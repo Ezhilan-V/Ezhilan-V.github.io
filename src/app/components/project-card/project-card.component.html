@@ -1,0 +1,37 @@
+<div class="row">
+    <div class="col-md-12">
+        <h4 class="title text-center">My Projects</h4>
+        <ngb-tabset [justify]="'center'" type="pills"
+            class="nav nav-pills nav-pills-primary  nav-pills-just-icons justify-content-center tab-space">
+            <ngb-tab *ngFor="let proj of projects">
+                <ng-template class="project-icons" ngbTabTitle>
+                    <i [class]="proj.icon" [ngbTooltip]="proj.name"></i>
+                </ng-template>
+                <ng-template ngbTabContent>
+                    <div class="row">
+                        <div class="col-md-10 ml-auto mr-auto">
+                            <div class="row collections card-deck">
+                                <div class="card project-card" *ngFor="let project of proj.projects">
+                                    <div class="text-primary card-header" data-aos="fade-left" data-aos-offset="50"
+                                        data-aos-duration="500">
+                                        <div>{{project.title}}</div>
+                                        <div class="sub-title">Role : {{project.role}}
+                                        </div>
+                                    </div>
+                                    <img [src]="project.imageUrl" class="project-card-images card-img-top"
+                                        onerror="this.src = 'assets/images/gif.gif'" [alt]="project.title"
+                                        data-aos="fade-up" data-aos-offset="50" data-aos-duration="500">
+                                    <div class="card-body " data-aos="fade-right" data-aos-offset="50" data-aos-duration="500">
+                                        <p>
+                                            {{project.description}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+            </ngb-tab>
+        </ngb-tabset>
+    </div>
+</div>
