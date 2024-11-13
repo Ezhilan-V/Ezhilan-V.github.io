@@ -2,6 +2,9 @@
 @use '~@angular/material' as mat;
 @import "~bootstrap/scss/bootstrap.scss";
 @import "assets/sass/now-ui-kit.scss";
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 @include mat.core();
 

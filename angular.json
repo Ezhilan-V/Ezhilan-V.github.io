@@ -33,6 +33,7 @@
             "styles": [
               "src/styles.scss",
               "node_modules/primeicons/primeicons.css",
+               "node_modules/aos/dist/aos.css",
               "primeng/resources/themes/arya-green/theme.css",
               "node_modules/primeng/resources/primeng.min.css",
               "src/assets/sass/now-ui-kit.scss",
