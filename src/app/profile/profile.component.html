@@ -1,12 +1,13 @@
 <div class="wrapper">
-    <div class="page-header page-header-small" filter-color="orange">
+    <div class="page-header page-header-small" filter-color="primary">
         <div class="page-header-image rellax-header" data-rellax-speed="-8"
             style="background-image:url('assets/img/suryanelliBG1.jpg')">
+            <div class="overlay"></div>
         </div>
         <div class="container">
             <div class="content-center">
                 <div class="photo-container">
-                    <img src="assets/img/vez.jpg" alt="">
+                    <img src="assets/img/vez.jpg" alt="Ezhilan Veluchami">
                 </div>
                 <h3 class="title">Ezhilan Veluchami</h3>
                 <p class="category">Robotics Software Engineer</p>
@@ -14,26 +15,39 @@
         </div>
     </div>
 </div>
+
 <div class="section">
     <div class="container">
         <div class="button-container">
             <a href="https://drive.google.com/file/d/1q-aOVx3ErQyEwwPBhqzDb6A0xxe0wZqJ/view?usp=share_link"
-                target="_blank" class="btn btn-primary btn-round btn-lg">Resume</a>
-            <a href="https://www.linkedin.com/in/ezhilan-veluchami/" target="_blank" class="btn btn-default btn-round btn-lg btn-icon" rel="tooltip"
+                target="_blank" 
+                class="btn btn-primary btn-round btn-lg">
+                <i class="now-ui-icons files_paper"></i>
+                Resume
+            </a>
+            <a href="https://www.linkedin.com/in/ezhilan-veluchami/" 
+                target="_blank" 
+                class="btn btn-default btn-round btn-lg btn-icon" 
+                rel="tooltip"
                 title="Follow me on LinkedIn">
                 <i class="fab fa-linkedin"></i>
             </a>
-            <a href="https://github.com/Ezhilan-V" target="_blank" class="btn btn-default btn-round btn-lg btn-icon" rel="tooltip"
+            <a href="https://github.com/Ezhilan-V" 
+                target="_blank" 
+                class="btn btn-default btn-round btn-lg btn-icon" 
+                rel="tooltip"
                 title="Follow me on Github">
                 <i class="fab fa-github"></i>
             </a>
         </div>
-        <h3 class="title">About me</h3>
-        <h5 class="description">
-            {{about}} </h5>
-        <app-about></app-about>
-        <app-experience></app-experience>
-        <app-education></app-education>
-        <!-- <app-contact></app-contact> -->
+        
+        <div class="content-section">
+            <h3 class="title">About me</h3>
+            <h5 class="description">{{about}}</h5>
+            
+            <app-about></app-about>
+            <app-experience></app-experience>
+            <app-education></app-education>
+        </div>
     </div>
 </div>

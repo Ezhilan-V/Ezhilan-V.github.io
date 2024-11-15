@@ -10,11 +10,14 @@ import { MaterialModule } from './material.module';
 import { ComponentsModule } from './components/components.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProfileComponent } from './components/profile/profile.component';
+import { ThemeService } from './theme.service';
+import { ThemeToggleComponent } from './theme/theme.component';
 @NgModule({
     declarations: [
         AppComponent,
         NavbarComponent,
-        ProfileComponent
+        ProfileComponent,
+        ThemeToggleComponent
     ],
     imports: [
         BrowserAnimationsModule,
@@ -26,7 +29,7 @@ import { ProfileComponent } from './components/profile/profile.component';
         MaterialModule,
         ProfileModule
     ],
-    providers: [],
+    providers: [ThemeService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }
