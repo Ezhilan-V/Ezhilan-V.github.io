@@ -1,136 +1,60 @@
-<section class="py-16 bg-gray-50">
-    <div class="container mx-auto px-4">
-      <h2 class="text-3xl font-bold text-center mb-12" data-aos="fade-down">Work Experience</h2>
-  
-      <div class="relative">
-        <!-- Timeline line (visible on md and up) -->
-        <div class="hidden md:block absolute left-1/2 transform -translate-x-px h-full w-0.5 bg-gray-200"></div>
-  
-        <!-- Experience Items -->
-        <div class="space-y-8">
-          <div *ngFor="let exp of workexp; let isOdd = odd; let i = index" class="relative">
-            <!-- Timeline item wrapper -->
-            <div class="flex flex-col md:flex-row items-start md:justify-center"
-                 [class.md:flex-row-reverse]="isOdd"
-                 [attr.data-aos]="isOdd ? 'fade-left' : 'fade-right'"
-                 [attr.data-aos-delay]="i * 100">
-  
-              <!-- Date for medium and up screens -->
-              <div class="hidden md:block w-1/2 px-6"
-                   [class.text-right]="!isOdd"
-                   [class.text-left]="isOdd">
-                <span class="text-sm text-gray-500">{{exp.period}}</span>
-              </div>
-  
-              <!-- Timeline dot -->
-              <div class="absolute left-0 md:left-1/2 transform md:-translate-x-1/2 mt-6">
-                <div [class]="'w-4 h-4 rounded-full border-4 border-white ' + exp.color"></div>
-              </div>
-  
-              <!-- Content Card -->
-              <div class="ml-8 md:ml-0 md:w-1/2 md:px-6">
-                <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300">
-                  <!-- Header -->
-                  <div class="cursor-pointer transform transition-transform duration-300 hover:scale-[1.01]" 
-                       (click)="toggleExperience(exp.id)">
-                    <div class="flex justify-between items-start">
-                      <div>
-                        <h3 class="text-xl font-semibold text-gray-900">{{exp.company}}</h3>
-                        <p class="text-sm text-gray-500">{{exp.location}}</p>
-                      </div>
-                      <div class="text-right flex items-center">
-                        <p class="font-medium text-gray-700">{{exp.role}}</p>
-                        <p class="text-sm text-gray-500 md:hidden ml-2">{{exp.period}}</p>
-                        <!-- Chevron Icon -->
-                        <svg [class]="'w-5 h-5 ml-2 transform transition-transform duration-300 ' + 
-                                    (isExperienceExpanded(exp.id) ? 'rotate-180' : '')"
-                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" 
-                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" 
-                                clip-rule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-  
-                  <!-- Expanded Content -->
-                  <div *ngIf="isExperienceExpanded(exp.id)" 
-                       class="mt-4 pt-4 border-t border-gray-200 animate-fadeIn">
-                    <!-- Responsibilities -->
-                    <div class="mb-4">
-                      <h4 class="text-lg font-medium text-gray-900 mb-2">Key Responsibilities</h4>
-                      <ul class="list-disc list-inside space-y-1">
-                        <li *ngFor="let responsibility of exp.responsibilities; let i = index" 
-                            class="text-gray-700 animate-slideIn"
-                            [style.animation-delay]="i * 100 + 'ms'">
-                          {{responsibility}}
-                        </li>
-                      </ul>
-                    </div>
-  
-                    <!-- Projects -->
-                    <div *ngIf="exp.subProjects && exp.subProjects.length > 0" 
-                         class="mt-6">
-                      <h4 class="text-lg font-medium text-gray-900 mb-3">Projects</h4>
-                      <div class="space-y-3">
-                        <div *ngFor="let project of exp.subProjects" 
-                             class="bg-gray-50 rounded-lg">
-                          <!-- Project Header -->
-                          <div class="p-3 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                               (click)="toggleProject(project.id)">
-                            <div class="flex justify-between items-center">
-                              <h5 class="font-medium text-gray-800">
-                                {{project.name}} - {{project.role}}
-                              </h5>
-                              <!-- Project Chevron -->
-                              <svg [class]="'w-4 h-4 transform transition-transform duration-300 ' + 
-                                          (isProjectExpanded(project.id) ? 'rotate-180' : '')"
-                                   xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" 
-                                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" 
-                                      clip-rule="evenodd" />
-                              </svg>
+<div class="section" id="experience">
+    <div class="container cc-education">
+        <div class="h4 text-center mb-4 title">Work Experience</div>
+        <div class="colorlib-narrow-content">
+            <div class="row">
+                <div class="col-md-12 card">
+                    <br>
+                    <h3 class="text-primary " style="margin-bottom: 2px;">Infosys techologies limited , Mysore</h3>
+                    <h5 class="text-secondary">May 2019 - present</h5>
+                    <div class="timeline-centered">
+                        <article *ngFor="let exp of workexp" class="timeline-entry animate-box" data-aos="fade-right"
+                            data-aos-offset="50" data-aos-duration="500">
+                            <div class="timeline-entry-inner">
+                                <div class="timeline-icon color-2"
+                                    [matTooltip]="exp.timeline" matTooltipPosition="right">
+                                    {{exp.id}}
+                                </div>
+                                <mat-expansion-panel class="timeline-label card">
+                                    <mat-expansion-panel-header>
+                                        <mat-panel-title>
+                                           {{exp.project}} 
+                                        </mat-panel-title>
+                                    </mat-expansion-panel-header>
+                                    <div>
+                                        <h4>Unit</h4>
+                                        <p class="content">{{exp.unit}} </p>
+                                    </div>
+                                    <div>
+                                        <h4>Role</h4>
+                                        <p class="content">{{exp.role}} </p>
+                                    </div>
+                                    <div>
+                                        <h4>Description</h4>
+                                        <p class="content">{{exp.summary}} </p>
+                                    </div>
+                                    <div>
+                                        <h4>Skills</h4>
+                                        <mat-chip-list class="content" aria-label="Fish selection">
+                                            <mat-chip color="primary" *ngFor="let tech of exp.technologies">{{tech}}
+                                            </mat-chip>
+                                        </mat-chip-list>
+                                    </div>
+                                    <div>
+                                        <h4>Responsibilities</h4>
+                                        <ul>
+                                            <li *ngFor="let work of exp.work">{{work}}</li>
+                                        </ul>
+                                    </div>
+                                    
+                                </mat-expansion-panel>
+
+
                             </div>
-                          </div>
-  
-                          <!-- Project Details -->
-                          <div *ngIf="isProjectExpanded(project.id)" 
-                               class="p-3 border-t border-gray-200 animate-slideDown">
-                            <p class="text-gray-700 mb-3">{{project.description}}</p>
-  
-                            <!-- Technologies -->
-                            <div class="mb-3">
-                              <h6 class="text-sm font-medium text-gray-900 mb-2">Technologies</h6>
-                              <div class="flex flex-wrap gap-2">
-                                <span *ngFor="let tech of project.technologies; let i = index"
-                                      class="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded animate-fadeIn"
-                                      [style.animation-delay]="i * 50 + 'ms'">
-                                  {{tech}}
-                                </span>
-                              </div>
-                            </div>
-  
-                            <!-- Project Responsibilities -->
-                            <div>
-                              <h6 class="text-sm font-medium text-gray-900 mb-2">Responsibilities</h6>
-                              <ul class="list-disc list-inside space-y-1">
-                                <li *ngFor="let resp of project.responsibilities; let i = index"
-                                    class="text-gray-700 text-sm animate-slideIn"
-                                    [style.animation-delay]="i * 100 + 'ms'">
-                                  {{resp}}
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        </article>
                     </div>
-                  </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </section>
+</div>

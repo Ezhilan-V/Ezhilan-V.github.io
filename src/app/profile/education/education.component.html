@@ -1,72 +1,73 @@
-<!-- education.component.html -->
-<div class="container mx-auto p-4">
-  <div *ngFor="let edu of education"
-    class="w-full rounded-lg shadow-lg bg-white mb-6 overflow-hidden transform transition-all hover:shadow-xl"
-    [attr.data-aos]="'fade-up'" [attr.data-aos-duration]="800">
-
-    <div class="flex flex-col lg:flex-row">
-      <!-- School Info Section -->
-      <div class="lg:w-1/4 bg-gradient-to-br from-[#2C4875] to-[#f85c2b] p-6 text-white">
-        <div class="flex items-center mb-4">
-          <mat-icon class="mr-2 text-white">school</mat-icon>
-          <h3 class="text-xl font-bold">{{edu.school}}</h3>
+<div class="section" id="education">
+  <div class="container cc-education">
+    <div class="h4 text-center mb-4 title">Education</div>
+    <div class="card">
+      <div class="row">
+        <div class="col-md-3 bg-primary" data-aos="fade-right" data-aos-offset="50" data-aos-duration="500">
+          <div class="card-body cc-education-header">
+            <div class="h4">Karpagam College of Engineering</div>
+            <p>2015 - 2019</p>
+          </div>
         </div>
-        <div class="flex items-center text-white/90">
-          <mat-icon class="mr-2 !text-sm text-white">today</mat-icon>
-          <p>{{edu.period}}</p>
+        <div class="col-md-9" data-aos="fade-left" data-aos-offset="50" data-aos-duration="500">
+          <div class="card-body">
+            <div class="h4">Bachelor of Automobile Engineering</div>
+            <ul>
+              <li> Karpagam College of Engineering is Anna University Affiliated</li>
+              <li>Completed B.E in Automobile Engineering with <b>8.74 CGPA</b>.</li>
+              <li>Won the <b>Best Student Award</b> 2 times for excellent Academic records at College.</li>
+            </ul>
+          </div>
         </div>
       </div>
-
-      <!-- Details Section -->
-      <div class="lg:w-3/4 p-6">
-        <h4 class="text-xl font-bold text-[#2C4875] mb-4 flex items-center">
-          <mat-icon class="mr-2 text-[#2C4875]">military_tech</mat-icon>
-          {{edu.degree}}
-        </h4>
-
-        <ng-container *ngFor="let section of edu.details">
-          <!-- GPA Section -->
-          <div *ngIf="isGPASection(section)" class="flex items-center mb-4">
-            <mat-icon class="mr-2 text-[#2C4875]">grade</mat-icon>
-            <p class="font-semibold text-[#888888]" [innerHTML]="section.content"></p>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="col-md-3 bg-primary" data-aos="fade-right" data-aos-offset="50" data-aos-duration="500">
+          <div class="card-body cc-education-header">
+            <div class="h4">GD Matric</div>
+            <p>2013 - 2015</p>
           </div>
-
-          <!-- Categorized Courses Section -->
-          <div *ngIf="isCourseCategorizedSection(section)" class="mb-4">
-            <div class="flex items-center mb-2">
-              <mat-icon class="mr-2 text-[#2C4875]">library_books</mat-icon>
-              <h5 class="font-semibold text-[#888888]">{{section.title}}</h5>
-            </div>
-            <div class="pl-6">
-              <div *ngFor="let category of section.content" class="mb-2">
-                <div class="text-[#2C4875] font-medium mb-1">{{category.category}}:</div>
-                <div class="text-[#888888] text-sm pl-4">{{category.courses.join(', ')}}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Projects Section -->
-          <div *ngIf="isProjectsSection(section)" class="mb-4">
-            <div class="flex items-center mb-2">
-              <mat-icon class="mr-2 text-[#2C4875]">rocket_launch</mat-icon>
-              <h5 class="font-semibold text-[#888888]">Key Projects:</h5>
-            </div>
-            <ul class="list-disc pl-10 text-[#888888] text-sm space-y-1 marker:text-[#2C4875]">
-              <li *ngFor="let project of section.content">{{project}}</li>
+        </div>
+        <div class="col-md-9" data-aos="fade-left" data-aos-offset="50" data-aos-duration="500">
+          <div class="card-body">
+            <div class="h5">Higher Secondary</div>
+            <ul>
+              <li>
+                The High School was mainly focus on the bases of science, mathematics, and Computer Science
+              </li>
+              <li>
+                There was also a good base on physics, mathematics and chemistry.
+              </li>
+              <li>
+                Completed my high school with<b> 88.25%</b>.
+              </li>
             </ul>
           </div>
-
-          <!-- Achievements Section -->
-          <div *ngIf="isAchievementsSection(section)" class="mb-4">
-            <div class="flex items-center mb-2">
-              <mat-icon class="mr-2 text-[#2C4875]">emoji_events</mat-icon>
-              <h5 class="font-semibold text-[#888888]">Academic Achievements:</h5>
-            </div>
-            <ul class="list-disc pl-10 text-[#888888] text-sm space-y-1 marker:text-[#2C4875]">
-              <li *ngFor="let achievement of section.content">{{achievement}}</li>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="col-md-3 bg-primary" data-aos="fade-right" data-aos-offset="50" data-aos-duration="500">
+          <div class="card-body cc-education-header">
+            <div class="h4">Nirmala Matha Convent</div>
+            <p>2002 - 2013</p>
+          </div>
+        </div>
+        
+        <div class="col-md-9" data-aos="fade-left" data-aos-offset="50" data-aos-duration="500">
+          <div class="card-body">
+            <div class="h4">Secondary School</div>
+            <ul>
+              <li>The Secondary aims at Maths , English , Science, Social Science, Litrature and Languages.
+              </li>
+              <li>
+                Completed my Secondary school with <b>94.8%</b>.
+              </li>
             </ul>
           </div>
-        </ng-container>
+        </div>
       </div>
     </div>
   </div>
