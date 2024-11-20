@@ -1,150 +1,23 @@
-/* Import statements */
-@use '@angular/material' as mat;
+/* You can add global styles to this file, and also import other style files */
+@use '~@angular/material' as mat;
 @import "~bootstrap/scss/bootstrap.scss";
 @import "assets/sass/now-ui-kit.scss";
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-@import "~primeng/resources/themes/saga-blue/theme.css";
-@import "~primeng/resources/themes/arya-blue/theme.css";
+@import '~primeicons/primeicons.css';
 
-// Include the common styles for Angular Material
 @include mat.core();
 
-// Define the palettes
 $my-primary: mat.define-palette(mat.$indigo-palette, 500);
 $my-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
-$my-warn: mat.define-palette(mat.$red-palette);
 
-// Create the theme objects
-$my-light-theme: mat.define-light-theme((
-  color: (
-    primary: $my-primary,
-    accent: $my-accent,
-    warn: $my-warn,
-  ),
+$my-theme: mat.define-light-theme((
+ color: (
+   primary: $my-primary,
+   accent: $my-accent,
+ )
 ));
 
-$my-dark-theme: mat.define-dark-theme((
-  color: (
-    primary: $my-primary,
-    accent: $my-accent,
-    warn: $my-warn,
-  ),
-));
+@include mat.all-component-themes($my-theme);
 
-// Define CSS custom properties for theme colors
-:root {
-  /* Light theme (default) */
-  --primary-color: #2C4875;
-  --primary-light: #546A7B;
-  --primary-dark: #1A2A44;
-  --accent-color: #0095CC;
-  --background-main: #F0F2F5;
-  --background-card: #FFFFFF;
-  --background-dark: #E8ECEF;
-  --text-primary: #2D3748;
-  --text-secondary: #4A5568;
-  --text-light: #718096;
-  --border-color: #E2E8F0;
-}
-
-// Apply the light theme by default
-@include mat.all-component-themes($my-light-theme);
-
-// Apply dark theme class
-.dark-theme {
-  --primary-color: #3d5a8c;
-  --primary-light: #647d8f;
-  --primary-dark: #1f3251;
-  --accent-color: #00b4f5;
-  --background-main: #1a1f2e;
-  --background-card: #242838;
-  --background-dark: #2f3446;
-  --text-primary: #e2e8f0;
-  --text-secondary: #cbd5e0;
-  --text-light: #a0aec0;
-  --border-color: #2d3748;
-
-  @include mat.all-component-themes($my-dark-theme);
-}
-
-/* Common component styles */
-.content-card {
-  background-color: var(--background-card);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.section-container {
-  background-color: var(--background-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Utility classes */
-.bg-primary-light {
-  background-color: var(--background-dark);
-}
-
-.text-accent {
-  color: var(--accent-color);
-}
-
-.border-subtle {
-  border-color: var(--border-color);
-}
-
-/* Card hover effects */
-.hover-card {
-  transition: transform 0.2s, box-shadow 0.2s;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-}
-
-/* Material overrides */
-.mat-card {
-  background-color: var(--background-card) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
-}
-
-.mat-toolbar.mat-primary {
-  background-color: var(--primary-color) !important;
-}
-
-/* PrimeNG theme overrides */
-body {
-  &.light-theme {
-    @import "~primeng/resources/themes/saga-blue/theme.css";
-  }
-  
-  &.dark-theme {
-    @import "~primeng/resources/themes/arya-blue/theme.css";
-    
-    .p-component {
-      background-color: var(--background-card);
-      color: var(--text-primary);
-    }
-    
-    .p-datatable {
-      .p-datatable-thead > tr > th {
-        background-color: var(--background-dark);
-        color: var(--text-primary);
-      }
-      
-      .p-datatable-tbody > tr {
-        background-color: var(--background-card);
-        color: var(--text-primary);
-        
-        &:hover {
-          background-color: var(--background-dark);
-        }
-      }
-    }
-  }
-}

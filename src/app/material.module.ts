@@ -53,7 +53,8 @@ const materialModules = [
   OverlayModule,
   PortalModule,
   MatChipsModule,
-  MatTooltipModule
+  MatTooltipModule,
+  MatIconModule
 ];
 
 @NgModule({

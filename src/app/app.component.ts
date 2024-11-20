@@ -1,26 +1,18 @@
-import { Component, OnInit, Renderer2, } from '@angular/core';
-import { ThemeService } from './theme.service';
+import { Component, OnInit, Inject, Renderer2, ElementRef, ViewChild } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { Subscription } from 'rxjs/Subscription';
+import 'rxjs/add/operator/filter';
+import { DOCUMENT } from '@angular/common';
+import { LocationStrategy, PlatformLocation, Location } from '@angular/common';
+import { NavbarComponent } from './shared/navbar/navbar.component';
 
 @Component({
     selector: 'app-root',
-    template: `
-    <div [class.dark-theme]="isDark" [class.light-theme]="!isDark">
-        <app-navbar></app-navbar>
-      <router-outlet></router-outlet>
-    </div>
-  `
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-    // isDarkMode = false;
-
-    constructor(
-        private themeService: ThemeService,
-        private renderer: Renderer2
-    ) { }
-    isDark = false;
+    constructor() {}
     ngOnInit() {
-        this.themeService.isDarkMode$.subscribe(isDark => {
-            this.isDark = isDark;
-        });
     }
 }

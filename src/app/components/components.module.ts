@@ -8,6 +8,7 @@ import { AgmCoreModule } from '@agm/core';
 import { MaterialModule } from '../material.module';
 import { RouterModule } from '@angular/router';
 import { ProjectCardComponent } from './project-card/project-card.component';
+import { ProjectsComponent } from './projects/projects.component';
 
 @NgModule({
     exports:[ ProjectCardComponent],
@@ -25,7 +26,8 @@ import { ProjectCardComponent } from './project-card/project-card.component';
         })
     ],
     declarations: [
-        ProjectCardComponent
+        ProjectCardComponent,
+        ProjectsComponent
     ]
 })
 export class ComponentsModule { }
