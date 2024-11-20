@@ -7,11 +7,11 @@ import { JwBootstrapSwitchNg2Module } from 'jw-bootstrap-switch-ng2';
 import { AgmCoreModule } from '@agm/core';
 import { MaterialModule } from '../material.module';
 import { RouterModule } from '@angular/router';
-import { ProjectCardComponent } from './project-card/project-card.component';
+import { ProjectCardComponent } from '../profile/project-card/project-card.component';
 import { ProjectsComponent } from './projects/projects.component';
 
 @NgModule({
-    exports:[ ProjectCardComponent],
+    exports:[ ],
     imports: [
         CommonModule,
         FormsModule,
@@ -26,8 +26,6 @@ import { ProjectsComponent } from './projects/projects.component';
         })
     ],
     declarations: [
-        ProjectCardComponent,
-        ProjectsComponent
     ]
 })
 export class ComponentsModule { }

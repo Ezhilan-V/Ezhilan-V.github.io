@@ -7,19 +7,26 @@ import { EducationComponent } from './education/education.component';
 import { ContactComponent } from './contact/contact.component';
 import { ResumeComponent } from './profile.component';
 import { MaterialModule } from '../material.module';
+import { ProjectCardComponent } from './project-card/project-card.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { ProjectDetailsComponent } from './project-card/project-details.component';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
-    MaterialModule
+    MaterialModule,
+    NgbModule,
   ],
-  declarations: [ResumeComponent,
+  declarations: [
+    ResumeComponent,
     AboutComponent,
     ExperienceComponent,
     EducationComponent,
-    ContactComponent,
+    ContactComponent, 
+    ProjectCardComponent,
+    ProjectDetailsComponent
   ],
-  providers: [     ]
+  providers: []
 })
 export class ProfileModule { }

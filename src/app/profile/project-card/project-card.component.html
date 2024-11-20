@@ -1,0 +1,68 @@
+<div class="projects-container mat-elevation-z2">
+    <!-- Category tabs -->
+    <mat-tab-group [(selectedIndex)]="selectedCategoryIndex" 
+                   (selectedIndexChange)="selectCategory($event)"
+                   mat-align-tabs="center"
+                   animationDuration="300ms"
+                   class="project-tabs">
+      <mat-tab *ngFor="let category of projects">
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">{{category.icon}}</mat-icon>
+          <span class="tab-label">{{category.name}}</span>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  
+    <!-- Projects carousel -->
+    <div class="category-container" *ngFor="let category of projects; let i = index">
+      <div class="carousel-container" *ngIf="selectedCategoryIndex === i"
+           (touchstart)="handleTouchStart($event)"
+           (touchend)="handleTouchEnd($event, category.name, category.projects.length)">
+        
+        <button mat-icon-button class="nav-button prev" 
+                (click)="prevSlide(category.name)"
+                *ngIf="canShowPrevSlide(category.name)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+  
+        <div class="projects-carousel">
+          <div class="project-cards" 
+               [style.transform]="'translateX(-' + (currentSlide[category.name] || 0) * 100 + '%)'">
+            <mat-card class="project-card" 
+                      *ngFor="let project of category.projects">
+              <img mat-card-image [src]="project.imageUrls[0]" [alt]="project.title">
+              
+              <mat-card-header>
+                <mat-card-title>{{project.title}}</mat-card-title>
+                <mat-card-subtitle>{{project.role}}</mat-card-subtitle>
+              </mat-card-header>
+  
+              <mat-card-content>
+                <p class="project-description">{{project.description | slice:0:150}}...</p>
+                
+                <div class="tech-chips">
+                  <mat-chip-list>
+                    <mat-chip *ngFor="let tech of project.technologies?.slice(0,3)">
+                      {{tech}}
+                    </mat-chip>
+                  </mat-chip-list>
+                </div>
+              </mat-card-content>
+  
+              <mat-card-actions>
+                <button mat-button color="primary" (click)="openProjectDetails(project,category)">
+                  LEARN MORE
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </div>
+  
+        <!-- <button mat-icon-button class="nav-button next" 
+                (click)="nextSlide(category.name, category.projects.length)"
+                *ngIf="canShowNextSlide(category.name, category.projects.length)">
+          <mat-icon>chevron_right</mat-icon>
+        </button> -->
+      </div>
+    </div>
+  </div>

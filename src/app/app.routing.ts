@@ -6,10 +6,9 @@ import { ProfileComponent } from './components/profile/profile.component';
 import { ResumeComponent } from './profile/profile.component';
 
 const routes: Routes = [
-    { path: '', redirectTo: 'profile', pathMatch: 'prefix' },
+    { path: '', component: ResumeComponent },
     { path: 'projects', component: ProfileComponent },
-    { path: 'profile', component: ResumeComponent },
-    { path: '**', redirectTo: 'profile', pathMatch: 'full' },
+    // { path: '**', redirectTo: '', pathMatch: 'full' },
 ];
 @NgModule({
     imports: [
