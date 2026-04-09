@@ -10,6 +10,7 @@ import { MaterialModule } from '../material.module';
 import { ProjectCardComponent } from './project-card/project-card.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ProjectDetailsComponent } from './project-card/project-details.component';
+import { SkillsComponent } from './skills/skills.component';
 
 @NgModule({
   imports: [
@@ -21,9 +22,10 @@ import { ProjectDetailsComponent } from './project-card/project-details.componen
   declarations: [
     ResumeComponent,
     AboutComponent,
+    SkillsComponent,
     ExperienceComponent,
     EducationComponent,
-    ContactComponent, 
+    ContactComponent,
     ProjectCardComponent,
     ProjectDetailsComponent
   ],
