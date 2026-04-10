@@ -9,6 +9,8 @@ import { ProfileService } from './profile.service';
 })
 export class ResumeComponent implements OnInit {
   about: string = ""
+  techTags = ['ROS2', 'C++', 'Python', 'AWS GreenGrass', 'Docker', 'Computer Vision', 'Autonomous Systems', 'Angular', 'React', 'Jetson Orin'];
+
   constructor(private profileService: ProfileService) {
     this.about = this.profileService.about
   }

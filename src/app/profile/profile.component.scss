@@ -1,3 +1,41 @@
-.description{
-    font-weight: 500;
+/* Hero dot grid pattern */
+.hero-dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Gradient ring around photo */
+.photo-ring {
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6, #22d3ee, #0ea5e9);
+  background-size: 300% 300%;
+  animation: gradientShift 6s ease infinite, spin 10s linear infinite;
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Photo glow */
+.photo-glow {
+  box-shadow: 0 0 40px rgba(14, 165, 233, 0.4);
+}
+
+/* Gradient name text */
+.gradient-name {
+  background: linear-gradient(135deg, #f1f5f9 20%, #38bdf8 50%, #a78bfa 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Primary CTA button */
+.btn-gradient-primary {
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.35);
+
+  &:hover {
+    box-shadow: 0 8px 30px rgba(14, 165, 233, 0.5);
+  }
 }

@@ -1,48 +1,54 @@
-<div class="section" id="about">
-    <div class="container">
-      <div class="card" data-aos="fade-up" data-aos-offset="10">
-        <div class="row">
-          <div class="col-lg-6 col-md-12">
-            <div class="card-body">
-              <div class="h4 mt-0 title">Professional Summary</div>
-              <div>
-                <ul>
-                  <li *ngFor="let m of professionalSummary">{{m}}</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6 col-md-12">
-            <div class="card-body">
-              <div class="h4 mt-0 title">Basic Information</div>
-             
-              <div class="row mt-3">
-                <div class="col-sm-4">
-                  <strong class="text-uppercase">Email:</strong>
-                </div>
-                <div class="col-sm-8">ezhilan.veluchami&#64;gmail.com</div>
-              </div>
-              <div class="row mt-3">
-                <div class="col-sm-4">
-                  <strong class="text-uppercase">Phone:</strong>
-                </div>
-                <div class="col-sm-8">+1 (602)586-9848 </div>
-              </div>
-              <div class="row mt-3">
-                <div class="col-sm-4">
-                  <strong class="text-uppercase">Address:</strong>
-                </div>
-                <div class="col-sm-8">Greater Boston Area, MA</div>
-              </div>
-              <div class="row mt-3">
-                <div class="col-sm-4">
-                  <strong class="text-uppercase">Language:</strong>
-                </div>
-                <div class="col-sm-8">English,Tamil</div>
-              </div>
-            </div>
-          </div>
+<div class="section-wrapper" id="about">
+  <h2 class="text-2xl font-bold text-slate-100 mb-8 section-heading" data-aos="fade-right">
+    Quick Info
+  </h2>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" data-aos="fade-up" data-aos-offset="10">
+
+    <!-- Professional Summary -->
+    <div class="dark-card rounded-2xl p-6">
+      <h3 class="text-lg font-semibold text-sky-400 mb-4 flex items-center gap-2">
+        <mat-icon class="text-sky-400 !text-base">insights</mat-icon>
+        Professional Summary
+      </h3>
+      <ul class="space-y-3">
+        <li *ngFor="let m of professionalSummary"
+            class="flex items-start gap-2 text-sm text-slate-300 leading-relaxed">
+          <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-sky-400 flex-shrink-0"></span>
+          {{ m }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Basic Info -->
+    <div class="dark-card rounded-2xl p-6">
+      <h3 class="text-lg font-semibold text-violet-400 mb-4 flex items-center gap-2">
+        <mat-icon class="text-violet-400 !text-base">person</mat-icon>
+        Basic Information
+      </h3>
+      <div class="space-y-4">
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value">ezhilan.veluchami&#64;gmail.com</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Phone</span>
+          <span class="info-value">+1 (602) 586-9848</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Location</span>
+          <span class="info-value">Greater Boston Area, MA</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Languages</span>
+          <span class="info-value">English, Tamil</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Patent</span>
+          <span class="info-value text-xs">U.S. App. No. 63/574,771</span>
         </div>
       </div>
     </div>
+
   </div>
+</div>

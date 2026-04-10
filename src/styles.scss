@@ -21,3 +21,157 @@ $my-theme: mat.define-light-theme((
 
 @include mat.all-component-themes($my-theme);
 
+/* ============================================================
+   GLOBAL DARK THEME
+   ============================================================ */
+
+:root {
+  --bg-primary:    #080b14;
+  --bg-surface:    #0d1117;
+  --bg-card:       #161b22;
+  --border-color:  rgba(255, 255, 255, 0.08);
+  --text-primary:  #f1f5f9;
+  --text-muted:    #94a3b8;
+  --accent-blue:   #0ea5e9;
+  --accent-purple: #8b5cf6;
+  --accent-cyan:   #22d3ee;
+  --glow-blue:     rgba(14, 165, 233, 0.25);
+  --glow-purple:   rgba(139, 92, 246, 0.25);
+}
+
+html, body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Section backgrounds */
+.section,
+.wrapper,
+.page-header {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Bootstrap card overrides */
+.card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important;
+}
+
+.card-body {
+  color: var(--text-primary) !important;
+}
+
+/* Typography overrides */
+h1, h2, h3, h4, h5, h6,
+.title, .h4, .h3, .h2, .h1 {
+  color: var(--text-primary) !important;
+}
+
+p, li, span, label {
+  color: inherit;
+}
+
+/* Button overrides */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
+  border: none !important;
+  box-shadow: 0 4px 15px var(--glow-blue) !important;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px var(--glow-blue) !important;
+  }
+}
+
+.btn-default {
+  background: transparent !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-muted) !important;
+
+  &:hover {
+    border-color: var(--accent-blue) !important;
+    color: var(--accent-blue) !important;
+  }
+}
+
+/* Form controls */
+.form-control {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+
+  &::placeholder {
+    color: var(--text-muted) !important;
+  }
+
+  &:focus {
+    border-color: var(--accent-blue) !important;
+    box-shadow: 0 0 0 3px var(--glow-blue) !important;
+  }
+}
+
+/* input-group-addon */
+.input-group-addon {
+  background-color: var(--bg-surface) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Angular Material overrides */
+.mat-icon {
+  color: inherit !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb {
+  background: #2d3748;
+  border-radius: 3px;
+
+  &:hover { background: var(--accent-blue); }
+}
+
+/* Shared section wrapper */
+.section-wrapper {
+  width: 100%;
+}
+
+/* Dark card shared base */
+.dark-card {
+  background: #161b22;
+  border: 1px solid rgba(255,255,255,0.07);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 8px 32px rgba(14, 165, 233, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+/* bg-dark-bg / bg-dark-surface / bg-dark-card helpers (Tailwind purge safety) */
+.bg-dark-bg      { background-color: #080b14; }
+.bg-dark-surface { background-color: #0d1117; }
+.bg-dark-card    { background-color: #161b22; }
+.border-dark-border { border-color: rgba(255,255,255,0.08); }
+
+/* Section heading gradient accent */
+.section-heading {
+  position: relative;
+  display: inline-block;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 60%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 2px;
+  }
+}
+

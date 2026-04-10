@@ -1,72 +1,92 @@
-<!-- education.component.html -->
-<div class="container mx-auto p-4">
-  <div *ngFor="let edu of education"
-    class="w-full rounded-lg shadow-lg bg-white mb-6 overflow-hidden transform transition-all hover:shadow-xl"
-    [attr.data-aos]="'fade-up'" [attr.data-aos-duration]="800">
+<div class="section-wrapper" id="education">
+  <h2 class="text-2xl font-bold text-slate-100 mb-8 section-heading" data-aos="fade-right">
+    Education
+  </h2>
 
-    <div class="flex flex-col lg:flex-row">
-      <!-- School Info Section -->
-      <div class="lg:w-1/4 bg-gradient-to-br from-[#2C4875] to-[#f85c2b] p-6 text-white">
-        <div class="flex items-center mb-4">
-          <mat-icon class="mr-2 text-white">school</mat-icon>
-          <h3 class="text-xl font-bold">{{edu.school}}</h3>
-        </div>
-        <div class="flex items-center text-white/90">
-          <mat-icon class="mr-2 !text-sm text-white">today</mat-icon>
-          <p>{{edu.period}}</p>
-        </div>
-      </div>
+  <div class="space-y-6">
+    <div *ngFor="let edu of education; let i = index"
+         class="rounded-2xl overflow-hidden border border-white/[0.07] bg-dark-card hover:border-white/20 hover:shadow-2xl hover:shadow-black/50 transition-all duration-300 hover:-translate-y-1"
+         [attr.data-aos]="'fade-up'"
+         [attr.data-aos-delay]="i * 100"
+         [attr.data-aos-duration]="800">
 
-      <!-- Details Section -->
-      <div class="lg:w-3/4 p-6">
-        <h4 class="text-xl font-bold text-[#2C4875] mb-4 flex items-center">
-          <mat-icon class="mr-2 text-[#2C4875]">military_tech</mat-icon>
-          {{edu.degree}}
-        </h4>
+      <div class="flex flex-col lg:flex-row">
 
-        <ng-container *ngFor="let section of edu.details">
-          <!-- GPA Section -->
-          <div *ngIf="isGPASection(section)" class="flex items-center mb-4">
-            <mat-icon class="mr-2 text-[#2C4875]">grade</mat-icon>
-            <p class="font-semibold text-[#888888]" [innerHTML]="section.content"></p>
-          </div>
-
-          <!-- Categorized Courses Section -->
-          <div *ngIf="isCourseCategorizedSection(section)" class="mb-4">
-            <div class="flex items-center mb-2">
-              <mat-icon class="mr-2 text-[#2C4875]">library_books</mat-icon>
-              <h5 class="font-semibold text-[#888888]">{{section.title}}</h5>
+        <!-- Left: School block -->
+        <div class="lg:w-1/4 bg-gradient-to-br from-[#1a3560] to-[#c14a23] p-6 text-white flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <mat-icon class="text-white/80 !text-lg">school</mat-icon>
+              <h3 class="text-base font-bold leading-tight">{{ edu.school }}</h3>
             </div>
-            <div class="pl-6">
-              <div *ngFor="let category of section.content" class="mb-2">
-                <div class="text-[#2C4875] font-medium mb-1">{{category.category}}:</div>
-                <div class="text-[#888888] text-sm pl-4">{{category.courses.join(', ')}}</div>
+            <span class="inline-flex items-center gap-1 text-xs text-white/70 bg-white/10 px-2.5 py-1 rounded-full">
+              <mat-icon class="!text-xs">today</mat-icon>
+              {{ edu.period }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Right: Details -->
+        <div class="lg:w-3/4 p-6">
+          <h4 class="text-base font-bold text-slate-100 mb-5 flex items-center gap-2">
+            <mat-icon class="text-sky-400 !text-lg">military_tech</mat-icon>
+            {{ edu.degree }}
+          </h4>
+
+          <ng-container *ngFor="let section of edu.details">
+
+            <!-- GPA -->
+            <div *ngIf="isGPASection(section)" class="flex items-center gap-2 mb-4 text-sm text-slate-300">
+              <mat-icon class="text-amber-400 !text-base">grade</mat-icon>
+              <span [innerHTML]="section.content" class="[&_b]:text-amber-400 [&_b]:font-bold"></span>
+            </div>
+
+            <!-- Courses -->
+            <div *ngIf="isCourseCategorizedSection(section)" class="mb-4">
+              <div class="flex items-center gap-2 mb-3">
+                <mat-icon class="text-violet-400 !text-base">library_books</mat-icon>
+                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ section.title }}</h5>
+              </div>
+              <div class="pl-1 space-y-2">
+                <div *ngFor="let category of section.content" class="flex flex-wrap items-baseline gap-x-2">
+                  <span class="text-xs font-semibold text-sky-400 min-w-[110px]">{{ category.category }}:</span>
+                  <span class="text-xs text-slate-400">{{ category.courses.join(', ') }}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Projects Section -->
-          <div *ngIf="isProjectsSection(section)" class="mb-4">
-            <div class="flex items-center mb-2">
-              <mat-icon class="mr-2 text-[#2C4875]">rocket_launch</mat-icon>
-              <h5 class="font-semibold text-[#888888]">Key Projects:</h5>
+            <!-- Projects -->
+            <div *ngIf="isProjectsSection(section)" class="mb-4">
+              <div class="flex items-center gap-2 mb-3">
+                <mat-icon class="text-cyan-400 !text-base">rocket_launch</mat-icon>
+                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Key Projects</h5>
+              </div>
+              <ul class="space-y-1.5 pl-1">
+                <li *ngFor="let project of section.content"
+                    class="flex items-start gap-2 text-xs text-slate-400">
+                  <span class="mt-1.5 w-1 h-1 rounded-full bg-cyan-400 flex-shrink-0"></span>
+                  {{ project }}
+                </li>
+              </ul>
             </div>
-            <ul class="list-disc pl-10 text-[#888888] text-sm space-y-1 marker:text-[#2C4875]">
-              <li *ngFor="let project of section.content">{{project}}</li>
-            </ul>
-          </div>
 
-          <!-- Achievements Section -->
-          <div *ngIf="isAchievementsSection(section)" class="mb-4">
-            <div class="flex items-center mb-2">
-              <mat-icon class="mr-2 text-[#2C4875]">emoji_events</mat-icon>
-              <h5 class="font-semibold text-[#888888]">Academic Achievements:</h5>
+            <!-- Achievements -->
+            <div *ngIf="isAchievementsSection(section)" class="mb-4">
+              <div class="flex items-center gap-2 mb-3">
+                <mat-icon class="text-amber-400 !text-base">emoji_events</mat-icon>
+                <h5 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Achievements</h5>
+              </div>
+              <ul class="space-y-1.5 pl-1">
+                <li *ngFor="let achievement of section.content"
+                    class="flex items-start gap-2 text-xs text-slate-400">
+                  <span class="mt-1.5 w-1 h-1 rounded-full bg-amber-400 flex-shrink-0"></span>
+                  {{ achievement }}
+                </li>
+              </ul>
             </div>
-            <ul class="list-disc pl-10 text-[#888888] text-sm space-y-1 marker:text-[#2C4875]">
-              <li *ngFor="let achievement of section.content">{{achievement}}</li>
-            </ul>
-          </div>
-        </ng-container>
+
+          </ng-container>
+        </div>
       </div>
     </div>
   </div>

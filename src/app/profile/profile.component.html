@@ -1,39 +1,94 @@
-<div class="wrapper">
-    <div class="page-header page-header-small" filter-color="orange">
-        <div class="page-header-image rellax-header" data-rellax-speed="-8"
-            style="background-image:url('assets/img/suryanelliBG1.jpg')">
-        </div>
-        <div class="container">
-            <div class="content-center">
-                <div class="photo-container">
-                    <img src="assets/img/vez.jpg" alt="">
-                </div>
-                <h3 class="title">Ezhilan Veluchami</h3>
-                <p class="category">Robotics Engineer</p>
-            </div>
-        </div>
+<div class="min-h-screen bg-dark-bg text-slate-100">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+
+    <!-- Ambient blobs -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-60 -right-60 w-[500px] h-[500px] bg-brand-blue   rounded-full opacity-[0.07] blur-3xl animate-pulse-slow"></div>
+      <div class="absolute -bottom-60 -left-60 w-[500px] h-[500px] bg-brand-purple rounded-full opacity-[0.07] blur-3xl animate-pulse-slow"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-brand-cyan rounded-full opacity-[0.03] blur-3xl"></div>
     </div>
-</div>
-<div class="section">
-    <div class="container">
-        <div class="button-container">
-            <a href="https://drive.google.com/file/d/1q-aOVx3ErQyEwwPBhqzDb6A0xxe0wZqJ/view?usp=share_link"
-                target="_blank" class="btn btn-primary btn-round btn-lg">Resume</a>
-            <a href="https://www.linkedin.com/in/ezhilan-veluchami/" target="_blank"
-                class="btn btn-default btn-round btn-lg btn-icon" rel="tooltip" title="Follow me on LinkedIn">
-                <i class="fab fa-linkedin"></i>
-            </a>
-            <a href="https://github.com/Ezhilan-V" target="_blank" class="btn btn-default btn-round btn-lg btn-icon"
-                rel="tooltip" title="Follow me on Github">
-                <i class="fab fa-github"></i>
-            </a>
+
+    <!-- Dot grid pattern -->
+    <div class="absolute inset-0 hero-dot-grid pointer-events-none"></div>
+
+    <!-- Content -->
+    <div class="relative z-10 text-center px-4 max-w-4xl mx-auto" data-aos="fade-up" data-aos-duration="800">
+
+      <!-- Profile photo with gradient ring -->
+      <div class="inline-block mb-8 animate-float">
+        <div class="relative w-36 h-36 mx-auto">
+          <div class="absolute inset-0 rounded-full p-[3px] animate-spin-slow photo-ring">
+            <div class="w-full h-full rounded-full bg-dark-bg"></div>
+          </div>
+          <img src="assets/img/vez.jpg" alt="Ezhilan Veluchami"
+               class="absolute inset-[5px] w-[calc(100%-10px)] h-[calc(100%-10px)] rounded-full object-cover z-10 photo-glow">
         </div>
-        <h3 class="title">About me</h3>
-        <h5 class="">{{about}}</h5>
-        <app-about></app-about>
-        <app-skills></app-skills>
-        <app-experience></app-experience>
-        <app-education></app-education>
-        <app-project-card></app-project-card>
+      </div>
+
+      <!-- Name -->
+      <h1 class="text-5xl md:text-7xl font-bold mb-3 gradient-name tracking-tight">
+        Ezhilan Veluchami
+      </h1>
+
+      <!-- Role -->
+      <p class="text-xl md:text-2xl font-semibold text-sky-400 mb-1">
+        Systems Development Engineer
+      </p>
+      <p class="text-base text-slate-400 mb-8">
+        Amazon Robotics &nbsp;·&nbsp; Greater Boston, MA
+      </p>
+
+      <!-- Tech tags -->
+      <div class="flex flex-wrap justify-center gap-2 mb-10 max-w-2xl mx-auto">
+        <span *ngFor="let tag of techTags"
+              class="px-3 py-1 text-xs font-medium rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 transition-colors cursor-default">
+          {{ tag }}
+        </span>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href="https://drive.google.com/file/d/1XY0xlYDX8aZA1KwCnnjH6Y3G4iTWcV-D/view?usp=sharing"
+           target="_blank"
+           class="px-7 py-3 rounded-full font-semibold text-white btn-gradient-primary transition-all hover:scale-105">
+          View Resume
+        </a>
+        <a href="https://www.linkedin.com/in/ezhilan-veluchami/" target="_blank"
+           class="px-7 py-3 rounded-full font-semibold border border-slate-600 text-slate-300 hover:border-sky-500 hover:text-sky-400 transition-all hover:scale-105">
+          <i class="fab fa-linkedin mr-2"></i>LinkedIn
+        </a>
+        <a href="https://github.com/Ezhilan-V" target="_blank"
+           class="px-7 py-3 rounded-full font-semibold border border-slate-600 text-slate-300 hover:border-violet-500 hover:text-violet-400 transition-all hover:scale-105">
+          <i class="fab fa-github mr-2"></i>GitHub
+        </a>
+      </div>
     </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
+      <span class="text-xs text-slate-500 tracking-widest uppercase">scroll</span>
+      <div class="w-5 h-9 rounded-full border border-slate-600 flex items-start justify-center pt-1">
+        <div class="w-1 h-2 bg-sky-400 rounded-full animate-scroll-dot"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ABOUT BLURB ===================== -->
+  <div class="bg-dark-surface border-y border-dark-border py-10">
+    <div class="container mx-auto px-4 max-w-3xl text-center" data-aos="fade-up">
+      <p class="text-base text-slate-300 leading-relaxed">{{ about }}</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTIONS ===================== -->
+  <div class="container mx-auto px-4 py-16 space-y-20">
+    <app-about></app-about>
+    <app-skills></app-skills>
+    <app-experience></app-experience>
+    <app-education></app-education>
+    <app-project-card></app-project-card>
+  </div>
+
 </div>
