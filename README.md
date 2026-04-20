@@ -1,27 +1,43 @@
-# VezFront
+# Ezhilan Veluchami — Portfolio
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.9.
+Personal portfolio site for Ezhilan Veluchami, Systems Development Engineer at Amazon Robotics. Built with Angular 19, Tailwind CSS, and Angular Material. Deployed via GitHub Pages at [ezhilan-v.github.io](https://ezhilan-v.github.io).
 
-## Development server
+## Stack
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+- **Framework**: Angular 19 (NgModule, zone.js)
+- **Styling**: Tailwind CSS v3 + Angular Material M3 + Bootstrap 4 (layout only)
+- **Animations**: AOS (Animate on Scroll)
+- **Icons**: Font Awesome 5 (CDN) + Angular Material Icons
+- **Content**: Single JSON file at `src/assets/data/portfolio.json` — all text, skills, projects, and experience data lives here
+- **Hosting**: GitHub Pages (output to `docs/`)
 
-## Code scaffolding
+## Sections
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+1. Hero — typewriter role, count-up stats, tech tags
+2. About — professional summary, contact info, expandable STAR engineering stories
+3. Skills — categorized chips with icons, click-to-filter projects
+4. Experience — Amazon Robotics, ASU, Infosys, Ashok Leyland with sub-projects
+5. Education — ASU MS Robotics (4.0 GPA), Karpagam BE Automobile Engineering
+6. Patent — U.S. Application No. 63/574,771 (Parkinson's biofeedback device)
+7. Projects — Robotics, Software, and Automobile categories
+8. Contact
 
-## Build
+## Development
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```bash
+npm install
+npx ng serve           # dev server at http://localhost:4200
+```
 
-## Running unit tests
+## Build & Deploy
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```bash
+npx ng build           # production build → docs/
+git add docs/ src/
+git commit -m "deploy"
+git push               # GitHub Pages serves from docs/
+```
 
-## Running end-to-end tests
+## Content Updates
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+All site content is driven by `src/assets/data/portfolio.json`. Update that file and rebuild — no component changes needed for text, skills, projects, or experience.

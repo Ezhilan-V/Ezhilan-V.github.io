@@ -1,0 +1,44 @@
+<div class="section-wrapper" id="motorsport">
+  <p class="section-number" data-aos="fade-right">03 / Motorsport</p>
+  <h2 class="text-2xl font-bold text-slate-100 mb-3 section-heading" data-aos="fade-right">
+    Motorsport Engineering
+  </h2>
+  <p class="text-sm text-slate-400 mb-10 max-w-2xl" data-aos="fade-up">
+    {{ motorsport.summary }}
+  </p>
+
+  <div class="space-y-5">
+    <div *ngFor="let r of motorsport.roles; let i = index"
+         class="motorsport-card rounded-2xl p-6 border"
+         [ngClass]="r.borderColor"
+         [attr.data-aos]="'fade-up'"
+         [attr.data-aos-delay]="i * 100">
+
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <div>
+          <span class="text-xs font-mono font-bold uppercase tracking-widest" [ngClass]="r.color">{{ r.role }}</span>
+          <h3 class="text-base font-bold text-slate-100 mt-0.5">{{ r.team }}</h3>
+        </div>
+        <span class="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-white/[0.05] border border-white/[0.08] px-3 py-1 rounded-full self-start sm:self-auto whitespace-nowrap">
+          <mat-icon class="!text-xs !w-3 !h-3">today</mat-icon>
+          {{ r.year }}
+        </span>
+      </div>
+
+      <ul class="space-y-2">
+        <li *ngFor="let h of r.highlights"
+            class="flex items-start gap-2.5 text-sm text-slate-300 leading-relaxed">
+          <mat-icon class="!text-sm !w-4 !h-4 mt-0.5 flex-shrink-0" [ngClass]="r.color">chevron_right</mat-icon>
+          {{ h }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mt-8" data-aos="fade-up">
+    <span *ngFor="let tag of motorsport.tags"
+          class="px-3 py-1 text-xs rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 font-medium">
+      {{ tag }}
+    </span>
+  </div>
+</div>

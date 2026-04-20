@@ -56,6 +56,15 @@
   transition: all 0.3s ease;
 }
 
+/* Timeline dot pulse on expanded state */
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+  50%       { box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.15); }
+}
+.ring-sky-500   { animation: dotPulse 2s ease-in-out infinite; }
+.ring-green-500 { animation: dotPulse 2s ease-in-out infinite; }
+.ring-amber-500 { animation: dotPulse 2s ease-in-out infinite; }
+
 /* Responsive Timeline Line */
 .timeline-line {
   @apply hidden md:block absolute left-1/2 transform -translate-x-px h-full w-0.5 bg-gray-200;
@@ -83,14 +92,34 @@
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 rounded;
+  background: #0d1117;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 rounded hover:bg-gray-500;
+  background: #2d3748;
+  border-radius: 3px;
+
+  &:hover { background: #0ea5e9; }
+}
+
+/* ── Light theme ── */
+:host-context(.light-theme) {
+  ::-webkit-scrollbar-track { background: #e2e8f0; }
+  ::-webkit-scrollbar-thumb { background: #94a3b8; &:hover { background: #0284c7; } }
+
+  /* Experience cards use bg-dark-card (Tailwind) which is overridden globally.
+     Override the hover-border and sub-project expand area which are hardcoded. */
+  [class*="rounded-xl"][class*="border-white"] {
+    border-color: rgba(0,0,0,0.09) !important;
+  }
+  [class*="hover:bg-white"] {
+    &:hover { background-color: rgba(0,0,0,0.03) !important; }
+  }
+  .border-t { border-top-color: rgba(0,0,0,0.07) !important; }
 }

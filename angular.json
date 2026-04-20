@@ -32,16 +32,11 @@
             ],
             "styles": [
               "src/styles.scss",
-              "node_modules/primeicons/primeicons.css",
               "node_modules/aos/dist/aos.css",
-              "node_modules/primeng/resources/themes/arya-blue/theme.css",
-               "node_modules/primeng/resources/primeng.min.css",
               "src/assets/sass/now-ui-kit.scss",
               "src/assets/css/demo.css"
             ],
-            "scripts": [
-              "node_modules/rellax/rellax.min.js"
-            ]
+            "scripts": []
           },
           "configurations": {
             "production": {
@@ -80,10 +75,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "vez-front:build:production"
+              "buildTarget": "vez-front:build:production"
             },
             "development": {
-              "browserTarget": "vez-front:build:development"
+              "buildTarget": "vez-front:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -91,7 +86,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "vez-front:build"
+            "buildTarget": "vez-front:build"
           }
         },
         "test": {
@@ -115,5 +110,4 @@
       }
     }
   },
-  "defaultProject": "vez-front"
 }

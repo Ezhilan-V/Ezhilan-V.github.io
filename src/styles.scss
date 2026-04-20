@@ -1,30 +1,24 @@
 /* You can add global styles to this file, and also import other style files */
-@use '~@angular/material' as mat;
-@import "~bootstrap/scss/bootstrap.scss";
+@use '@angular/material' as mat;
+@import "bootstrap/scss/bootstrap";
 @import "assets/sass/now-ui-kit.scss";
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-@import '~primeicons/primeicons.css';
 
-@include mat.core();
-
-$my-primary: mat.define-palette(mat.$indigo-palette, 500);
-$my-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
-
-$my-theme: mat.define-light-theme((
- color: (
-   primary: $my-primary,
-   accent: $my-accent,
- )
-));
-
-@include mat.all-component-themes($my-theme);
+html {
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$azure-palette,
+    ),
+    density: 0,
+  ));
+}
 
 /* ============================================================
-   GLOBAL DARK THEME
+   CSS CUSTOM PROPERTIES
    ============================================================ */
-
 :root {
   --bg-primary:    #080b14;
   --bg-surface:    #0d1117;
@@ -37,128 +31,126 @@ $my-theme: mat.define-light-theme((
   --accent-cyan:   #22d3ee;
   --glow-blue:     rgba(14, 165, 233, 0.25);
   --glow-purple:   rgba(139, 92, 246, 0.25);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html, body {
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
+  scroll-behavior: smooth;
 }
 
-/* Section backgrounds */
-.section,
-.wrapper,
-.page-header {
+/* ── Section resets ── */
+.section, .wrapper, .page-header {
   background-color: var(--bg-primary) !important;
 }
 
-/* Bootstrap card overrides */
+/* ── Bootstrap card overrides ── */
 .card {
   background-color: var(--bg-card) !important;
   border: 1px solid var(--border-color) !important;
   color: var(--text-primary) !important;
   box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important;
 }
+.card-body { color: var(--text-primary) !important; }
 
-.card-body {
-  color: var(--text-primary) !important;
-}
-
-/* Typography overrides */
+/* ── Typography ── */
 h1, h2, h3, h4, h5, h6,
-.title, .h4, .h3, .h2, .h1 {
-  color: var(--text-primary) !important;
-}
+.title, .h4, .h3, .h2, .h1 { color: var(--text-primary) !important; }
+p, li, span, label { color: inherit; }
 
-p, li, span, label {
-  color: inherit;
-}
-
-/* Button overrides */
+/* ── Bootstrap button overrides ── */
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)) !important;
   border: none !important;
   box-shadow: 0 4px 15px var(--glow-blue) !important;
-
-  &:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 25px var(--glow-blue) !important;
-  }
+  &:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 25px var(--glow-blue) !important; }
 }
-
 .btn-default {
   background: transparent !important;
   border: 1px solid var(--border-color) !important;
   color: var(--text-muted) !important;
-
-  &:hover {
-    border-color: var(--accent-blue) !important;
-    color: var(--accent-blue) !important;
-  }
+  &:hover { border-color: var(--accent-blue) !important; color: var(--accent-blue) !important; }
 }
 
-/* Form controls */
+/* ── Form controls ── */
 .form-control {
   background-color: var(--bg-surface) !important;
   border-color: var(--border-color) !important;
   color: var(--text-primary) !important;
-
-  &::placeholder {
-    color: var(--text-muted) !important;
-  }
-
-  &:focus {
-    border-color: var(--accent-blue) !important;
-    box-shadow: 0 0 0 3px var(--glow-blue) !important;
-  }
+  &::placeholder { color: var(--text-muted) !important; }
+  &:focus { border-color: var(--accent-blue) !important; box-shadow: 0 0 0 3px var(--glow-blue) !important; }
 }
-
-/* input-group-addon */
 .input-group-addon {
   background-color: var(--bg-surface) !important;
   border-color: var(--border-color) !important;
   color: var(--text-muted) !important;
 }
 
-/* Angular Material overrides */
-.mat-icon {
-  color: inherit !important;
-}
+/* ── Angular Material ── */
+.mat-icon { color: inherit !important; }
 
-/* Scrollbar styling */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-surface); }
 ::-webkit-scrollbar-thumb {
   background: #2d3748;
   border-radius: 3px;
-
   &:hover { background: var(--accent-blue); }
 }
 
-/* Shared section wrapper */
-.section-wrapper {
-  width: 100%;
-}
+/* ── Shared section wrapper ── */
+.section-wrapper { width: 100%; }
 
-/* Dark card shared base */
+/* ── Dark card — glass-morphism with spring hover ── */
 .dark-card {
-  background: #161b22;
+  background: rgba(22, 27, 34, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255,255,255,0.07);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition: transform 0.35s var(--spring), box-shadow 0.35s var(--ease-out), border-color 0.35s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.04) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
 
   &:hover {
-    box-shadow: 0 8px 32px rgba(14, 165, 233, 0.1);
-    transform: translateY(-2px);
+    transform: translateY(-5px);
+    box-shadow:
+      0 16px 48px rgba(14, 165, 233, 0.18),
+      0 0 0 1px rgba(14, 165, 233, 0.22);
+    border-color: rgba(14, 165, 233, 0.25);
+
+    &::before { opacity: 1; }
   }
 }
 
-/* bg-dark-bg / bg-dark-surface / bg-dark-card helpers (Tailwind purge safety) */
+/* ── Colour helpers (Tailwind purge safety) ── */
 .bg-dark-bg      { background-color: #080b14; }
 .bg-dark-surface { background-color: #0d1117; }
 .bg-dark-card    { background-color: #161b22; }
 .border-dark-border { border-color: rgba(255,255,255,0.08); }
 
-/* Section heading gradient accent */
+/* ── Material Dialog dark theme ── */
+.project-dialog .mat-dialog-container {
+  background: #0d1117 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* ── Section heading — underline draws in on AOS entrance ── */
 .section-heading {
   position: relative;
   display: inline-block;
@@ -168,10 +160,168 @@ p, li, span, label {
     position: absolute;
     bottom: -4px;
     left: 0;
-    width: 60%;
+    width: 0;
     height: 3px;
     background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
     border-radius: 2px;
+    transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1) 0.35s;
+  }
+
+  &.aos-animate::after {
+    width: 60%;
   }
 }
 
+/* ── Section number prefix (01 / About, 02 / Skills, etc.) ── */
+.section-number {
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+  display: block;
+}
+
+/* ── Gradient name text (used in hero + footer) ── */
+.gradient-name {
+  background: linear-gradient(135deg, #f1f5f9 20%, #38bdf8 50%, #a78bfa 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Theme toggle button ── */
+.theme-toggle-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  &:hover { background: rgba(255,255,255,0.1); }
+}
+
+/* ============================================================
+   LIGHT THEME OVERRIDES  (applied when <html> has .light-theme)
+   ============================================================ */
+.light-theme {
+  /* ── CSS custom properties ── */
+  --bg-primary:    #f0f4f8;
+  --bg-surface:    #f8fafc;
+  --bg-card:       #ffffff;
+  --border-color:  rgba(0, 0, 0, 0.08);
+  --text-primary:  #0f172a;
+  --text-muted:    #64748b;
+  --accent-blue:   #0284c7;
+  --accent-purple: #7c3aed;
+  --accent-cyan:   #0891b2;
+  --glow-blue:     rgba(2, 132, 199, 0.2);
+  --glow-purple:   rgba(124, 58, 237, 0.2);
+
+  /* ── Page ── */
+  background-color: #f0f4f8 !important;
+  color: #0f172a !important;
+  .section, .wrapper, .page-header { background-color: #f0f4f8 !important; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar-track { background: #e2e8f0 !important; }
+  ::-webkit-scrollbar-thumb { background: #94a3b8 !important; &:hover { background: #0284c7 !important; } }
+
+  /* ── Custom bg helpers ── */
+  .bg-dark-bg      { background-color: #f0f4f8 !important; }
+  .bg-dark-surface { background-color: #f8fafc !important; }
+  .bg-dark-card    { background-color: #ffffff !important; }
+  .border-dark-border { border-color: rgba(0,0,0,0.09) !important; }
+
+  /* ── Tailwind slate text → readable on light bg ── */
+  .text-slate-100 { color: #0f172a !important; }
+  .text-slate-200 { color: #1e293b !important; }
+  .text-slate-300 { color: #334155 !important; }
+  .text-slate-400 { color: #475569 !important; }
+  .text-slate-500 { color: #64748b !important; }
+  .text-slate-600 { color: #94a3b8 !important; }
+  .text-slate-700 { color: #94a3b8 !important; }
+
+  /* ── White-transparent borders → dark-transparent ── */
+  [class*="border-white"] { border-color: rgba(0,0,0,0.09) !important; }
+
+  /* ── Headings ── */
+  h1, h2, h3, h4, h5, h6,
+  .title, .h4, .h3, .h2, .h1 { color: #0f172a !important; }
+
+  /* ── Gradient name ── */
+  .gradient-name {
+    background: linear-gradient(135deg, #0f172a 10%, #0284c7 45%, #7c3aed 80%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+
+  /* ── Hero extras ── */
+  .hero-dot-grid { opacity: 0.2; filter: invert(1); }
+  .cta-secondary { border-color: #cbd5e1 !important; color: #334155 !important; }
+  .hero-tag { border-color: rgba(2,132,199,0.3) !important; background-color: rgba(2,132,199,0.08) !important; color: #0369a1 !important; }
+
+  /* Photo ring bg */
+  .bg-dark-bg.rounded-full { background-color: #f0f4f8 !important; }
+
+  /* Stats divider */
+  [class*="bg-white/"] { background-color: rgba(0,0,0,0.09) !important; }
+
+  /* ── Section number ── */
+  .section-number { color: var(--accent-blue) !important; }
+
+  /* ── Section heading underline ── */
+  .section-heading::after { background: linear-gradient(90deg, #0284c7, #7c3aed) !important; }
+
+  /* ── Global dark-card (about component local override handled via :host-context) ── */
+  .dark-card {
+    background: #ffffff !important;
+    border-color: rgba(0,0,0,0.09) !important;
+    &:hover {
+      box-shadow: 0 16px 48px rgba(2,132,199,0.12), 0 0 0 1px rgba(2,132,199,0.18) !important;
+      border-color: rgba(2,132,199,0.2) !important;
+    }
+  }
+
+  /* ── Bootstrap card ── */
+  .card { background-color: #ffffff !important; border-color: rgba(0,0,0,0.08) !important; color: #0f172a !important; }
+  .card-body { color: #0f172a !important; }
+
+  /* ── Material Dialog ── */
+  .project-dialog .mat-dialog-container {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  /* ── Material Tabs ── */
+  .mat-tab-label        { color: #64748b !important; }
+  .mat-tab-label-active { color: #0284c7 !important; }
+  .mat-ink-bar          { background-color: #0284c7 !important; }
+  .mat-tab-header       { border-bottom-color: rgba(0,0,0,0.1) !important; }
+  .mat-tab-body-wrapper { background: transparent !important; }
+
+  /* ── Form controls ── */
+  .form-control {
+    background-color: #ffffff !important;
+    border-color: rgba(0,0,0,0.15) !important;
+    color: #0f172a !important;
+  }
+
+  /* ── Buttons ── */
+  .btn-default {
+    border-color: rgba(0,0,0,0.15) !important;
+    color: #64748b !important;
+  }
+
+  /* ── Navbar theme toggle ── */
+  .theme-toggle-btn {
+    background: rgba(0,0,0,0.05) !important;
+    border-color: rgba(0,0,0,0.1) !important;
+    &:hover { background: rgba(0,0,0,0.09) !important; }
+  }
+
+  /* ── Mobile dropdown ── */
+  nav [class*="bg-[#080b14]"] {
+    background: rgba(248,250,252,0.98) !important;
+  }
+}

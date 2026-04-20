@@ -1,7 +1,20 @@
 <div class="section-wrapper" id="skills">
-  <h2 class="text-2xl font-bold text-slate-100 mb-8 section-heading" data-aos="fade-right">
-    Technical Skills
-  </h2>
+  <p class="section-number" data-aos="fade-right">02 / Skills</p>
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-2xl font-bold text-slate-100 section-heading" data-aos="fade-right">
+      Technical Skills
+    </h2>
+    <button *ngIf="selectedSkill"
+            (click)="clearFilter()"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 hover:bg-sky-500/25 transition-all">
+      <mat-icon class="!text-sm !w-4 !h-4">filter_alt_off</mat-icon>
+      Clear filter: {{ selectedSkill }}
+    </button>
+  </div>
+
+  <p class="text-sm text-slate-400 mb-6 -mt-4" *ngIf="!selectedSkill" data-aos="fade-up">
+    Click any skill to filter projects
+  </p>
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
     <div
@@ -20,9 +33,13 @@
       <div class="p-4 flex flex-wrap gap-2">
         <span
           *ngFor="let skill of cat.skills; let j = index"
-          class="px-2.5 py-1 text-xs font-medium rounded-full bg-white/[0.06] text-slate-300 border border-white/[0.08] hover:bg-white/[0.12] hover:text-white transition-all cursor-default"
+          (click)="selectSkill(skill)"
+          [class.skill-active]="isSelected(skill)"
+          class="skill-chip px-2.5 py-1 text-xs font-medium rounded-full border transition-all cursor-pointer select-none flex items-center gap-1.5"
           [attr.data-aos]="'fade-in'"
           [attr.data-aos-delay]="i * 60 + j * 25">
+          <!-- Icon: hidden on mobile, shown on md+ -->
+          <i *ngIf="getIcon(skill)" [class]="getIcon(skill)! + ' hidden md:inline-block text-[10px] opacity-70'"></i>
           {{ skill }}
         </span>
       </div>

@@ -1,54 +1,110 @@
 import { Component } from '@angular/core';
-
-interface SkillCategory {
-  name: string;
-  icon: string;
-  color: string;
-  skills: string[];
-}
+import { ProfileService, SkillCategory } from '../profile.service';
 
 @Component({
+  standalone: false,
   selector: 'app-skills',
   templateUrl: './skills.component.html',
   styleUrls: ['./skills.component.scss']
 })
 export class SkillsComponent {
-  categories: SkillCategory[] = [
-    {
-      name: 'Programming',
-      icon: 'code',
-      color: 'from-blue-600 to-blue-400',
-      skills: ['C++ (Advanced)', 'Python', 'TypeScript', 'Kotlin', 'JavaScript', 'MATLAB', 'Bash', 'CMake', 'Git']
-    },
-    {
-      name: 'Robotics & Autonomy',
-      icon: 'precision_manufacturing',
-      color: 'from-green-600 to-green-400',
-      skills: ['ROS2', 'Nav2', 'MoveIt', 'RViz', 'Gazebo', 'PX4', 'Ardupilot', 'SLAM', 'Path Planning', 'Motion Planning', 'MPC', 'Multi-Robot Systems']
-    },
-    {
-      name: 'Perception & Sensing',
-      icon: 'visibility',
-      color: 'from-purple-600 to-purple-400',
-      skills: ['OpenCV', '3D Object Detection', '3D Semantic Segmentation', 'Point Cloud Processing', 'LiDAR-Camera Fusion', 'Sensor Fusion', 'Extended Kalman Filter', 'Intel RealSense D435', 'Velodyne VLP-16', 'Basler Pylon SDK']
-    },
-    {
-      name: 'Hardware & Embedded',
-      icon: 'developer_board',
-      color: 'from-orange-600 to-orange-400',
-      skills: ['Jetson Orin', 'Raspberry Pi 4', 'Pixhawk', 'UR5 Robotic Arm', 'IMU', 'Encoders']
-    },
-    {
-      name: 'Cloud & DevOps',
-      icon: 'cloud',
-      color: 'from-cyan-600 to-cyan-400',
-      skills: ['AWS GreenGrass', 'Docker', 'CloudWatch', 'CI/CD', 'SonarQube', 'JIRA', 'Agile']
-    },
-    {
-      name: 'Web Development',
-      icon: 'web',
-      color: 'from-pink-600 to-pink-400',
-      skills: ['React', 'Angular', 'Node.js', 'Express.js', 'WebSocket', 'RESTful APIs', 'Microservices', 'MongoDB']
+  selectedSkill: string | null = null;
+  categories: SkillCategory[];
+
+  readonly skillIconMap: Record<string, string> = {
+    // Robotics
+    'ROS2': 'fas fa-robot',
+    'Nav2': 'fas fa-route',
+    'MoveIt': 'fas fa-drafting-compass',
+    'Gazebo': 'fas fa-cube',
+    'PX4': 'fas fa-paper-plane',
+    'Ardupilot': 'fas fa-paper-plane',
+    'SLAM': 'fas fa-map-marked-alt',
+    'Path Planning': 'fas fa-route',
+    'Motion Planning': 'fas fa-route',
+    'MPC': 'fas fa-sliders-h',
+    'Multi-Robot Systems': 'fas fa-sitemap',
+    'DARP': 'fas fa-th',
+    // Perception
+    '3D Object Detection': 'fas fa-cube',
+    '3D Semantic Segmentation': 'fas fa-layer-group',
+    'Point Cloud Processing': 'fas fa-braille',
+    'Extended Kalman Filter': 'fas fa-wave-square',
+    'Sensor Fusion': 'fas fa-compress-arrows-alt',
+    'OpenCV': 'fas fa-eye',
+    'LiDAR-Camera Fusion': 'fas fa-camera',
+    'Intel RealSense D435': 'fas fa-camera',
+    'Velodyne VLP-16': 'fas fa-dot-circle',
+    // Programming
+    'C++ (Advanced)': 'fas fa-code',
+    'Python': 'fab fa-python',
+    'TypeScript': 'fab fa-js-square',
+    'JavaScript': 'fab fa-js',
+    'Java': 'fab fa-java',
+    'MATLAB': 'fas fa-calculator',
+    'Bash': 'fas fa-terminal',
+    'CMake': 'fas fa-tools',
+    'Git': 'fab fa-git-alt',
+    // Cloud & Embedded
+    'AWS GreenGrass': 'fab fa-aws',
+    'Docker': 'fab fa-docker',
+    'CloudWatch': 'fab fa-aws',
+    'CI/CD': 'fas fa-infinity',
+    'Jetson Orin': 'fas fa-microchip',
+    'Raspberry Pi 4': 'fas fa-microchip',
+    'Pixhawk': 'fas fa-microchip',
+    'UR5 Robotic Arm': 'fas fa-robot',
+    // Web
+    'Angular': 'fab fa-angular',
+    'React': 'fab fa-react',
+    'Node.js': 'fab fa-node-js',
+    'Express.js': 'fab fa-node',
+    'MongoDB': 'fas fa-database',
+    'Socket.io': 'fas fa-plug',
+    'WebSocket': 'fas fa-plug',
+    'RESTful APIs': 'fas fa-exchange-alt',
+    'MEAN Stack': 'fas fa-layer-group',
+    // Mechanical
+    'SolidWorks': 'fas fa-drafting-compass',
+    'CATIA': 'fas fa-drafting-compass',
+    'AutoCAD': 'fas fa-pencil-ruler',
+    'Simulink': 'fas fa-project-diagram',
+    'Ansys FEA': 'fas fa-atom',
+    'MSC ADAMS': 'fas fa-cogs',
+    'Vehicle Dynamics': 'fas fa-car',
+    'Chassis Design': 'fas fa-car-side',
+    'PLC Programming': 'fas fa-industry',
+  };
+
+  constructor(private profileService: ProfileService) {
+    this.categories = this.profileService.skills;
+  }
+
+  getIcon(skill: string): string | null {
+    return this.skillIconMap[skill] ?? null;
+  }
+
+  selectSkill(skill: string) {
+    const normalized = skill.replace(/\s*\(.*?\)/, '').trim();
+    if (this.selectedSkill === normalized) {
+      this.selectedSkill = null;
+      this.profileService.setSkillFilter(null);
+    } else {
+      this.selectedSkill = normalized;
+      this.profileService.setSkillFilter(normalized);
+      setTimeout(() => {
+        document.getElementById('projects-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
-  ];
+  }
+
+  isSelected(skill: string): boolean {
+    const normalized = skill.replace(/\s*\(.*?\)/, '').trim();
+    return this.selectedSkill === normalized;
+  }
+
+  clearFilter() {
+    this.selectedSkill = null;
+    this.profileService.setSkillFilter(null);
+  }
 }

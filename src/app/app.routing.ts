@@ -1,22 +1,18 @@
 import { NgModule } from '@angular/core';
-import { CommonModule, } from '@angular/common';
-import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
-import { ProfileComponent } from './components/profile/profile.component';
 import { ResumeComponent } from './profile/profile.component';
 
 const routes: Routes = [
-    { path: '', component: ResumeComponent },
-    { path: 'projects', component: ProfileComponent },
-    // { path: '**', redirectTo: '', pathMatch: 'full' },
+  { path: '', component: ResumeComponent },
+  { path: '**', redirectTo: '', pathMatch: 'full' }
 ];
+
 @NgModule({
-    imports: [
-        CommonModule,
-        BrowserModule,
-        RouterModule.forRoot(routes)
-    ],
-    exports: [
-    ],
+  imports: [
+    CommonModule,
+    RouterModule.forRoot(routes)
+  ],
+  exports: [RouterModule]
 })
 export class AppRoutingModule { }

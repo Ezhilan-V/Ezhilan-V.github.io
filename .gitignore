@@ -10,6 +10,12 @@
 # dependencies
 /node_modules
 
+# Angular build cache
+/.angular
+
+# Claude Code
+/.claude
+
 # profiling files
 chrome-profiler-events*.json
 

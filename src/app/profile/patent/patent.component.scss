@@ -1,0 +1,15 @@
+.patent-callout {
+  background: rgba(139, 92, 246, 0.04);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  &:hover {
+    border-color: rgba(139, 92, 246, 0.4) !important;
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.08);
+  }
+}
+
+:host-context(.light-theme) {
+  .patent-callout {
+    background: rgba(139, 92, 246, 0.03);
+    border-color: rgba(124, 58, 237, 0.2) !important;
+  }
+}

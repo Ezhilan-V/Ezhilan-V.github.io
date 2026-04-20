@@ -1,0 +1,598 @@
+{
+  "meta": {
+    "name": "Ezhilan Veluchami",
+    "title": "Systems Development Engineer @ Amazon Robotics",
+    "company": "Amazon Robotics",
+    "location": "Greater Boston, MA",
+    "email": "ezhilan.veluchami@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/ezhilan-veluchami/",
+    "github": "https://github.com/Ezhilan-V",
+    "resumeUrl": "https://drive.google.com/file/d/19F_hfYUmYktTFvMLo4RRnwrdnHdn4LTw/view?usp=sharing",
+    "copyrightYear": "2026",
+    "languages": "English, Tamil",
+    "patent": "U.S. App. No. 63/574,771"
+  },
+  "hero": {
+    "roles": [
+      "Systems Development Engineer",
+      "Robotics Engineer",
+      "Automobile Engineer → Software"
+    ],
+    "techTags": [
+      "ROS2", "C++", "Python", "Nav2", "MoveIt", "SLAM",
+      "Computer Vision", "Sensor Fusion", "Jetson Orin", "AWS GreenGrass", "Docker"
+    ],
+    "stats": [
+      { "label": "Engineers Trained", "suffix": "+", "target": 2000, "colorClass": "text-amber-400" },
+      { "label": "GPA · ASU Robotics", "suffix": "", "target": 4.0, "colorClass": "text-sky-400", "decimal": 2 },
+      { "label": "Evaluation Time Cut", "suffix": "%", "target": 70, "colorClass": "text-emerald-400" },
+      { "label": "US Patent", "suffix": "", "target": 1, "colorClass": "text-violet-400" }
+    ]
+  },
+  "about": {
+    "bio": "I build systems that move — production C++ imaging deployed across 130 Jetson Orin edge nodes at Amazon Robotics, multi-robot coverage planners in ROS2, 3D perception pipelines on KITTI, and autonomous drone stacks. Mechanical engineering gave me physical intuition; six years of software gave me the tools to act on it. Now I want to go deeper: full-stack robotics roles where perception, planning, and control meet real hardware.",
+    "professionalSummary": [
+      "Systems Development Engineer at Amazon Robotics — building production C++ imaging services deployed across 130 Jetson Orin edge devices in 6 fulfillment centers, replacing Honeywell scanners at 75% lower cost.",
+      "MS in Robotics and Autonomous Systems (4.00 GPA, Graduated With Distinction) from Arizona State University — 3D multi-object tracking, multi-robot coordination, quadrotor control and collision-detection research.",
+      "Five years at Infosys: trained 2,000+ engineers as Batch Owner, built ATLAS (ML learning-path tool presented to COO Nandan Nilekani, adopted by Siemens), led the 4-person UI team that won the Philips Healthcare CPQ & PLM contract.",
+      "Automobile Engineering undergraduate at Karpagam College of Engineering — technical lead, then team captain of the Formula Student program; also oversaw the Go Kart and vehicle-design competition teams.",
+      "Filed U.S. Patent Application No. 63/574,771 with ASU and Dignity Health for a biofeedback system for speech modulation in Parkinson's patients."
+    ]
+  },
+  "skills": [
+    {
+      "name": "Robotics & Autonomy",
+      "icon": "precision_manufacturing",
+      "color": "from-sky-700 to-sky-500",
+      "skills": ["ROS2", "Nav2", "MoveIt", "Gazebo", "PX4", "Ardupilot", "SLAM", "Path Planning", "Motion Planning", "MPC", "Multi-Robot Systems", "DARP"]
+    },
+    {
+      "name": "Perception & Sensing",
+      "icon": "visibility",
+      "color": "from-violet-700 to-violet-500",
+      "skills": ["3D Object Detection", "3D Semantic Segmentation", "Point Cloud Processing", "Extended Kalman Filter", "Sensor Fusion", "OpenCV", "LiDAR-Camera Fusion", "Intel RealSense D435", "Velodyne VLP-16"]
+    },
+    {
+      "name": "Programming",
+      "icon": "code",
+      "color": "from-emerald-700 to-emerald-500",
+      "skills": ["C++ (Advanced)", "Python", "TypeScript", "JavaScript", "Java", "MATLAB", "Bash", "CMake", "Git"]
+    },
+    {
+      "name": "Cloud & Embedded",
+      "icon": "developer_board",
+      "color": "from-orange-700 to-orange-500",
+      "skills": ["AWS GreenGrass", "Docker", "CloudWatch", "CI/CD", "Jetson Orin", "Raspberry Pi 4", "Pixhawk", "UR5 Robotic Arm"]
+    },
+    {
+      "name": "Web & Full-Stack",
+      "icon": "web",
+      "color": "from-pink-700 to-pink-500",
+      "skills": ["Angular", "React", "Node.js", "Express.js", "MongoDB", "Socket.io", "WebSocket", "RESTful APIs", "MEAN Stack"]
+    },
+    {
+      "name": "Mechanical & CAD",
+      "icon": "engineering",
+      "color": "from-amber-700 to-amber-500",
+      "skills": ["SolidWorks", "CATIA", "AutoCAD", "MATLAB", "Simulink", "Ansys FEA", "MSC ADAMS", "Vehicle Dynamics", "Chassis Design", "PLC Programming"]
+    }
+  ],
+  "experience": [
+    {
+      "id": "1",
+      "company": "Amazon Robotics Applied Automation",
+      "location": "Greater Boston Area, MA",
+      "role": "Systems Development Engineer",
+      "period": "May 2025 – Present",
+      "color": "bg-orange-500",
+      "responsibilities": [
+        "Achieved 75% cost reduction ($800→$200/unit) developing Basler camera system in C++ replacing Honeywell scanners",
+        "Built C++ imaging service wrapper for Basler Pylon SDK integrated with Jetson Orin edge devices",
+        "Deployed solution to 130 edge devices across 6 fulfillment centers using AWS GreenGrass and Docker",
+        "Created CloudWatch production alarms and monitoring dashboards for system reliability",
+        "Led UWC setup for FastInduct as part of fleet management migration from CDM to UWC platform"
+      ]
+    },
+    {
+      "id": "2",
+      "company": "Arizona State University",
+      "location": "Tempe, AZ",
+      "role": "Robotics Systems Engineer / Graduate Research Assistant",
+      "period": "Dec 2023 – May 2025",
+      "color": "bg-green-500",
+      "responsibilities": [
+        "Conducted SILT for PX4-based X650 drones using Mission Planner and Ardupilot",
+        "Developed path planning algorithms with obstacle avoidance in Python and C++ using ROS2 on Raspberry Pi 4",
+        "Implemented AB3DMOT 3D tracking pipeline using Extended Kalman Filter improving metrics by 5% on KITTI dataset",
+        "Integrated Intel RealSense D435 and Velodyne VLP-16 sensors with ROS2 for autonomous drone navigation",
+        "Constructed quadrotor collision detection dataset with 1,080+ events using UR5 robotic arm"
+      ],
+      "subProjects": [
+        {
+          "id": "2.1",
+          "name": "ENSIL GROUP (EPICS Pro)",
+          "role": "Robotics Systems Engineer",
+          "description": "Autonomous drone systems and multi-robot path planning (May 2024 – May 2025)",
+          "technologies": ["ROS2", "Python", "C++", "PX4", "Ardupilot", "Gazebo", "Raspberry Pi 4", "Node.js", "DARP"],
+          "responsibilities": [
+            "Conducted SILT for PX4-based X650 drones using Mission Planner and Ardupilot",
+            "Developed path planning with obstacle avoidance using ROS2 on Raspberry Pi 4",
+            "Engineered multi-robot DARP system achieving 100% coverage with 40% reduced exploration time",
+            "Built Node.js backend for multi-robot communication reducing latency by 30%"
+          ]
+        },
+        {
+          "id": "2.2",
+          "name": "Robotics and Intelligent Systems Lab",
+          "role": "Graduate Research Assistant",
+          "description": "3D perception and drone collision research (Dec 2023 – May 2024)",
+          "technologies": ["ROS2", "Python", "C++", "Extended Kalman Filter", "Point Cloud Processing", "Intel RealSense D435", "Velodyne VLP-16", "Isaac Sim"],
+          "responsibilities": [
+            "Implemented AB3DMOT 3D tracking with Extended Kalman Filter — 5% improvement on KITTI",
+            "Built Cylinder3D semantic segmentation with voxel-based point cloud processing",
+            "Integrated RealSense D435 and Velodyne VLP-16 sensors with ROS2 in C++ and Python",
+            "Constructed quadrotor collision dataset with 1,080+ events using UR5 robotic arm",
+            "Worked with LIOSAM and ORB-SLAM pipelines in Isaac Sim for drone localization"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "company": "Infosys Limited",
+      "location": "Mysore, India",
+      "role": "Senior Systems Engineer",
+      "period": "May 2019 – Jul 2022",
+      "color": "bg-yellow-500",
+      "responsibilities": [
+        "Led team of 4 engineers developing React and Angular PLM applications with microservices architecture",
+        "Reduced API calls by 30% and sprint backlogs by 40% through architecture optimization",
+        "Engineered ATLAS ML-driven learning platform using MEAN stack increasing user engagement by 30%",
+        "Implemented CI/CD pipelines with zero SonarQube issues",
+        "Mentored 2,000+ engineers in programming and full-stack development"
+      ],
+      "subProjects": [
+        {
+          "id": "3.1",
+          "name": "ATLAS Learning Platform",
+          "role": "Full Stack Developer",
+          "description": "ML-driven learning path platform integrated with Wingspan",
+          "technologies": ["Angular", "Node.js", "Express", "MongoDB", "FabricJS", "D3.js"],
+          "responsibilities": [
+            "Engineered ML-driven learning platform increasing user engagement by 30%",
+            "Designed automated evaluation tool reducing evaluation time by 50%",
+            "Developed interactive learning maps using FabricJS with interactive checkpoints"
+          ]
+        },
+        {
+          "id": "3.2",
+          "name": "Design Portal",
+          "role": "Angular Developer",
+          "description": "Schematic diagram editor for Japanese construction firm",
+          "technologies": ["Angular", "draw.io", "TypeScript", "REST APIs"],
+          "responsibilities": [
+            "Engineered custom draw.io build integrated within Angular application",
+            "Created reusable components for drag-and-drop on complex hierarchical structures",
+            "Reduced API calls by 45% through optimized component design"
+          ]
+        },
+        {
+          "id": "3.3",
+          "name": "Configurator",
+          "role": "UI Lead",
+          "description": "CPQ platform for global health technology company using Configit Ace",
+          "technologies": ["React", "TypeScript", "Configit APIs", "PLM tools"],
+          "responsibilities": [
+            "Led team of four engineers in React application development",
+            "Achieved 40% decrease in sprint backlogs as team liaison",
+            "Enforced code quality with 100% test coverage and zero SonarQube issues"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "company": "Ashok Leyland Ltd",
+      "location": "Hosur, India",
+      "role": "Automation Engineer Intern",
+      "period": "Aug 2018 – Dec 2018",
+      "color": "bg-red-500",
+      "responsibilities": [
+        "Enhanced H-Series Engine production line efficiency by 10% through PLC automation",
+        "Implemented PLC-enforced Quality Gates reducing defects by 30%",
+        "Optimized spare parts inventory management reducing costs by 20%"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "Arizona State University",
+      "period": "2022 - 2024",
+      "degree": "Master of Science in Robotics and Autonomous Systems (Mechanical and Aerospace Engineering)",
+      "gradient": "from-[#1a3560] to-[#c14a23]",
+      "details": [
+        {
+          "type": "gpa",
+          "content": "Graduated With Distinction with a perfect <b>4.0 CGPA</b>"
+        },
+        {
+          "type": "courseCategorized",
+          "title": "Specialized Coursework",
+          "content": [
+            { "category": "Advanced Robotics", "courses": ["Robotic Systems II", "Modeling and Control of Robots", "Multi-Robot Systems"] },
+            { "category": "AI & Perception",   "courses": ["Machine Learning and AI", "Perception in Robotics"] },
+            { "category": "Systems & Control", "courses": ["Advanced System Modeling Dynamics & Control", "Design Optimization"] }
+          ]
+        },
+        {
+          "type": "projects",
+          "content": [
+            "Implemented AB3DMOT pipeline for 3D multi-object tracking using KITTI dataset",
+            "Developed warehouse automation system using Divide Areas Algorithm for multi-robot coverage",
+            "Designed state feedback and observer feedback controllers for 3-DoF robotic arm",
+            "Created autonomous waypoint following and object detection system for Parrot Minidrone"
+          ]
+        }
+      ]
+    },
+    {
+      "school": "Karpagam College of Engineering",
+      "period": "2015 - 2019",
+      "degree": "Bachelor of Engineering in Automobile Engineering",
+      "gradient": "from-[#1a3a2a] to-[#0f5132]",
+      "details": [
+        {
+          "type": "gpa",
+          "content": "Graduated With Distinction from Anna University Affiliated Institution with <b>8.77 CGPA</b> (Equivalent to 3.9/4.0)"
+        },
+        {
+          "type": "courseCategorized",
+          "title": "Relevant Technical Coursework",
+          "content": [
+            { "category": "Programming",          "courses": ["Java Programming", "Advanced C Programming", "Database Management Systems"] },
+            { "category": "Engineering",           "courses": ["Engineering Mechanics", "Strength of Materials", "Machine Drawing"] },
+            { "category": "Control Systems",       "courses": ["Vehicle Dynamics", "Automotive Electronics"] },
+            { "category": "Design & Manufacturing","courses": ["Design of Automotive Components", "Lean Manufacturing", "Production Processes"] }
+          ]
+        },
+        {
+          "type": "achievements",
+          "content": [
+            "Received Best Student Award twice for academic excellence",
+            "Led Team Griffin Riderz in SUPRA SAE (Formula SAE) competitions, improving team ranking by 56 positions",
+            "Completed significant design optimization projects, achieving 15% weight reduction in chassis components"
+          ]
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Robotics",
+      "icon": "precision_manufacturing",
+      "projects": [
+        {
+          "title": "Amazon Robotics — Basler Imaging Service",
+          "role": "Systems Development Engineer",
+          "timeline": "May 2025 - Present",
+          "description": "Built a production C++ imaging service using Basler cameras and the Pylon SDK to replace Honeywell scanners in Amazon fulfillment centers. Deployed across 130 Jetson Orin edge devices via AWS GreenGrass and Docker, cutting hardware costs by 75% ($800 → $200/unit). Integrated CloudWatch monitoring for fleet-wide reliability tracking.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["C++", "Basler Pylon SDK", "Jetson Orin", "AWS GreenGrass", "Docker", "CloudWatch"],
+          "highlights": [
+            "75% hardware cost reduction — $800 → $200 per unit",
+            "Deployed to 130 edge devices across 6 fulfillment centers",
+            "Built C++ Pylon SDK wrapper following Carbon framework patterns",
+            "Created CloudWatch production alarms and dashboards"
+          ]
+        },
+        {
+          "title": "Quadrotor Collision Detection Dataset",
+          "role": "Graduate Research Assistant",
+          "timeline": "Dec 2023 - May 2024",
+          "description": "Built a first-of-its-kind dataset for quadrotor collision detection: 1,080+ labeled events across 3 drone types, 2 impact surfaces, and 6 collision speeds. Used a UR5 robotic arm to repeatably stage collisions under slow-motion capture. Integrated Intel RealSense D435 and Velodyne VLP-16 via ROS2 for real-time sensor fusion during free-flight testing.",
+          "imageUrls": ["assets/img/edge_not_aligned3.jpg", "assets/img/edge_aligned1_top.jpg", "assets/img/edge_not_aligned1_top.jpg"],
+          "technologies": ["ROS2", "C++", "Python", "OpenCV", "Sensor Fusion", "Intel RealSense D435", "Velodyne VLP-16", "Point Cloud Processing", "UR5 Robotic Arm"],
+          "highlights": [
+            "1,080+ unique collision events — 3 drones × 2 surfaces × 6 speeds",
+            "25% improvement in ML-based collision detection accuracy",
+            "Multi-sensor fusion: RealSense D435 + Velodyne VLP-16 in ROS2",
+            "LIOSAM and ORB-SLAM evaluated in Isaac Sim"
+          ]
+        },
+        {
+          "title": "3D Perception: Tracking & Semantic Segmentation",
+          "role": "Graduate Research Assistant",
+          "timeline": "Jan 2024 - May 2024",
+          "description": "Implemented the AB3DMOT multi-object tracking pipeline with Extended Kalman Filter on the KITTI LiDAR dataset, improving sAMOTA and MOTP metrics by 5%. Separately built a Cylinder3D semantic segmentation model using voxel-based point cloud processing for real-time 3D scene understanding.",
+          "imageUrls": ["assets/img/edge_not_aligned3.jpg"],
+          "technologies": ["Python", "PyTorch", "Point Cloud Processing", "3D Object Detection", "3D Semantic Segmentation", "Extended Kalman Filter", "LiDAR-Camera Fusion"],
+          "highlights": [
+            "5% improvement in sAMOTA and MOTP on KITTI benchmark",
+            "AB3DMOT tracking pipeline with Extended Kalman Filter",
+            "Cylinder3D voxel-based segmentation for real-time inference",
+            "Applicable to autonomous navigation perception stacks"
+          ]
+        },
+        {
+          "title": "Multi-Robot Coverage Path Planning",
+          "role": "Robotics Systems Engineer",
+          "timeline": "May 2024 - May 2025",
+          "description": "Designed and deployed a multi-robot coverage system using the DARP algorithm in Gazebo simulation, achieving 100% warehouse floor coverage with a 40% reduction in exploration time. Implemented ROS2-based path planning with obstacle avoidance in C++ and Python on Raspberry Pi 4. Built a Node.js WebSocket backend for inter-robot communication, cutting coordination latency by 30%.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["ROS2", "C++", "Python", "Gazebo", "Path Planning", "Multi-Robot Systems", "Raspberry Pi 4", "PX4", "Ardupilot", "Node.js", "WebSocket"],
+          "highlights": [
+            "100% coverage with 40% reduction in exploration time (DARP)",
+            "30% latency reduction via Node.js WebSocket backend",
+            "SILT completed for PX4-based X650 drone fleet",
+            "Obstacle-aware path planning in ROS2 on Raspberry Pi 4"
+          ]
+        },
+        {
+          "title": "Mambo Drone — Autonomous Line Following",
+          "role": "Robotics Developer",
+          "timeline": "Aug 2023 - Dec 2023",
+          "description": "Designed full autonomy stack for the Mambo mini drone in MATLAB/Simulink: fused IMU and downward camera data with a state observer, ran edge detection for line tracking, and implemented state-feedback plus observer-feedback controllers for stable hover and trajectory following.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["MATLAB", "Simulink", "Control Systems", "Sensor Fusion", "OpenCV", "IMU", "Motion Planning"],
+          "highlights": [
+            "Full autonomy stack: perception → state estimation → control",
+            "IMU + camera sensor fusion with observer-feedback controller",
+            "Edge detection pipeline for visual line tracking",
+            "State-feedback controller for stable hover and trajectory following"
+          ]
+        },
+        {
+          "title": "Hexapod Robot — Kinematics & Gait Control",
+          "role": "Robotics Developer",
+          "timeline": "Aug 2023 - Dec 2023",
+          "description": "Derived DH parameters and formulated complete forward/inverse kinematics for all six legs of a hexapod robot in MATLAB. Implemented gait control enabling independent roll, pitch, yaw, and translation with real-time ground-avoidance and balance constraints.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["MATLAB", "Motion Planning", "Control Systems"],
+          "highlights": [
+            "Full FK/IK derivation using DH parameters for 6-legged system",
+            "6-DOF gait: roll, pitch, yaw, and XYZ translation",
+            "Real-time ground-avoidance and static balance constraints",
+            "Extensible framework applicable to quadruped platforms"
+          ]
+        },
+        {
+          "title": "ANN vs MPC Controller for Quadrotor",
+          "role": "Robotics Developer",
+          "timeline": "Aug 2023 - Dec 2023",
+          "description": "Benchmarked a tuned Artificial Neural Network controller against a Model Predictive Controller for quadrotor stabilization. Modeled nonlinear quadrotor dynamics, generated MPC reference trajectories, and trained the ANN to imitate MPC behavior — achieving 85% tracking fidelity at a fraction of the computational cost.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["Python", "TensorFlow", "MPC", "Control Systems", "MATLAB"],
+          "highlights": [
+            "ANN achieved 85% of MPC tracking performance",
+            "Nonlinear quadrotor dynamics modeled from first principles",
+            "Significant compute savings vs real-time MPC",
+            "Relevant to onboard control on Pixhawk/embedded platforms"
+          ]
+        },
+        {
+          "title": "Parkinson's Biofeedback Device",
+          "role": "Student Researcher — Barrow Neurological Institute",
+          "timeline": "Jan 2023 - Dec 2023",
+          "description": "Co-developed a wearable biofeedback device to help Parkinson's patients regulate vocal intensity in real time. Led the full software stack — signal acquisition, adaptive voice filtering (trained on 40 patient samples), and embedded firmware — from concept through clinical prototype. Device improved communication effectiveness in 80% of tested patients and resulted in a filed U.S. patent.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["Python", "C++", "Signal Processing", "Machine Learning", "Embedded Systems"],
+          "highlights": [
+            "Patent filed — U.S. Application No: 63/574,771 (April 2024)",
+            "80% of tested patients showed measurable improvement",
+            "Adaptive voice filter trained on 40 labeled patient samples",
+            "35% improvement in patient communication effectiveness"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Software",
+      "icon": "terminal",
+      "projects": [
+        {
+          "title": "ATLAS — ML-Driven Learning Platform",
+          "role": "Full Stack Developer · Infosys",
+          "timeline": "Jul 2020 - May 2021",
+          "description": "Built ATLAS, an ML-driven learning path suggestion platform integrated with Infosys's Wingspan LMS. Developed interactive learning maps with FabricJS, an automated evaluation engine using the MEAN stack, and analytics dashboards in D3.js. The platform personalized learning paths for 2,000+ engineers and increased engagement by 30%.",
+          "imageUrls": ["assets/img/atlasCheckPoint.jpg"],
+          "technologies": ["Angular", "Node.js", "MongoDB", "Express.js", "TypeScript", "Machine Learning", "RESTful APIs"],
+          "highlights": [
+            "30% increase in user engagement across 2,000+ engineers",
+            "Interactive learning maps with FabricJS checkpoints",
+            "Automated certification evaluation engine",
+            "Analytics dashboards built with D3.js"
+          ]
+        },
+        {
+          "title": "Schematic Design Portal — draw.io + Angular",
+          "role": "Angular Developer · Infosys",
+          "timeline": "May 2021 - Dec 2021",
+          "description": "Engineered a custom draw.io build embedded inside an Angular application for a Japanese construction firm's design workflow. Built reusable Angular components for drag-and-drop management of complex hierarchical schematic structures, with optimized parent-child state sync that cut API calls by 45%.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["Angular", "TypeScript", "RESTful APIs", "WebSocket"],
+          "highlights": [
+            "45% reduction in API calls through optimized component design",
+            "Custom draw.io build embedded in Angular SPA",
+            "Reusable drag-and-drop components for hierarchical structures",
+            "Seamless parent-child state synchronization"
+          ]
+        },
+        {
+          "title": "Configurator — CPQ Platform for Philips",
+          "role": "UI Lead · Infosys",
+          "timeline": "Dec 2021 - Jul 2022",
+          "description": "Led a team of four engineers building a React-based CPQ application integrated with Configit Ace APIs and Philips PLM tools. Acted as the client-facing tech lead, managing requirements, sprint planning, and quality gates — achieving 100% test coverage and zero SonarQube issues, while cutting sprint backlog by 40%.",
+          "imageUrls": ["assets/img/vasSimulation.jpg"],
+          "technologies": ["React", "TypeScript", "RESTful APIs", "Microservices", "CI/CD"],
+          "highlights": [
+            "40% reduction in sprint backlog through effective coordination",
+            "100% unit test coverage with zero SonarQube issues",
+            "Led 4-engineer team as client-facing tech lead",
+            "Microservices integration with Philips PLM and Configit Ace"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Automobile",
+      "icon": "engineering",
+      "projects": [
+        {
+          "title": "SUPRA SAE 2018 / Formula Student 2019",
+          "role": "Team Captain",
+          "timeline": "2018 - 2019",
+          "description": "Captained the college formula student team through two consecutive competitions (SUPRA SAE India 2018 and Formula Student 2019). Drove the vehicle redesign strategy — suspension geometry, powertrain tuning, and weight reduction — that resulted in a 56-position ranking improvement. Managed a cross-functional team of 20+ students.",
+          "imageUrls": ["assets/img/supra2018.jpg"],
+          "technologies": ["SolidWorks", "Vehicle Dynamics", "FEA", "Project Management"],
+          "highlights": [
+            "56-position ranking improvement across two competitions",
+            "Led 20+ member cross-functional student team",
+            "Redesigned suspension geometry and powertrain tuning",
+            "Managed full build cycle from design to race day"
+          ]
+        },
+        {
+          "title": "SUPRA SAE 2017",
+          "role": "Driver & Technical Lead",
+          "timeline": "2016 - 2017",
+          "description": "Served dual roles as the team's primary driver and technical lead for the 2017 SUPRA SAE competition. Designed powertrain layout, chassis structure, and suspension kinematics from scratch. As the test driver, directly translated handling feedback into suspension and setup changes.",
+          "imageUrls": ["assets/img/supra2017.jpg"],
+          "technologies": ["SolidWorks", "FEA", "Vehicle Dynamics"],
+          "highlights": [
+            "Dual role: primary driver and technical design lead",
+            "Designed powertrain, chassis, and suspension kinematics",
+            "Translated driver feedback into suspension setup changes",
+            "First competition entry for the team"
+          ]
+        },
+        {
+          "title": "BFKCT Go-Kart 2018",
+          "role": "Team Captain & Driver",
+          "timeline": "2018",
+          "description": "Led a small team to design, build, and race a go-kart from scratch in the BFKCT endurance competition. Managed the full project lifecycle — chassis fabrication, engine integration, and race strategy — while also serving as the lead driver during the endurance event.",
+          "imageUrls": ["assets/img/bfkct2018.jpg"],
+          "technologies": ["Mechanical Design", "Project Management", "Vehicle Dynamics"],
+          "highlights": [
+            "Full vehicle built from scratch within competition timeline",
+            "Led design, fabrication, and race strategy",
+            "Served as lead driver in endurance event",
+            "End-to-end project ownership from concept to race"
+          ]
+        },
+        {
+          "title": "PLC Quality Gate — Ashok Leyland",
+          "role": "Automation Engineer Intern",
+          "timeline": "Aug 2018 - Dec 2018",
+          "description": "Implemented PLC-driven quality gates on the H-Series Engine production line at Ashok Leyland's Hosur plant. Used FMEA to identify critical failure modes, then automated inspection checkpoints that reduced defect escapes by 30% and improved line throughput by 10%. Also optimized the spare parts reorder logic, cutting inventory costs by 20%.",
+          "imageUrls": ["assets/img/ashokLeyland.jpg"],
+          "technologies": ["PLC", "FMEA", "Industrial Automation"],
+          "highlights": [
+            "30% reduction in production defects via automated quality gates",
+            "10% line throughput improvement",
+            "20% inventory cost reduction through reorder optimization",
+            "FMEA-driven failure mode identification"
+          ]
+        }
+      ]
+    }
+  ],
+  "motorsport": {
+    "summary": "Two years leading motorsport engineering at Karpagam College of Engineering — technical lead year one, team captain year two of the Formula Student program, with concurrent oversight of the Go Kart and vehicle-design competition teams.",
+    "roles": [
+      {
+        "role": "Team Captain",
+        "team": "Formula Student — Team Griffin Riderz, Karpagam College of Engineering",
+        "year": "2018–19",
+        "highlights": [
+          "Captained the team through SUPRA SAE India 2018 and Formula Student 2019 — improved team ranking by 56 positions across two competitions.",
+          "Led a 20+ member cross-functional team through the full build cycle: design reviews, fabrication, scrutineering, and race day.",
+          "Drove the vehicle redesign strategy — suspension geometry, powertrain tuning, and chassis weight reduction.",
+          "Managed full project lifecycle from design freeze through competition."
+        ],
+        "color": "text-amber-400",
+        "borderColor": "border-amber-500/40"
+      },
+      {
+        "role": "Technical Lead & Driver",
+        "team": "Formula Student — Team Griffin Riderz, Karpagam College of Engineering",
+        "year": "2016–17",
+        "highlights": [
+          "Served as primary driver and technical lead for SUPRA SAE 2017 — the team's first competitive entry.",
+          "Designed powertrain layout, chassis structure, and suspension kinematics from scratch in SolidWorks.",
+          "Translated direct driver feedback into suspension and setup changes during testing.",
+          "Owned the complete technical design process from concept to competition vehicle."
+        ],
+        "color": "text-sky-400",
+        "borderColor": "border-sky-500/40"
+      },
+      {
+        "role": "Team Captain & Driver",
+        "team": "Go Kart — BFKCT Endurance Competition",
+        "year": "2018",
+        "highlights": [
+          "Led design, fabrication, and race strategy for the BFKCT endurance go-kart build.",
+          "Served as lead driver during the endurance event.",
+          "Full project ownership from concept through race day."
+        ],
+        "color": "text-emerald-400",
+        "borderColor": "border-emerald-500/40"
+      }
+    ],
+    "tags": ["Formula Student", "SUPRA SAE India", "Go Kart", "Vehicle Dynamics", "SolidWorks", "Chassis Design", "Team Leadership"]
+  },
+  "patent": {
+    "title": "Biofeedback System and Method for Speech Modulation",
+    "applicationNumber": "U.S. Application No. 63/574,771",
+    "filingDate": "April 4, 2024",
+    "applicant": "Arizona Board of Regents on behalf of Arizona State University and Dignity Health",
+    "description": "Co-developed a wearable biofeedback device helping Parkinson's patients regulate vocal intensity in real time. Led the full software stack — signal acquisition, adaptive voice filtering trained on 40 patient samples, and embedded firmware — from concept through clinical prototype. 80% of tested patients showed measurable improvement in communication effectiveness.",
+    "impact": "80% of tested patients showed measurable improvement"
+  },
+  "stories": [
+    {
+      "id": "assessment-tool",
+      "title": "Automated Angular Assessment Tool",
+      "principle": "Ownership · Invent and Simplify",
+      "situation": "Manual evaluation of 2,000+ Angular trainee submissions was slow and inconsistent — evaluators spent hours copy-pasting projects into master files just to grade them.",
+      "task": "Streamline the evaluation workflow, improve grading consistency, and enable meaningful feedback at scale.",
+      "action": "Analyzed the full evaluation workflow end-to-end, designed the architecture, and built an Angular + Node tool that automated extraction, test runs, and report generation. Added support for project variation and evaluator override, then documented and trained the team.",
+      "result": "70%+ reduction in evaluation time. 30% capacity boost. Adopted as a best practice across Infosys training programs. Earned an Infosys Insta Award."
+    },
+    {
+      "id": "atlas",
+      "title": "ATLAS — ML Learning-Path Tool",
+      "principle": "Think Big · Customer Obsession",
+      "situation": "As Batch Owner I had access to trainee performance data and saw that everyone was following the same learning path regardless of their gaps and strengths.",
+      "task": "Build a tool that mapped each trainee's progress and recommended personalized next steps.",
+      "action": "Partnered with two colleagues, negotiated Wingspan API access, built the ML model and Angular UI, integrated it as both a standalone app and an iframe. Presented up through leadership, eventually to then-COO Nandan Nilekani. Onboarded Siemens as an adopting client.",
+      "result": "+30% user engagement across 2,000+ engineers. Integrated into Infosys Wingspan. Siemens adoption. All three contributors promoted."
+    },
+    {
+      "id": "philips-cpq",
+      "title": "Philips Healthcare CPQ — Team Lead",
+      "principle": "Deliver Results · Hire and Develop the Best",
+      "situation": "Selected to lead a 4-person UI team on a high-visibility Philips Healthcare CPQ proof-of-concept — eight months before leaving for grad school.",
+      "task": "Pick the team, ramp on Configit, build a compelling POC that wins the long-term contract.",
+      "action": "Recruited top UI-track graduates via the ETA network. Led the Configit training and built a functional POC during training that we used in the winning pitch. Ran agile cadences, maintained direct comms with POs and architects in the Netherlands and England, and designed a scalable modular UI. Personally reviewed every PR and instituted coding standards that Philips QA later called out as the bar for other streams.",
+      "result": "Infosys won the long-term Philips Healthcare CPQ and PLM contract. Every sprint commitment met through heavy change-request load."
+    },
+    {
+      "id": "socketio",
+      "title": "Socket.io Real-Time Tool — Self-Taught Pivot",
+      "principle": "Learn and Be Curious · Bias for Action",
+      "situation": "Wanted to expand beyond my immediate job scope into real-time communications. No one asked me to.",
+      "task": "Self-learn Socket.io and build something real with it.",
+      "action": "Read the docs, built small apps on my own time, and created a real-time code-review tool. When COVID shifted all training online, pivoted the tool into a real-time attendance and quiz application.",
+      "result": "The attendance tool became core to Infosys online training programs. Canvas.js learning maps built from the same self-study powered ATLAS's most-loved feature."
+    },
+    {
+      "id": "assessment-standards",
+      "title": "Standardizing Assessment Question Papers",
+      "principle": "Have Backbone · Disagree and Commit",
+      "situation": "Angular question papers varied wildly across batches — some over-indexed on CSS trivia, others on obscure edge cases. Grading was incomparable across cohorts.",
+      "task": "Make the case for a minimum testing specification and get team alignment.",
+      "action": "Analyzed existing papers and mapped coverage gaps with data. Opened a team discussion, acknowledged creativity concerns, and argued that fairness required a baseline — that CSS-heavy papers were measuring the wrong things for an Angular assessment. Drafted a proposal and iterated.",
+      "result": "Team aligned on a standard spec. Trainees reported higher confidence. Content creators worked faster. Evaluations became comparable across cohorts."
+    }
+  ]
+}

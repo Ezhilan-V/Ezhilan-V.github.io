@@ -1,8 +1,5 @@
 module.exports = {
-  mode: 'jit',
-  purge: {
-    content: ['./src/**/*.{html,ts}'],
-  },
+  content: ['./src/**/*.{html,ts}'],
   darkMode: 'class',
   theme: {
     extend: {
@@ -54,13 +51,6 @@ module.exports = {
         'glow-purple': '0 0 30px rgba(139, 92, 246, 0.3)',
         'glow-cyan':   '0 0 30px rgba(34, 211, 238, 0.3)',
       },
-    },
-  },
-  variants: {
-    extend: {
-      scale:     ['hover', 'group-hover'],
-      transform: ['hover', 'group-hover'],
-      opacity:   ['group-hover'],
     },
   },
   plugins: [],

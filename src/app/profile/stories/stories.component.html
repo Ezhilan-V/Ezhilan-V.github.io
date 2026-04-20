@@ -1,0 +1,51 @@
+<div class="section-wrapper" id="stories">
+  <p class="section-number" data-aos="fade-right">07 / STAR Stories</p>
+  <h2 class="text-2xl font-bold text-slate-100 mb-3 section-heading" data-aos="fade-right">
+    Behind the Numbers
+  </h2>
+  <p class="text-sm text-slate-400 mb-10" data-aos="fade-up">
+    The context behind the metrics. Expandable.
+  </p>
+
+  <div class="space-y-3">
+    <div *ngFor="let story of stories; let i = index"
+         class="story-card rounded-2xl border border-white/[0.07] overflow-hidden"
+         [attr.data-aos]="'fade-up'"
+         [attr.data-aos-delay]="i * 60">
+
+      <!-- Header (always visible) -->
+      <button class="w-full flex items-start justify-between gap-4 p-5 text-left hover:bg-white/[0.03] transition-colors"
+              (click)="toggle(story.id)">
+        <div class="flex-1">
+          <span class="text-xs font-mono text-sky-400 uppercase tracking-widest block mb-1">{{ story.principle }}</span>
+          <h3 class="text-sm font-bold text-slate-100">{{ story.title }}</h3>
+        </div>
+        <mat-icon [class]="'text-slate-400 transform transition-transform duration-300 flex-shrink-0 mt-0.5 ' + (isExpanded(story.id) ? 'rotate-180' : '')">
+          expand_more
+        </mat-icon>
+      </button>
+
+      <!-- Expanded body -->
+      <div *ngIf="isExpanded(story.id)" class="px-5 pb-5 border-t border-white/[0.06]">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div class="story-block">
+            <span class="story-label">Situation</span>
+            <p class="story-text">{{ story.situation }}</p>
+          </div>
+          <div class="story-block">
+            <span class="story-label">Task</span>
+            <p class="story-text">{{ story.task }}</p>
+          </div>
+          <div class="story-block">
+            <span class="story-label">Action</span>
+            <p class="story-text">{{ story.action }}</p>
+          </div>
+          <div class="story-block bg-emerald-500/5 border-emerald-500/20">
+            <span class="story-label text-emerald-400">Result</span>
+            <p class="story-text font-medium text-slate-200">{{ story.result }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+.motorsport-card {
+  background: rgba(22, 27, 34, 0.7);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  }
+}
+
+:host-context(.light-theme) {
+  .motorsport-card {
+    background: #ffffff;
+    &:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+  }
+}

@@ -1,54 +1,140 @@
 <div class="section-wrapper" id="about">
+  <p class="section-number" data-aos="fade-right">01 / About Me</p>
   <h2 class="text-2xl font-bold text-slate-100 mb-8 section-heading" data-aos="fade-right">
-    Quick Info
+    About Me
   </h2>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" data-aos="fade-up" data-aos-offset="10">
+  <!-- Lead paragraph -->
+  <div class="mb-6" data-aos="fade-up">
+    <p class="text-base md:text-lg text-slate-300 leading-relaxed font-medium">
+      {{ professionalSummary[0] }}
+    </p>
+  </div>
 
-    <!-- Professional Summary -->
-    <div class="dark-card rounded-2xl p-6">
-      <h3 class="text-lg font-semibold text-sky-400 mb-4 flex items-center gap-2">
-        <mat-icon class="text-sky-400 !text-base">insights</mat-icon>
-        Professional Summary
-      </h3>
-      <ul class="space-y-3">
-        <li *ngFor="let m of professionalSummary"
-            class="flex items-start gap-2 text-sm text-slate-300 leading-relaxed">
-          <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-sky-400 flex-shrink-0"></span>
-          {{ m }}
-        </li>
-      </ul>
-    </div>
+  <!-- Remaining summary bullets -->
+  <ul class="space-y-2 mb-10" data-aos="fade-up" data-aos-delay="80">
+    <li *ngFor="let m of professionalSummary.slice(1)"
+        class="flex items-start gap-3 text-sm text-slate-400 leading-relaxed">
+      <span class="mt-2 w-1.5 h-1.5 rounded-full bg-sky-400 flex-shrink-0"></span>
+      {{ m }}
+    </li>
+  </ul>
 
-    <!-- Basic Info -->
+  <!-- 3-column info cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-14" data-aos="fade-up" data-aos-delay="160">
+
+    <!-- Card 1: Contact -->
     <div class="dark-card rounded-2xl p-6">
-      <h3 class="text-lg font-semibold text-violet-400 mb-4 flex items-center gap-2">
-        <mat-icon class="text-violet-400 !text-base">person</mat-icon>
-        Basic Information
+      <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <mat-icon class="text-sky-400 !text-base">contact_page</mat-icon>
+        Contact &amp; Location
       </h3>
-      <div class="space-y-4">
+      <div class="space-y-3">
         <div class="info-row">
           <span class="info-label">Email</span>
-          <span class="info-value">ezhilan.veluchami&#64;gmail.com</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Phone</span>
-          <span class="info-value">+1 (602) 586-9848</span>
+          <a [href]="'mailto:' + meta.email"
+             class="info-value hover:text-sky-400 transition-colors truncate">
+            {{ meta.email }}
+          </a>
         </div>
         <div class="info-row">
           <span class="info-label">Location</span>
-          <span class="info-value">Greater Boston Area, MA</span>
+          <span class="info-value">{{ meta.location }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Languages</span>
-          <span class="info-value">English, Tamil</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Patent</span>
-          <span class="info-value text-xs">U.S. App. No. 63/574,771</span>
+          <span class="info-value">{{ meta.languages }}</span>
         </div>
       </div>
     </div>
 
+    <!-- Card 2: Patent -->
+    <div class="dark-card rounded-2xl p-6">
+      <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <mat-icon class="text-violet-400 !text-base">workspace_premium</mat-icon>
+        Patent
+      </h3>
+      <p class="text-xs text-slate-400 leading-relaxed">{{ meta.patent }}</p>
+    </div>
+
+    <!-- Card 3: Social links -->
+    <div class="dark-card rounded-2xl p-6">
+      <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <mat-icon class="text-emerald-400 !text-base">link</mat-icon>
+        Connect
+      </h3>
+      <div class="flex flex-col gap-3">
+        <a [href]="meta.linkedin" target="_blank"
+           class="flex items-center gap-2.5 text-sm text-slate-400 hover:text-sky-400 transition-colors group">
+          <span class="w-7 h-7 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center group-hover:bg-sky-500/20 transition-colors">
+            <i class="fab fa-linkedin text-xs"></i>
+          </span>
+          LinkedIn
+        </a>
+        <a [href]="meta.github" target="_blank"
+           class="flex items-center gap-2.5 text-sm text-slate-400 hover:text-violet-400 transition-colors group">
+          <span class="w-7 h-7 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
+            <i class="fab fa-github text-xs"></i>
+          </span>
+          GitHub
+        </a>
+      </div>
+    </div>
+
   </div>
+
+  <!-- ── STAR Stories ── -->
+  <div data-aos="fade-up" data-aos-delay="200">
+    <div class="flex items-center gap-3 mb-6">
+      <mat-icon class="text-amber-400 !text-xl">auto_stories</mat-icon>
+      <h3 class="text-lg font-bold text-slate-100">Engineering Stories</h3>
+      <span class="text-xs text-slate-500 font-mono ml-1">{{ stories.length }} situations · click to expand</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div *ngFor="let s of stories; let i = index"
+           class="story-card rounded-xl border border-white/[0.07] bg-dark-card overflow-hidden transition-all duration-300"
+           [class.story-expanded]="isExpanded(s.id)"
+           [attr.data-aos]="'fade-up'"
+           [attr.data-aos-delay]="i * 60">
+
+        <!-- Header — always visible -->
+        <button class="w-full text-left px-5 py-4 flex items-start justify-between gap-3 hover:bg-white/[0.03] transition-colors"
+                (click)="toggle(s.id)">
+          <div class="flex flex-col gap-1 min-w-0">
+            <span class="text-sm font-semibold text-slate-200 leading-snug">{{ s.title }}</span>
+            <span class="text-xs text-amber-400/80 font-mono tracking-wide">{{ s.principle }}</span>
+          </div>
+          <mat-icon class="text-slate-500 flex-shrink-0 !text-base transition-transform duration-300"
+                    [class.rotate-180]="isExpanded(s.id)">
+            expand_more
+          </mat-icon>
+        </button>
+
+        <!-- Expanded STAR body -->
+        <div class="story-body px-5 pb-5" *ngIf="isExpanded(s.id)">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-white/[0.06]">
+            <div class="star-block">
+              <span class="star-label">Situation</span>
+              <p class="star-text">{{ s.situation }}</p>
+            </div>
+            <div class="star-block">
+              <span class="star-label">Task</span>
+              <p class="star-text">{{ s.task }}</p>
+            </div>
+            <div class="star-block">
+              <span class="star-label">Action</span>
+              <p class="star-text">{{ s.action }}</p>
+            </div>
+            <div class="star-block star-result">
+              <span class="star-label result-label">Result</span>
+              <p class="star-text">{{ s.result }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </div>

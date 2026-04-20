@@ -1,18 +1,14 @@
-import { Component, OnInit, Inject, Renderer2, ElementRef, ViewChild } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { Subscription } from 'rxjs/Subscription';
-import 'rxjs/add/operator/filter';
-import { DOCUMENT } from '@angular/common';
-import { LocationStrategy, PlatformLocation, Location } from '@angular/common';
-import { NavbarComponent } from './shared/navbar/navbar.component';
+import { Component, OnInit } from '@angular/core';
+import * as AOS from 'aos';
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+  standalone: false,
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-    constructor() {}
-    ngOnInit() {
-    }
+  ngOnInit() {
+    AOS.init({ duration: 900, once: true, offset: 80 });
+  }
 }
