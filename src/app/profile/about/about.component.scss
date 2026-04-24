@@ -48,41 +48,6 @@
   opacity: 0.8;
 }
 
-/* ── STAR story cards ── */
-.story-card {
-  cursor: pointer;
-
-  &:hover { border-color: rgba(255,255,255,0.12); }
-  &.story-expanded { border-color: rgba(251, 191, 36, 0.25); }
-}
-
-.story-body { animation: slideDown 0.2s ease; }
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.star-block { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; }
-
-.star-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #475569;
-}
-
-.result-label { color: #34d399; }
-
-.star-text {
-  font-size: 0.8rem;
-  color: #94a3b8;
-  line-height: 1.55;
-}
-
-.star-result .star-text { color: #cbd5e1; }
-
 /* ── Light theme ── */
 :host-context(.light-theme) {
   .dark-card {

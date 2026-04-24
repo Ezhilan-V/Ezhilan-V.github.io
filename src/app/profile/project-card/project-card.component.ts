@@ -2,10 +2,10 @@ import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { ProjectDetailsComponent } from '../project-details/project-details.component';
-import { ProfileService, Project, ProjectCategory } from '../profile.service';
+import { ProfileService, Project, ProjectCategory, ProjectFilter } from '../profile.service';
 
-const MOBILE_BP  = 768;
-const TABLET_BP  = 1024;
+const MOBILE_BP       = 768;
+const TABLET_BP       = 1024;
 const TOUCH_THRESHOLD = 50;
 
 @Component({
@@ -21,13 +21,11 @@ export class ProjectCardComponent implements OnInit, OnDestroy {
   itemsPerSlide = 3;
   allProjects: ProjectCategory[];
   filteredProjects: ProjectCategory[] = [];
-  activeSkill: string | null = null;
+  activeSkill: string | null = null;   // single skill  used for tech pill highlighting
+  activeFilter: string | null = null;  // display label in badge
 
   private sub = new Subscription();
-  private resizeHandler = () => {
-    this.updateItemsPerSlide();
-    this.cdr.markForCheck();
-  };
+  private resizeHandler = () => { this.updateItemsPerSlide(); this.cdr.markForCheck(); };
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -43,9 +41,8 @@ export class ProjectCardComponent implements OnInit, OnDestroy {
     window.addEventListener('resize', this.resizeHandler);
 
     this.sub.add(
-      this.profileService.selectedSkill$.subscribe(skill => {
-        this.activeSkill = skill;
-        this.applyFilter(skill);
+      this.profileService.projectFilter$.subscribe(filter => {
+        this.applyFilter(filter);
         this.selectedCategoryIndex = 0;
         this.currentSlide = {};
         this.cdr.markForCheck();
@@ -58,20 +55,39 @@ export class ProjectCardComponent implements OnInit, OnDestroy {
     this.sub.unsubscribe();
   }
 
-  applyFilter(skill: string | null) {
-    if (!skill) {
+  applyFilter(filter: ProjectFilter) {
+    if (!filter) {
+      this.activeSkill  = null;
+      this.activeFilter = null;
       this.filteredProjects = this.allProjects;
       return;
     }
-    const lower = skill.toLowerCase();
-    this.filteredProjects = this.allProjects
-      .map(cat => ({
-        ...cat,
-        projects: cat.projects.filter(p =>
-          p.technologies?.some(t => t.toLowerCase().includes(lower))
-        )
-      }))
-      .filter(cat => cat.projects.length > 0);
+
+    if (filter.kind === 'skill') {
+      this.activeSkill  = filter.value;
+      this.activeFilter = filter.value;
+      const lower = filter.value.toLowerCase();
+      this.filteredProjects = this.allProjects
+        .map(cat => ({
+          ...cat,
+          projects: cat.projects.filter(p =>
+            p.technologies?.some(t => t.toLowerCase().includes(lower))
+          )
+        }))
+        .filter(cat => cat.projects.length > 0);
+    } else {
+      this.activeSkill  = null;
+      this.activeFilter = filter.name;
+      const lowers = filter.skills.map(s => s.toLowerCase());
+      this.filteredProjects = this.allProjects
+        .map(cat => ({
+          ...cat,
+          projects: cat.projects.filter(p =>
+            p.technologies?.some(t => lowers.some(s => t.toLowerCase().includes(s)))
+          )
+        }))
+        .filter(cat => cat.projects.length > 0);
+    }
   }
 
   getProjectCount(): number {
@@ -79,13 +95,9 @@ export class ProjectCardComponent implements OnInit, OnDestroy {
   }
 
   updateItemsPerSlide() {
-    if (window.innerWidth < MOBILE_BP) {
-      this.itemsPerSlide = 1;
-    } else if (window.innerWidth < TABLET_BP) {
-      this.itemsPerSlide = 2;
-    } else {
-      this.itemsPerSlide = 3;
-    }
+    if (window.innerWidth < MOBILE_BP)       this.itemsPerSlide = 1;
+    else if (window.innerWidth < TABLET_BP)  this.itemsPerSlide = 2;
+    else                                     this.itemsPerSlide = 3;
   }
 
   openProjectDetails(project: Project, category: ProjectCategory) {
@@ -108,19 +120,13 @@ export class ProjectCardComponent implements OnInit, OnDestroy {
 
   prevSlide(categoryName: string) {
     const slide = this.currentSlide[categoryName] ?? 0;
-    if (slide > 0) {
-      this.currentSlide[categoryName] = slide - 1;
-      this.cdr.markForCheck();
-    }
+    if (slide > 0) { this.currentSlide[categoryName] = slide - 1; this.cdr.markForCheck(); }
   }
 
   nextSlide(categoryName: string, totalProjects: number) {
     const slide = this.currentSlide[categoryName] ?? 0;
-    const maxSlides = Math.ceil(totalProjects / this.itemsPerSlide) - 1;
-    if (slide < maxSlides) {
-      this.currentSlide[categoryName] = slide + 1;
-      this.cdr.markForCheck();
-    }
+    const max   = Math.ceil(totalProjects / this.itemsPerSlide) - 1;
+    if (slide < max) { this.currentSlide[categoryName] = slide + 1; this.cdr.markForCheck(); }
   }
 
   canShowPrevSlide(categoryName: string): boolean {
@@ -128,25 +134,22 @@ export class ProjectCardComponent implements OnInit, OnDestroy {
   }
 
   canShowNextSlide(categoryName: string, totalProjects: number): boolean {
-    const maxSlides = Math.ceil(totalProjects / this.itemsPerSlide) - 1;
-    return (this.currentSlide[categoryName] ?? 0) < maxSlides;
+    return (this.currentSlide[categoryName] ?? 0) < Math.ceil(totalProjects / this.itemsPerSlide) - 1;
   }
 
-  handleTouchStart(event: TouchEvent) {
-    this.touchStartX = event.touches[0].clientX;
-  }
+  handleTouchStart(event: TouchEvent) { this.touchStartX = event.touches[0].clientX; }
 
   handleTouchEnd(event: TouchEvent, categoryName: string, totalProjects: number) {
     const diffX = this.touchStartX - event.changedTouches[0].clientX;
     if (Math.abs(diffX) > TOUCH_THRESHOLD) {
       if (diffX > 0) this.nextSlide(categoryName, totalProjects);
-      else this.prevSlide(categoryName);
+      else           this.prevSlide(categoryName);
     }
   }
 
   getVisibleProjects(projects: Project[], categoryName: string): Project[] {
-    const startIndex = (this.currentSlide[categoryName] ?? 0) * this.itemsPerSlide;
-    return projects.slice(startIndex, startIndex + this.itemsPerSlide);
+    const start = (this.currentSlide[categoryName] ?? 0) * this.itemsPerSlide;
+    return projects.slice(start, start + this.itemsPerSlide);
   }
 
   getPaginationPages(totalProjects: number): number[] {

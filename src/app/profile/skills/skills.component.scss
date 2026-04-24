@@ -1,3 +1,15 @@
+.skill-card {
+  &:hover { border-color: rgba(255,255,255,0.18); }
+  &.cat-active { border-color: rgba(14, 165, 233, 0.5); box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.2); }
+}
+
+.cat-header {
+  cursor: pointer;
+  transition: filter 0.2s ease;
+  &:hover { filter: brightness(1.12); }
+  &:active { filter: brightness(0.95); }
+}
+
 .skill-chip {
   background: rgba(255, 255, 255, 0.05);
   color: #94a3b8;

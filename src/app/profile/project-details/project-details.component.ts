@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Project } from '../profile.service';
 
 @Component({
@@ -25,6 +26,11 @@ import { Project } from '../profile.service';
 
       <!-- Scrollable content -->
       <mat-dialog-content class="dlg-body">
+
+        <!-- Video embed -->
+        <div class="video-wrap" *ngIf="currentProject.videoUrl">
+          <iframe [src]="safeVideoUrl" allowfullscreen frameborder="0" class="dlg-video"></iframe>
+        </div>
 
         <!-- Image carousel -->
         <div class="img-wrap" *ngIf="currentProject.imageUrls?.length">
@@ -77,7 +83,7 @@ import { Project } from '../profile.service';
         <button class="nav-btn" (click)="navigate('prev')" [disabled]="!hasPrev">
           <mat-icon>arrow_back</mat-icon> Previous
         </button>
-        <button class="nav-btn close-btn" (click)="dialogRef.close()">Close</button>
+        <span class="proj-counter">{{ currentProjectIndex + 1 }} / {{ allProjects.length }}</span>
         <button class="nav-btn" (click)="navigate('next')" [disabled]="!hasNext">
           Next <mat-icon>arrow_forward</mat-icon>
         </button>
@@ -110,16 +116,21 @@ import { Project } from '../profile.service';
     .meta-sep { color: #475569; font-size: 0.75rem; }
     .meta-time { font-size: 0.8rem; color: #64748b; }
     .dlg-close {
-      background: transparent; border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px; color: #94a3b8; cursor: pointer; padding: 4px;
+      background: transparent; border: none;
+      border-radius: 50%; color: #64748b; cursor: pointer; padding: 6px;
       display: flex; align-items: center; transition: all 0.2s; flex-shrink: 0;
-      &:hover { background: rgba(255,255,255,0.06); color: #f1f5f9; }
+      &:hover { background: rgba(255,255,255,0.08); color: #f1f5f9; }
     }
     .dlg-body {
       padding: 1.25rem 1.5rem !important;
       overflow-y: auto; flex: 1;
       max-height: calc(90vh - 140px);
     }
+    .video-wrap {
+      border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem;
+      background: #000; aspect-ratio: 16/9;
+    }
+    .dlg-video { width: 100%; height: 100%; display: block; border: none; }
     .img-wrap {
       position: relative; border-radius: 12px; overflow: hidden;
       margin-bottom: 1.5rem; background: #161b22;
@@ -144,7 +155,7 @@ import { Project } from '../profile.service';
       font-size: 0.85rem; font-weight: 700; color: #94a3b8;
       text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.75rem;
     }
-    .s-icon { font-size: 1rem !important; width: 1rem !important; height: 1rem !important; color: #38bdf8; }
+    .s-icon { font-size: 1rem !important; width: 1rem !important; height: 1rem !important; line-height: 1rem !important; color: #38bdf8; }
     .dlg-desc { font-size: 0.9rem; color: #cbd5e1; line-height: 1.7; margin: 0; }
     .tech-grid { display: flex; flex-wrap: wrap; gap: 8px; }
     .tech-pill {
@@ -171,11 +182,12 @@ import { Project } from '../profile.service';
       border-radius: 8px; color: #94a3b8; font-size: 0.8rem; font-weight: 600;
       cursor: pointer; transition: all 0.2s;
       &:hover:not(:disabled) { border-color: #38bdf8; color: #38bdf8; }
-      &:disabled { opacity: 0.3; cursor: default; }
+      &:disabled { opacity: 0.25; cursor: default; }
     }
-    .close-btn {
-      border-color: rgba(255,255,255,0.2); color: #f1f5f9;
-      &:hover { border-color: #f1f5f9 !important; color: #f1f5f9 !important; }
+    .proj-counter {
+      font-size: 0.78rem; font-weight: 600; color: #475569;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px; padding: 4px 14px; letter-spacing: 0.04em;
     }
   `]
 })
@@ -191,11 +203,18 @@ export class ProjectDetailsComponent {
       allProjects: Project[];
       currentIndex: number;
     },
-    public dialogRef: MatDialogRef<ProjectDetailsComponent>
+    public dialogRef: MatDialogRef<ProjectDetailsComponent>,
+    private sanitizer: DomSanitizer
   ) {
     this.allProjects = data.allProjects;
     this.currentProjectIndex = data.currentIndex;
     this.currentProject = data.project;
+  }
+
+  get safeVideoUrl(): SafeResourceUrl {
+    const url = this.currentProject.videoUrl ?? '';
+    const embedUrl = url.replace('/view', '/preview').replace(/\?.*$/, '');
+    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
   }
 
   get hasPrev(): boolean { return this.currentProjectIndex > 0; }
@@ -207,6 +226,7 @@ export class ProjectDetailsComponent {
     else if (dir === 'next' && this.hasNext) this.currentProjectIndex++;
     this.currentProject = this.allProjects[this.currentProjectIndex];
   }
+
 
   prevImage() { if (this.currentImage > 0) this.currentImage--; }
   nextImage() {

@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
-import { ProfileService, PortfolioMeta, PortfolioStat } from './profile.service';
+import { ProfileService, PortfolioMeta, PortfolioStat, SkillCategory } from './profile.service';
 
 interface Stat extends PortfolioStat {
   display: number;
@@ -19,7 +19,7 @@ const STATS_OBSERVER_DELAY = 500;
 export class ResumeComponent implements OnInit, OnDestroy {
   meta!: PortfolioMeta;
   about = '';
-  techTags: string[] = [];
+  skillCategories: SkillCategory[] = [];
 
   roles: string[] = [];
   displayRole = '';
@@ -36,7 +36,7 @@ export class ResumeComponent implements OnInit, OnDestroy {
   constructor(private profileService: ProfileService, private ngZone: NgZone) {
     this.meta = this.profileService.meta;
     this.about = this.profileService.about;
-    this.techTags = this.profileService.hero.techTags;
+    this.skillCategories = this.profileService.skills;
     this.roles = this.profileService.hero.roles;
     this.stats = this.profileService.hero.stats.map(s => ({ ...s, display: 0 }));
   }

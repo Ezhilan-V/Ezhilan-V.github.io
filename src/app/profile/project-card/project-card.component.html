@@ -2,16 +2,16 @@
   <p class="section-number" data-aos="fade-right">05 / Projects</p>
   <div class="flex items-center justify-between mb-8">
     <h2 class="text-2xl font-bold text-slate-100 section-heading" data-aos="fade-right">Projects</h2>
-    <div *ngIf="activeSkill" class="filter-badge" data-aos="fade-left">
+    <div *ngIf="activeFilter" class="filter-badge" data-aos="fade-left">
       <mat-icon class="!text-sm !w-4 !h-4">filter_alt</mat-icon>
-      {{ getProjectCount() }} project{{ getProjectCount() !== 1 ? 's' : '' }} matching <strong>{{ activeSkill }}</strong>
+      {{ getProjectCount() }} project{{ getProjectCount() !== 1 ? 's' : '' }} matching <strong>{{ activeFilter }}</strong>
     </div>
   </div>
 
   <!-- Empty state -->
   <div *ngIf="filteredProjects.length === 0" class="empty-state">
     <mat-icon>search_off</mat-icon>
-    <p>No projects use <strong>{{ activeSkill }}</strong> directly.</p>
+    <p>No projects match <strong>{{ activeFilter }}</strong>.</p>
     <p class="text-sm text-slate-500">Try a related skill or clear the filter.</p>
   </div>
 
@@ -19,14 +19,14 @@
     <!-- Category tabs -->
     <mat-tab-group [(selectedIndex)]="selectedCategoryIndex"
                    (selectedIndexChange)="selectCategory($event)"
-                   mat-align-tabs="center"
+                   mat-stretch-tabs="true"
                    animationDuration="300ms"
                    class="project-tabs">
       <mat-tab *ngFor="let category of filteredProjects">
         <ng-template mat-tab-label>
-          <mat-icon class="tab-icon">{{category.icon}}</mat-icon>
-          <span class="tab-label">{{category.name}}</span>
-          <span class="tab-count" *ngIf="activeSkill">{{category.projects.length}}</span>
+          <mat-icon class="tab-icon">{{ category.icon }}</mat-icon>
+          <span class="tab-label">{{ category.name }}</span>
+          <span class="tab-count" *ngIf="activeFilter">{{ category.projects.length }}</span>
         </ng-template>
       </mat-tab>
     </mat-tab-group>
@@ -48,29 +48,47 @@
             <div class="project-card"
                  *ngFor="let project of getVisibleProjects(category.projects, category.name)">
 
-              <!-- Image -->
-              <div class="card-image-wrap">
-                <img [src]="project.imageUrls[0]" [alt]="project.title" class="card-image">
-                <div class="card-image-overlay"></div>
-                <span class="timeline-badge" *ngIf="project.timeline">
-                  <mat-icon class="badge-icon">schedule</mat-icon>{{ project.timeline }}
+              <!-- Image header or gradient fallback -->
+              <div *ngIf="project.imageUrls && project.imageUrls.length; else gradientHeader"
+                   class="card-header-img relative">
+                <img [src]="project.imageUrls[0]" [alt]="project.title" class="card-img">
+                <span *ngIf="project.videoUrl" class="video-badge">
+                  <mat-icon class="play-icon">play_circle</mat-icon> Video
                 </span>
               </div>
+              <ng-template #gradientHeader>
+                <div class="card-header bg-gradient-to-r relative" [ngClass]="category.color">
+                  <span *ngIf="project.videoUrl" class="video-badge">
+                    <mat-icon class="play-icon">play_circle</mat-icon> Video
+                  </span>
+                </div>
+              </ng-template>
 
               <!-- Body -->
               <div class="card-body">
-                <span class="role-label">{{ project.role }}</span>
                 <h3 class="card-title">{{ project.title }}</h3>
+                <div class="card-meta">
+                  <span class="role-label">{{ project.role }}</span>
+                  <span class="timeline-text" *ngIf="project.timeline">
+                    <mat-icon class="badge-icon">schedule</mat-icon>{{ project.timeline }}
+                  </span>
+                </div>
                 <p class="card-desc">{{ project.description }}</p>
 
+                <ul class="card-highlights" *ngIf="project.highlights && project.highlights.length">
+                  <li *ngFor="let h of project.highlights.slice(0, 2)" class="highlight-item">
+                    <span class="highlight-dot"></span>{{ h }}
+                  </li>
+                </ul>
+
                 <div class="card-techs">
-                  <span *ngFor="let tech of project.technologies?.slice(0, 3)"
+                  <span *ngFor="let tech of project.technologies?.slice(0, 4)"
                         [class]="'tech-pill' + (activeSkill && tech.toLowerCase().includes(activeSkill.toLowerCase()) ? ' tech-active' : '')">
                     {{ tech }}
                   </span>
                   <span class="tech-more"
-                        *ngIf="project.technologies && project.technologies.length > 3">
-                    +{{ project.technologies.length - 3 }}
+                        *ngIf="project.technologies && project.technologies.length > 4">
+                    +{{ project.technologies.length - 4 }}
                   </span>
                 </div>
               </div>

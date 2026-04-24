@@ -89,6 +89,7 @@ export interface Project {
   timeline: string;
   description: string;
   imageUrls: string[];
+  videoUrl?: string;
   technologies?: string[];
   highlights?: string[];
 }
@@ -96,6 +97,7 @@ export interface Project {
 export interface ProjectCategory {
   name: string;
   icon: string;
+  color: string;
   projects: Project[];
 }
 
@@ -127,11 +129,7 @@ export interface StarStory {
   id: string;
   title: string;
   principle: string;
-  situation: string;
-  task: string;
-  action: string;
-  result: string;
-  stub?: boolean;
+  body: string;
 }
 
 export interface PortfolioData {
@@ -147,9 +145,14 @@ export interface PortfolioData {
   stories: StarStory[];
 }
 
+export type ProjectFilter =
+  | { kind: 'skill'; value: string }
+  | { kind: 'category'; name: string; skills: string[] }
+  | null;
+
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
-  selectedSkill$ = new BehaviorSubject<string | null>(null);
+  projectFilter$ = new BehaviorSubject<ProjectFilter>(null);
 
   private portfolioData!: PortfolioData;
 
@@ -165,17 +168,27 @@ export class ProfileService {
     );
   }
 
-  get meta(): PortfolioMeta       { return this.portfolioData.meta; }
-  get hero(): PortfolioHero       { return this.portfolioData.hero; }
-  get about(): string             { return this.portfolioData.about.bio; }
+  get meta(): PortfolioMeta         { return this.portfolioData.meta; }
+  get hero(): PortfolioHero         { return this.portfolioData.hero; }
+  get about(): string               { return this.portfolioData.about.bio; }
   get professionalSummary(): string[] { return this.portfolioData.about.professionalSummary; }
-  get skills(): SkillCategory[]   { return this.portfolioData.skills; }
-  get experience(): Experience[]  { return this.portfolioData.experience; }
-  get education(): Education[]    { return this.portfolioData.education; }
+  get skills(): SkillCategory[]     { return this.portfolioData.skills; }
+  get experience(): Experience[]    { return this.portfolioData.experience; }
+  get education(): Education[]      { return this.portfolioData.education; }
   get projects(): ProjectCategory[] { return this.portfolioData.projects; }
-  get motorsport(): Motorsport    { return this.portfolioData.motorsport; }
-  get patent(): Patent            { return this.portfolioData.patent; }
-  get stories(): StarStory[]      { return this.portfolioData.stories; }
+  get motorsport(): Motorsport      { return this.portfolioData.motorsport; }
+  get patent(): Patent              { return this.portfolioData.patent; }
+  get stories(): StarStory[]        { return this.portfolioData.stories; }
 
-  setSkillFilter(skill: string | null) { this.selectedSkill$.next(skill); }
+  setSkillFilter(skill: string | null) {
+    this.projectFilter$.next(skill ? { kind: 'skill', value: skill } : null);
+  }
+
+  setSkillCategoryFilter(name: string, skills: string[]) {
+    this.projectFilter$.next({ kind: 'category', name, skills });
+  }
+
+  clearAllFilters() {
+    this.projectFilter$.next(null);
+  }
 }
