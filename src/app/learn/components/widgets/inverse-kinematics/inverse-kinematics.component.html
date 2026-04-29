@@ -1,0 +1,76 @@
+<div class="ik">
+  <div class="ik__stage">
+    <div class="ik__canvas" #canvasHost></div>
+
+    <div class="ik__hud">
+      <div class="ik__legend">
+        <span><i class="dot" style="background:#a78bfa"></i> q₁ base</span>
+        <span><i class="dot" style="background:#38bdf8"></i> q₂ shoulder</span>
+        <span><i class="dot" style="background:#34d399"></i> q₃ elbow</span>
+        <span><i class="dot" style="background:#fb7185"></i> target</span>
+      </div>
+      <div class="ik__status" [class.is-out]="!reachable">
+        <i class="fas" [class.fa-check]="reachable" [class.fa-times]="!reachable"></i>
+        <span>{{ reachable ? 'reachable' : 'out of reach' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ik__panel">
+    <div class="ik__panel-head">
+      <span class="ik__panel-title">3-DOF positional IK</span>
+      <div class="ik__panel-actions">
+        <button type="button" class="ik__btn" (click)="toggleElbow()">
+          <i class="fas fa-arrow-up-wide-short"></i>
+          elbow {{ elbowUp ? 'up' : 'down' }}
+        </button>
+        <button type="button" class="ik__btn" (click)="reset()">
+          <i class="fas fa-undo"></i> reset
+        </button>
+      </div>
+    </div>
+
+    <div class="ik__readout">
+      <span><span class="lbl">q₁</span><span class="val">{{ q.base }}°</span></span>
+      <span><span class="lbl">q₂</span><span class="val">{{ q.shoulder }}°</span></span>
+      <span><span class="lbl">q₃</span><span class="val">{{ q.elbow }}°</span></span>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Target X</span>
+        <span class="slider-row__val">{{ target.x | number:'1.2-2' }} m</span>
+      </div>
+      <input type="range" [min]="bounds.x.min" [max]="bounds.x.max" step="0.01"
+             [value]="target.x" (input)="setTarget('x', $any($event.target).value)" aria-label="Target X" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Target Y (height)</span>
+        <span class="slider-row__val">{{ target.y | number:'1.2-2' }} m</span>
+      </div>
+      <input type="range" [min]="bounds.y.min" [max]="bounds.y.max" step="0.01"
+             [value]="target.y" (input)="setTarget('y', $any($event.target).value)" aria-label="Target Y" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Target Z</span>
+        <span class="slider-row__val">{{ target.z | number:'1.2-2' }} m</span>
+      </div>
+      <input type="range" [min]="bounds.z.min" [max]="bounds.z.max" step="0.01"
+             [value]="target.z" (input)="setTarget('z', $any($event.target).value)" aria-label="Target Z" />
+    </div>
+
+    <button type="button" class="ik__btn ik__btn--full" (click)="randomTarget()">
+      <i class="fas fa-dice"></i> random reachable target
+    </button>
+
+    <p class="ik__note">
+      Drag the red sphere in 3D, or move the X/Y/Z sliders. The solver uses closed-form analytical IK:
+      base yaw = <code>atan2(z, x)</code>, then planar 2-link IK in the rotated x'-y plane.
+      Two solutions per reachable point — toggle elbow up/down to flip.
+    </p>
+  </div>
+</div>

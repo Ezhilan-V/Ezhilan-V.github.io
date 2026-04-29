@@ -1,0 +1,127 @@
+:host { display: block; }
+
+.conv {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+
+  @media (min-width: 1000px) { gap: 1.25rem; padding: 1.25rem; }
+
+  &__pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+
+    @media (min-width: 1000px) { gap: 0.85rem; }
+  }
+
+  &__pane {
+    background: #0a1320;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+  }
+
+  &__pane-label {
+    font-size: 0.62rem; font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    padding: 0.4rem 0.7rem;
+    background: rgba(8, 11, 20, 0.7);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  &__panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+
+    @media (min-width: 720px) {
+      grid-template-columns: minmax(220px, 260px) 1fr;
+      grid-template-areas:
+        "head head"
+        "kernel presets"
+        "note note";
+      column-gap: 1rem;
+      align-items: start;
+    }
+  }
+  &__panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; grid-area: head; }
+  &__panel-title { font-size: 0.78rem; font-weight: 600; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.12em; }
+
+  &__presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+    grid-area: presets;
+
+    @media (max-width: 480px) { grid-template-columns: repeat(2, 1fr); }
+
+    button {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.68rem; color: #cbd5e1;
+      background: rgba(8, 11, 20, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 8px; padding: 0.4rem 0.4rem;
+      cursor: pointer; transition: all 0.18s ease;
+      &:hover { color: #a78bfa; border-color: rgba(167, 139, 250, 0.4); background: rgba(167, 139, 250, 0.06); }
+      &.is-active { color: #0a1320; background: #a78bfa; border-color: #a78bfa; font-weight: 600; }
+    }
+  }
+
+  &__kernel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0.6rem;
+    background: rgba(8, 11, 20, 0.45);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 10px;
+    max-width: 240px;
+    grid-area: kernel;
+
+    input {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem; font-weight: 600;
+      text-align: center;
+      padding: 0.55rem 0.2rem;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 6px;
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color 0.15s ease;
+      -moz-appearance: textfield;
+      &::-webkit-outer-spin-button, &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      &:focus { border-color: #a78bfa; }
+    }
+  }
+
+  &__note {
+    margin: 0; font-size: 0.74rem; color: #94a3b8; line-height: 1.55;
+    font-family: 'Inter', system-ui, sans-serif;
+    grid-area: note;
+    code { font-family: 'JetBrains Mono', monospace; color: #a78bfa; background: rgba(167, 139, 250, 0.08); padding: 0.04rem 0.3rem; border-radius: 4px; font-size: 0.7rem; }
+  }
+}
+
+:host-context(.light-theme) .conv {
+  background: #ffffff; border-color: rgba(15, 23, 42, 0.1);
+  &__pane { background: #1e293b; }
+  &__pane-label { color: #cbd5e1; background: #0f172a; }
+  &__presets button:not(.is-active) { background: #ffffff; border-color: rgba(15, 23, 42, 0.1); color: #475569; }
+  &__kernel { background: rgba(241, 245, 249, 0.7); border-color: rgba(15, 23, 42, 0.08);
+    input { background: #ffffff; color: #0f172a; border-color: rgba(15, 23, 42, 0.12); } }
+  &__note { color: #475569; }
+}

@@ -1,0 +1,390 @@
+:host { display: block; width: 100%; max-width: 100%; overflow-x: clip; }
+
+.branches-diagram {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding-bottom: 70px;       /* space for tooltip / open-guide button overlay */
+  overflow-x: clip;
+
+  /* SVG keeps overflow: visible so labels near the viewBox edge don't clip,
+     but the parent clips so nothing pushes the page wider. */
+  svg { width: 100%; height: auto; display: block; overflow: visible; }
+}
+
+/* ── Hub ─────────────────────────────────────────────── */
+.hub-label, .centre-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  fill: #f1f5f9;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+.hub-sub {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 9.5px;
+  fill: #64748b;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.centre-cta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  fill: #94a3b8;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* ── Top-level spokes ────────────────────────────────── */
+.spoke {
+  stroke-opacity: 0.4;
+  transition: stroke-opacity 0.25s ease, stroke-width 0.25s ease;
+  animation: fade-in 0.6s ease-out var(--enter-delay, 0s) backwards;
+
+  &.is-hovered { stroke-opacity: 0.95; stroke-width: 2.4; }
+  &.is-dimmed  { stroke-opacity: 0.15; }
+}
+
+/* ── Top-level node groups ───────────────────────────── */
+.node-pos {
+  animation: fade-in 0.5s ease-out var(--enter-delay, 0s) backwards;
+  &.is-active { cursor: pointer; }
+  &:focus { outline: none; }
+}
+.node-scale {
+  transform-origin: center;
+  transform-box: fill-box;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.node-pos.is-active.is-hovered .node-scale { transform: scale(1.16); }
+
+.node-bg {
+  fill: #0d1117;
+  stroke-opacity: 0.85;
+  stroke-width: 2;
+  transition: stroke-opacity 0.2s ease, stroke-width 0.2s ease, filter 0.25s ease;
+}
+.node-pos.is-hovered .node-bg {
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 8px var(--accent, #38bdf8));
+}
+.node-pos.is-dimmed .node-bg { stroke-opacity: 0.35; }
+
+.node-pulse {
+  fill: none;
+  stroke-width: 2;
+  stroke-opacity: 0;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: pulse 3.6s ease-out infinite var(--enter-delay, 0s);
+  pointer-events: none;
+}
+.node-pos.is-hovered .node-pulse { animation-duration: 1.6s; }
+
+@keyframes pulse {
+  0%   { stroke-opacity: 0.45; transform: scale(1); }
+  60%  { stroke-opacity: 0;    transform: scale(1.55); }
+  100% { stroke-opacity: 0;    transform: scale(1.55); }
+}
+
+.node-icon, .centre-icon {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+.centre-icon { width: 44px; height: 44px; font-size: 22px; }
+.node-pos.is-hovered .node-icon { transform: scale(1.06); }
+
+.node-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+  transition: opacity 0.2s ease, font-size 0.2s ease, font-weight 0.2s ease;
+  animation: fade-in 0.5s ease-out var(--enter-delay, 0s) backwards;
+
+  &.is-hovered { font-size: 12px; font-weight: 700; }
+  &.is-dimmed  { opacity: 0.35; }
+}
+
+/* ── Drill-down ──────────────────────────────────────── */
+.drill-down {
+  animation: fade-in 0.35s ease-out;
+}
+
+.sub-spoke {
+  stroke-opacity: 0.45;
+  transition: stroke-opacity 0.2s ease, stroke-width 0.2s ease;
+  animation: fade-in 0.45s ease-out var(--enter-delay, 0s) backwards;
+
+  &.is-hovered { stroke-opacity: 1; stroke-width: 2.0; }
+}
+
+.sub-node-pos {
+  cursor: default;
+  animation: fade-in 0.45s ease-out var(--enter-delay, 0s) backwards;
+
+  .sub-node-bg {
+    fill: #0a1320;
+    stroke-width: 1.8;
+    stroke-opacity: 0.85;
+    transition: stroke-width 0.2s ease, filter 0.2s ease;
+  }
+  .sub-node-dot { transition: r 0.2s ease; }
+
+  &.is-hovered {
+    .sub-node-bg {
+      stroke-width: 2.6;
+      filter: drop-shadow(0 0 6px var(--accent, #38bdf8));
+    }
+  }
+}
+
+.sub-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 9.5px;
+  font-weight: 500;
+  fill-opacity: 0.85;
+  pointer-events: none;
+  transition: font-size 0.2s ease, font-weight 0.2s ease, fill-opacity 0.2s ease;
+  animation: fade-in 0.45s ease-out var(--enter-delay, 0s) backwards;
+
+  &.is-hovered { font-size: 10.5px; font-weight: 700; fill-opacity: 1; }
+}
+
+.centre {
+  cursor: pointer;
+  animation: centre-zoom 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+
+  &:focus { outline: none; }
+
+  .centre-bg {
+    transition: filter 0.25s ease, stroke-width 0.2s ease;
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent, #38bdf8) 35%, transparent));
+  }
+  .centre-icon { transition: transform 0.2s ease; }
+
+  &:hover .centre-bg {
+    stroke-width: 2.8;
+    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--accent, #38bdf8) 60%, transparent));
+  }
+  &:hover .centre-icon { transform: scale(1.06); }
+}
+
+@keyframes centre-zoom {
+  from { opacity: 0; transform-origin: center; }
+  to   { opacity: 1; }
+}
+
+/* ── HTML overlay tooltip ────────────────────────────── */
+.branches-diagram__tooltip {
+  --accent: #38bdf8;
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.95rem 0.55rem 0.85rem;
+  background: rgba(8, 11, 20, 0.92);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(148, 163, 184, 0.18));
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  font-family: 'Inter', system-ui, sans-serif;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+  white-space: nowrap;
+  max-width: calc(100% - 1rem);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+
+  &.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+  > i { color: var(--accent); font-size: 1.1rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
+
+  &-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  &-label { font-size: 0.8rem; font-weight: 600; color: var(--accent); }
+  &-desc  { font-size: 0.7rem; color: #cbd5e1; overflow: hidden; text-overflow: ellipsis; }
+  &-cta {
+    font-size: 0.65rem; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    padding-left: 0.6rem;
+    border-left: 1px solid rgba(148, 163, 184, 0.2);
+    flex-shrink: 0;
+  }
+}
+
+/* ── Drill-down controls ─────────────────────────────── */
+.branches-diagram__back,
+.branches-diagram__open {
+  --accent: #38bdf8;
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.85rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 500;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  animation: fade-in 0.3s ease-out;
+
+  i { font-size: 0.7rem; }
+}
+
+.branches-diagram__back {
+  top: 0;
+  left: 0;
+  color: #cbd5e1;
+  background: rgba(8, 11, 20, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+
+  &:hover {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 50%, rgba(148, 163, 184, 0.25));
+  }
+}
+
+.branches-diagram__open {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #0a1320;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  font-weight: 600;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent);
+
+  &:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Light theme ─────────────────────────────────────── */
+:host-context(.light-theme) {
+  .hub-label, .centre-label { fill: #0f172a; }
+  .hub-sub   { fill: #64748b; }
+  .centre-cta { fill: #475569; }
+
+  .node-bg, .sub-node-bg { fill: #ffffff; }
+  .centre-bg { fill: #ffffff !important; }
+
+  .branches-diagram__tooltip {
+    background: rgba(255, 255, 255, 0.97);
+    border-color: color-mix(in srgb, var(--accent) 50%, rgba(15, 23, 42, 0.12));
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.12);
+    &-desc { color: #475569; }
+  }
+  .branches-diagram__back {
+    color: #475569;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(15, 23, 42, 0.1);
+  }
+}
+
+/* ── Mobile adjustments ──────────────────────────────── */
+@media (max-width: 640px) {
+  .branches-diagram { padding-bottom: 60px; }
+
+  .branches-diagram__tooltip {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.7rem;
+    > i { font-size: 0.95rem; }
+    &-label { font-size: 0.74rem; }
+    &-desc  { font-size: 0.62rem; }
+    &-cta   { display: none; }
+  }
+  .branches-diagram__back  { font-size: 0.68rem; padding: 0.3rem 0.65rem; }
+  .branches-diagram__open  { font-size: 0.7rem; padding: 0.38rem 0.75rem; }
+  .sub-label { font-size: 8.5px; }
+}
+
+/* ── Applied platforms pills (the 9 fields not on the central diagram) ── */
+.branches-diagram__applied {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+
+  &-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  &-hint {
+    font-size: 0.7rem;
+    color: #64748b;
+  }
+
+  &-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  &-pill {
+    --accent: #38bdf8;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.85rem;
+    min-height: 36px;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid color-mix(in srgb, var(--accent) 28%, rgba(148, 163, 184, 0.16));
+    color: #e2e8f0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    i { color: var(--accent); font-size: 0.78rem; }
+
+    &:hover, &:focus-visible {
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      outline: none;
+    }
+  }
+}
+
+:host-context(.light-theme) .branches-diagram__applied-pill {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  color: #1e293b;
+}
+

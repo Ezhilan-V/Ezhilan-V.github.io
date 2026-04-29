@@ -1,0 +1,386 @@
+{
+  "slug": "ai-ml",
+  "hero": {
+    "tagline": "Robots that learn - the modern stack from RL to VLAs",
+    "intro": "Everything traditional in robotics is hand-engineered: someone wrote the perception code, someone tuned the controller, someone designed the planner. The modern shift is that robots can learn these layers end to end - from reinforcement learning that figures out how to walk in simulation, to imitation learning that copies a human demo, to vision-language-action models like π0 and GR00T that take 'put the dish in the sink' as input and output joint commands. This branch is a tour of that stack with what each technique does, when to reach for it, and code to start with."
+  },
+  "sections": [
+    {
+      "id": "when-to-learn",
+      "heading": "When learning beats classical (and when it doesn't)",
+      "body": "Learned methods aren't a universal upgrade. Classical algorithms still win when you have an accurate model and well-defined task: motion planning for a known arm, A* over a known map, Kalman fusion of well-modeled sensors. Learning wins when the world is too complex to model - contact-rich manipulation, agile locomotion over varied terrain, perception in clutter, and any task where you'd rather collect data than write equations.",
+      "bullets": [
+        "Use classical when: dynamics are known, environment is structured, safety is critical",
+        "Use learning when: contact, clutter, dexterity, generalization, or large data exists",
+        "Hybrid wins often: classical for the safety-critical loop, learning for the perception or skill on top"
+      ]
+    },
+    {
+      "id": "rl-fundamentals",
+      "widget": "qlearning",
+      "heading": "Reinforcement Learning - the core idea",
+      "body": "RL frames a problem as a Markov Decision Process: at each timestep the agent observes a state s, picks an action a, receives a reward r, and transitions to a new state s'. The goal is a policy π(a|s) that maximizes the expected sum of discounted future rewards. For robotics this is hard because: states are partially observed, actions are continuous, dynamics are unknown, and physical robots are slow to gather data.\n\nThe good news: modern algorithms (PPO, SAC, TD3) plus massively parallel simulation (Isaac Lab, MuJoCo MJX) have made it routine to train walking quadrupeds, in-hand manipulation, and drone control entirely in sim, then deploy zero-shot to real robots.",
+      "bullets": [
+        "State, action, reward, transition - the four ingredients of any MDP",
+        "Policy π(a|s) - what the agent does. Value V(s), Q(s,a) - how good a state/action is",
+        "Reward shaping is the dark art - bad rewards produce 'reward hacking' behaviors",
+        "On-policy (PPO) vs off-policy (SAC, TD3) - sample efficiency vs stability tradeoff"
+      ]
+    },
+    {
+      "id": "sim-to-real",
+      "heading": "Simulators + sim-to-real",
+      "body": "Real robots take seconds per training step; modern GPU simulators run thousands of environments in parallel at hundreds of thousands of steps per second. The 2026 recipe: train in a GPU sim with heavy domain randomization (mass, friction, motor delays, sensor noise, lighting), then deploy on real hardware. The reality gap closes through randomization plus a small amount of real-robot fine-tuning. NVIDIA's Cosmos and similar video world models are also being used to **synthesize photoreal training data** as a sim-augmentation, not just for world modeling.",
+      "bullets": [
+        "Isaac Lab (built on Isaac Sim 5.1 / 6.0) - GPU parallel sim, photoreal, the production-grade choice for humanoid + arm RL in 2026",
+        "MuJoCo + MuJoCo MJX - fast contact physics, JAX-friendly, the de-facto research standard. MJX runs on TPU / GPU",
+        "Genesis - GPU sim from the open-source community, ~80M FPS aggregate, growing fast",
+        "Brax - JAX-native physics from Google, common in research papers",
+        "Gazebo (Harmonic) - physics is good enough, vision is stylized; use it for systems work, not RL training",
+        "Domain randomization - vary friction, mass, lighting, textures, camera intrinsics every episode",
+        "Synthetic data via Cosmos / Omniverse Replicator - fills perception data gaps that pure-physics sim leaves"
+      ]
+    },
+    {
+      "id": "ppo-sac",
+      "heading": "PPO + SAC - the workhorse algorithms",
+      "body": "Two algorithms cover 90% of robot RL. PPO (Proximal Policy Optimization) is the on-policy default - stable, easy to tune, scales to massive parallel sims. SAC (Soft Actor-Critic) is the off-policy default - sample-efficient, great for tasks where each rollout is expensive, includes exploration via maximum entropy.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Train PPO on a Gymnasium env (stable-baselines3)",
+          "code": "import gymnasium as gym\nfrom stable_baselines3 import PPO\nfrom stable_baselines3.common.vec_env import SubprocVecEnv\n\ndef make_env(): return gym.make('Humanoid-v4')\n\nenvs = SubprocVecEnv([make_env for _ in range(16)])\nmodel = PPO('MlpPolicy', envs, n_steps=2048, batch_size=64,\n            learning_rate=3e-4, gamma=0.99, gae_lambda=0.95,\n            clip_range=0.2, ent_coef=0.0, verbose=1)\nmodel.learn(total_timesteps=10_000_000)\nmodel.save('humanoid_ppo')"
+        },
+        {
+          "language": "python",
+          "title": "SAC for an arm reaching task",
+          "code": "from stable_baselines3 import SAC\nfrom stable_baselines3.common.env_util import make_vec_env\n\nenv = make_vec_env('FetchReach-v3', n_envs=1)\nmodel = SAC('MultiInputPolicy', env,\n            buffer_size=1_000_000, batch_size=256,\n            tau=0.005, gamma=0.95, learning_starts=10_000,\n            verbose=1)\nmodel.learn(total_timesteps=1_000_000)"
+        }
+      ],
+      "links": [
+        {
+          "label": "stable-baselines3",
+          "url": "https://stable-baselines3.readthedocs.io/"
+        },
+        {
+          "label": "Isaac Lab tutorials",
+          "url": "https://isaac-sim.github.io/IsaacLab/"
+        }
+      ],
+      "widget": "rl-curve"
+    },
+    {
+      "id": "imitation-learning",
+      "heading": "Imitation Learning - learn from demonstrations",
+      "body": "Start here: HuggingFace's LeRobot is the de-facto starting point in 2026 for any IL work. One library, one dataset format, one CLI - it ships ACT, Diffusion Policy, π0, VQ-BeT, Pi0-FAST, plus loaders for Open-X-Embodiment, DROID, BridgeData, ALOHA, and the upstream openpi (Physical Intelligence's release of π0 / π0.5 weights). If you're picking up IL from scratch in 2026, do not roll your own training loop - clone lerobot, plug in your demos, train.\n\nThe theory underneath: when you have demonstrations, IL is often easier and faster than RL. The simplest form, behavior cloning, treats it as supervised learning: given (observation, action) pairs from an expert, train a network to map observations to actions. The catch is distributional shift - once the robot makes a mistake, it's in a state the expert never visited. DAgger fixes this by interactively querying the expert in those new states.\n\nModern flavors that ship in production stacks today: Diffusion Policy (denoising diffusion as action sampler - wins on dexterous tasks), ACT (Action Chunking Transformer - what ALOHA uses), Flow Matching policies (used by π0 / π0.5), and conditional BC variants used inside VLAs. The 2024-2025 ALOHA Unleashed result demonstrated that scale matters: 26K demos across 5 bimanual tasks + Diffusion Policy was enough to learn deformable-object and contact-rich manipulation reliably.",
+      "bullets": [
+        "Behavior Cloning - supervised regression on (obs, action) pairs. Limited by distributional shift",
+        "DAgger - query expert on robot's actual visited states. Fixes BC drift",
+        "Diffusion Policy - diffusion model conditioned on observation, samples action chunks; default for dexterous tasks",
+        "ACT (Action Chunking Transformer) - transformer that emits k actions at a time, smooths jitter; what ALOHA / Mobile ALOHA / ALOHA Unleashed run on",
+        "Flow Matching - π0 / π0.5's continuous-action approach; smoother and faster than diffusion at inference",
+        "ALOHA Unleashed (2024) - 26K demos × 5 tasks proved that scale + Diffusion Policy beats algorithm tinkering",
+        "LeRobot (HuggingFace) - one library for ACT, Diffusion Policy, π0, datasets, eval; the modern default starting point",
+        "Demos collection: kinesthetic teaching, teleop (VR rig / leader-follower like ALOHA / GELLO), trajectory optimization"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Behavior cloning skeleton",
+          "code": "import torch, torch.nn as nn\nfrom torch.utils.data import DataLoader, TensorDataset\n\nclass Policy(nn.Module):\n    def __init__(self, obs_dim, act_dim):\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(obs_dim, 256), nn.ReLU(),\n            nn.Linear(256, 256), nn.ReLU(),\n            nn.Linear(256, act_dim))\n    def forward(self, x): return self.net(x)\n\ndef train(obs, act, epochs=100):\n    policy = Policy(obs.shape[-1], act.shape[-1])\n    opt = torch.optim.Adam(policy.parameters(), lr=3e-4)\n    loader = DataLoader(TensorDataset(obs, act), batch_size=256, shuffle=True)\n    for _ in range(epochs):\n        for o, a in loader:\n            loss = ((policy(o) - a) ** 2).mean()\n            opt.zero_grad(); loss.backward(); opt.step()\n    return policy"
+        }
+      ],
+      "links": [
+        {
+          "label": "Diffusion Policy paper / code",
+          "url": "https://diffusion-policy.cs.columbia.edu/"
+        },
+        {
+          "label": "ALOHA / ACT",
+          "url": "https://tonyzhaozh.github.io/aloha/"
+        }
+      ]
+    },
+    {
+      "id": "vlms",
+      "heading": "Vision-Language Models (VLMs) for robots",
+      "body": "VLMs (CLIP, GPT-4V, Gemini, LLaVA, Florence-2, Qwen-VL) take an image + text and produce text or scores. For robots, VLMs solve the open-vocabulary perception problem: instead of training a YOLO model for every new object, you ask 'is there a red mug on the table?' and get an answer. They're the building block for any system that needs to react to natural-language scene descriptions.",
+      "bullets": [
+        "CLIP - image and text into a shared embedding space; great for similarity / retrieval",
+        "Open-vocab detection (Grounding DINO, Florence-2, OWL-ViT) - bounding boxes from text prompts",
+        "Open-vocab segmentation (SAM 2, SEEM) - mask anything, optionally text-prompted",
+        "Multimodal LLMs (GPT-4V, Gemini, Qwen2-VL) - vision-grounded reasoning"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Open-vocab detection with Grounding DINO",
+          "code": "from groundingdino.util.inference import load_model, predict, load_image\n\nmodel = load_model('GroundingDINO/config/GroundingDINO_SwinT_OGC.py',\n                   'weights/groundingdino_swint_ogc.pth')\nimage_src, image = load_image('table_scene.jpg')\nboxes, logits, phrases = predict(\n    model=model, image=image,\n    caption='red mug. blue book. coffee pot.',\n    box_threshold=0.35, text_threshold=0.25)"
+        }
+      ],
+      "links": [
+        {
+          "label": "Grounding DINO",
+          "url": "https://github.com/IDEA-Research/GroundingDINO"
+        },
+        {
+          "label": "SAM 2",
+          "url": "https://github.com/facebookresearch/sam2"
+        }
+      ]
+    },
+    {
+      "id": "vla-models",
+      "heading": "Vision-Language-Action models (VLAs)",
+      "body": "VLAs are the heavyweight bet of modern robotics: one transformer that takes camera images and a language instruction, and emits robot actions directly. The 2026 landscape is crowded and most of the leaders are now open-weight. Physical Intelligence's π0 (Oct 2024, open-sourced Feb 2025) and π0.5 (Apr 2025) introduced flow-matching action heads and open-world generalization. NVIDIA's GR00T N1 (Mar 2025) brought a 2B dual-system architecture for humanoids. Figure released Helix for in-house humanoid stacks. OpenVLA's OFT (Optimized Fine-Tuning) extension delivers 25-50x faster inference and high-frequency bimanual control.\n\nThe recipe is the same across all of them: pre-train a VLM (Llama, Gemma, PaliGemma backbones), co-fine-tune on Open-X-Embodiment + your robot's demos, output continuous actions (flow matching) or discrete action tokens (autoregressive). Pick the action head based on whether you need dexterity (flow matching wins) or simple shop-floor pick-and-place (token VLAs are simpler).",
+      "bullets": [
+        "π0 / π0.5 (Physical Intelligence) - flow-matching VLA, fully open-source weights + code, π0.5 generalizes to entirely unseen kitchens / bedrooms",
+        "OpenVLA (7B) + OFT - open weights, 25-50x inference speedup over vanilla, fine-tune on your task in hours",
+        "NVIDIA GR00T N1 / N1.5 - 2B params, dual-system (System 2 VLM + System 1 motor head), trained on Cosmos-synthesized + real humanoid data",
+        "Figure Helix - in-house VLA powering Figure 02 / 03 production lines at BMW",
+        "RT-2 / RT-X - the original Google work; superseded in practice by π0-family and OpenVLA",
+        "Token VLAs vs flow VLAs: tokens are simple but coarse; flow-matching gives smooth high-frequency continuous actions",
+        "Open-X-Embodiment + DROID + LeRobot datasets - the public training mix behind every credible 2026 VLA"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Run OpenVLA on a single (image, instruction) pair",
+          "code": "from PIL import Image\nfrom transformers import AutoModelForVision2Seq, AutoProcessor\nimport torch\n\nprocessor = AutoProcessor.from_pretrained('openvla/openvla-7b', trust_remote_code=True)\nvla = AutoModelForVision2Seq.from_pretrained(\n    'openvla/openvla-7b', torch_dtype=torch.bfloat16,\n    low_cpu_mem_usage=True, trust_remote_code=True).to('cuda')\n\nimage = Image.open('robot_view.jpg')\nprompt = 'In: What action should the robot take to pick up the red mug?\\nOut:'\ninputs = processor(prompt, image).to('cuda', dtype=torch.bfloat16)\naction = vla.predict_action(**inputs, unnorm_key='bridge_orig', do_sample=False)\nprint(action)  # 7-DoF Δpose + gripper"
+        }
+      ],
+      "links": [
+        {
+          "label": "OpenVLA",
+          "url": "https://openvla.github.io/"
+        },
+        {
+          "label": "Octo",
+          "url": "https://octo-models.github.io/"
+        },
+        {
+          "label": "Open-X-Embodiment dataset",
+          "url": "https://robotics-transformer-x.github.io/"
+        }
+      ]
+    },
+    {
+      "id": "llm-planners",
+      "heading": "LLMs as task planners",
+      "body": "Beyond direct VLAs, LLMs shine as high-level task planners. Code-as-Policies has the LLM emit Python that calls your robot's API. SayCan uses an LLM to score skill candidates against a value function. ReAct loops LLM-in-the-loop reasoning with tool / robot calls. The pattern: you provide the LLM with the robot's available skills, the current scene description, and the task - it returns a plan or a single next action.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Code-as-Policies sketch - LLM emits robot Python",
+          "code": "from anthropic import Anthropic\n\nSKILLS = '''\nrobot.pick(object_name)        # picks named object\nrobot.place(location_name)     # places held object\nrobot.go_to(location_name)     # navigates the base\n'''\n\ndef plan(task, scene_description):\n    client = Anthropic()\n    prompt = f'''You control a robot. Available skills:\n{SKILLS}\nScene: {scene_description}\nTask: {task}\nWrite Python that completes the task. Output only code.'''\n    msg = client.messages.create(\n        model='claude-opus-4-7',\n        max_tokens=1024,\n        messages=[{'role': 'user', 'content': prompt}])\n    return msg.content[0].text\n\ncode = plan('put the red mug in the sink',\n            'Counter has a red mug, blue book. Sink is to the left.')\nexec(code, {'robot': my_robot})"
+        }
+      ],
+      "links": [
+        {
+          "label": "Code as Policies",
+          "url": "https://code-as-policies.github.io/"
+        },
+        {
+          "label": "SayCan",
+          "url": "https://say-can.github.io/"
+        }
+      ]
+    },
+    {
+      "id": "diffusion-policies",
+      "heading": "Diffusion policies - generative behavior cloning",
+      "body": "Diffusion Policy treats robot actions as samples from a conditional distribution: given the current observation, denoise pure Gaussian noise into a sequence of future actions. This handles multimodality naturally (multiple valid grasps, multiple paths around an obstacle), produces smooth chunked actions, and tops the leaderboards on contact-rich tasks. The cost is inference speed - 5-10 denoising steps per command - but distillation and consistency models are closing that gap.",
+      "bullets": [
+        "Inputs: observation history (images + proprio) - typically last 2 frames",
+        "Outputs: action chunk - typically next 16 actions",
+        "Backbone: 1D U-Net or transformer, conditioned on observation embedding",
+        "DDPM scheduler at training, DDIM at inference for fewer steps",
+        "Compute receding-horizon: predict 16, execute 8, predict next 16, etc."
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Sketch: train a 1D conditional diffusion policy",
+          "code": "import torch, torch.nn as nn\nfrom diffusers import DDPMScheduler\n\nT = 100  # diffusion steps\nsched = DDPMScheduler(num_train_timesteps=T)\n\nclass UNet1D(nn.Module):\n    # ...standard 1D U-Net conditioned on `cond` via FiLM...\n    def forward(self, noisy_actions, t, cond): ...\n\ndef train_step(obs_seq, action_seq, model: UNet1D, opt):\n    # action_seq: (B, horizon, action_dim)\n    cond = encode_obs(obs_seq)                # vision + proprio embedding\n    noise = torch.randn_like(action_seq)\n    t = torch.randint(0, T, (action_seq.size(0),), device=noise.device)\n    noisy = sched.add_noise(action_seq, noise, t)\n    pred_noise = model(noisy, t, cond)\n    loss = ((pred_noise - noise) ** 2).mean()\n    opt.zero_grad(); loss.backward(); opt.step()\n    return loss.item()\n\n@torch.no_grad()\ndef sample(obs_seq, model, horizon=16, action_dim=7, steps=10):\n    cond = encode_obs(obs_seq)\n    a = torch.randn(1, horizon, action_dim, device=cond.device)\n    sched.set_timesteps(steps)\n    for t in sched.timesteps:\n        eps = model(a, t.expand(1), cond)\n        a = sched.step(eps, t, a).prev_sample\n    return a"
+        }
+      ],
+      "links": [
+        {
+          "label": "Diffusion Policy",
+          "url": "https://diffusion-policy.cs.columbia.edu/"
+        }
+      ]
+    },
+    {
+      "id": "world-models",
+      "heading": "World models & model-based RL",
+      "body": "Model-free RL learns a policy by trial and error. Model-based RL learns a model of the world's dynamics first, then plans inside that learned model - far more sample-efficient. The Dreamer family (V2/V3) trains a recurrent latent world model and a policy entirely in dreams; a quadruped can learn to walk in 1 hour of real experience instead of weeks.\n\nThe story changed in 2025-2026 with video-pretrained world foundation models. NVIDIA's Cosmos (7B / 14B) was trained on 9,000T tokens / 20M hours of real-world video and has been downloaded over 2M times by Jan 2026; Cosmos Policy was added to turn those world models into action-conditioned planners. Meta's V-JEPA 2 was pretrained on 1M+ hours of video, then action-conditioned with just 62 hours of unlabeled robot video, hitting 80% zero-shot pick-and-place on real arms across labs. DeepMind's Genie 3 (~11B) generates persistent interactive 3D worlds at 24 fps. Wayve's GAIA-2 (8.4B) is the AV-focused entrant.\n\nThe philosophical split: pixel predictors (Cosmos, Genie, GAIA) generate full video frames; representation predictors (V-JEPA) skip pixels and predict in abstract feature space. Over $2B has flowed into world-model startups in Q1 2026 alone (World Labs, AMI Labs).",
+      "bullets": [
+        "Dreamer V3 - latent world model + actor-critic, learns walking robots in 1-2 hours of real experience",
+        "TD-MPC2 - model + planning hybrid, the strongest model-based method on most manipulation benchmarks",
+        "NVIDIA Cosmos (7B / 14B) - pixel-space video world model trained on 20M hours of real-world video; Cosmos Policy turns it into a planner",
+        "Meta V-JEPA 2 - feature-space prediction, 80% zero-shot pick-and-place after only 62h robot fine-tuning",
+        "DeepMind Genie 3 (~11B) - real-time interactive 3D world, 24 fps, persistent across long horizons",
+        "Wayve GAIA-2 (8.4B) - driving-focused video world model used for AV scenario synthesis",
+        "Sample efficiency: 10x to 100x less real data than PPO / SAC for many control tasks",
+        "Open question: are pixel-perfect rollouts the right abstraction, or is feature-space prediction enough? Both camps have $1B+ funding in 2026"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Train Dreamer V3 on a Gymnasium robot env (open source)",
+          "code": "pip install dreamerv3\n# Trains a world model + actor-critic on the latent\npython -m dreamerv3.train \\\n    --configs gym_proprio \\\n    --task gym_HalfCheetah-v4 \\\n    --logdir ~/dreamer/cheetah"
+        }
+      ],
+      "links": [
+        {
+          "label": "DreamerV3 paper / code",
+          "url": "https://github.com/danijar/dreamerv3"
+        },
+        {
+          "label": "TD-MPC2",
+          "url": "https://www.tdmpc2.com/"
+        },
+        {
+          "label": "NVIDIA Cosmos (world models)",
+          "url": "https://www.nvidia.com/en-us/ai/cosmos/"
+        }
+      ]
+    },
+    {
+      "id": "where-to-start",
+      "heading": "A practical order to learn",
+      "body": "If you're starting from scratch, this is the order I'd recommend.",
+      "bullets": [
+        "1. Linear algebra + probability refresher (3blue1brown, Bishop's PRML chapters 1-2)",
+        "2. Deep learning fundamentals - Karpathy's nn-zero-to-hero playlist, FastAI part 1",
+        "3. Gymnasium + stable-baselines3 - get PPO running on CartPole, then HalfCheetah",
+        "4. Read Sutton & Barto chapters 1-6 alongside the coding",
+        "5. Imitation learning - robomimic, ACT, Diffusion Policy on a robot dataset",
+        "6. Pick a sim (Isaac Lab or MuJoCo MJX), train one task end-to-end, deploy in sim",
+        "7. Read Open-X / OpenVLA / RT-2 papers, fine-tune OpenVLA on your own demos",
+        "8. Sim-to-real transfer: domain randomization, system identification, residual learning"
+      ],
+      "links": [
+        {
+          "label": "Sutton & Barto (free PDF)",
+          "url": "http://incompleteideas.net/book/the-book-2nd.html"
+        },
+        {
+          "label": "Spinning Up in Deep RL",
+          "url": "https://spinningup.openai.com/"
+        },
+        {
+          "label": "robomimic",
+          "url": "https://robomimic.github.io/"
+        }
+      ]
+    },
+    {
+      "id": "datasets-benchmarks",
+      "heading": "Datasets, benchmarks & evaluation",
+      "body": "Robot ML lives or dies by data. Knowing the standard datasets and benchmarks lets you compare against published results, fine-tune from a sane checkpoint, and avoid retraining from scratch. The 2023-2025 wave of cross-embodiment + teleop datasets means there is now enough public data to train a real VLA from scratch. The center of gravity in 2026 is HuggingFace's LeRobot Hub - it ingests Open-X, DROID, BridgeData, ALOHA datasets in one common format, and most new releases publish there first.",
+      "bullets": [
+        "Open-X-Embodiment - 1M+ episodes across 22 robots from 60 datasets and 34 labs; the foundation for OpenVLA, Octo, RT-X, GR00T",
+        "DROID - 76K teleop episodes from 18 institutions; high-quality, diverse scenes",
+        "BridgeData V2 - 60K episodes on a WidowX arm; the Berkeley generalization benchmark",
+        "RH20T - 110K episodes, 147 tasks across 4 robots, multi-modal sensors",
+        "ALOHA / ALOHA Unleashed - bimanual datasets, the staple for diffusion-policy benchmarks",
+        "LeRobot Hub - the de-facto 2026 distribution channel; reads Open-X, DROID, ALOHA, BridgeData in one format",
+        "RoboCasa - large-scale procedurally-generated kitchen scenes (sim, not real); base for π0.5 training mix",
+        "Eval benchmarks: SimplerEnv (sim eval that correlates with real-world success), CALVIN, LIBERO, RLBench, ManiSkill 3"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Stream Open-X via tfds - 100s of GB without downloading it all",
+          "code": "import tensorflow_datasets as tfds\n\n# Stream just one constituent dataset from the gs:// bucket\nds = tfds.load('berkeley_autolab_ur5', split='train',\n               data_dir='gs://gresearch/robotics')\nfor episode in ds.take(2):\n    for step in episode['steps']:\n        img = step['observation']['image']                # (H, W, 3) uint8\n        action = step['action']                            # robot-specific\n        instruction = step['observation']['natural_language_instruction']\n        print(instruction.numpy(), action.shape)"
+        },
+        {
+          "language": "bash",
+          "title": "Run SimplerEnv eval against an OpenVLA checkpoint",
+          "code": "pip install simpler-env\npython -m simpler_env.evaluation.maniskill2_evaluator \\\n    --task widowx_carrot_on_plate \\\n    --policy openvla --checkpoint openvla/openvla-7b \\\n    --num-episodes 25"
+        }
+      ],
+      "links": [
+        {
+          "label": "Open-X-Embodiment",
+          "url": "https://robotics-transformer-x.github.io/"
+        },
+        {
+          "label": "DROID dataset",
+          "url": "https://droid-dataset.github.io/"
+        },
+        {
+          "label": "SimplerEnv",
+          "url": "https://simpler-env.github.io/"
+        },
+        {
+          "label": "LIBERO",
+          "url": "https://libero-project.github.io/"
+        },
+        {
+          "label": "RoboCasa",
+          "url": "https://robocasa.ai/"
+        }
+      ]
+    },
+    {
+      "id": "vision-foundation-models",
+      "heading": "Vision foundation models",
+      "body": "Robotics perception increasingly bootstraps from vision foundation models - large image encoders trained self-supervised on internet-scale data. DINOv2 (Meta) gives general-purpose features that segment, classify, and localize objects with little fine-tuning. Sapiens (Meta, 2024) is human-specific. Florence-2 / CLIP-V2 do open-vocab everything. The pattern: use the FM as a frozen backbone, train a small adapter head for your task.",
+      "bullets": [
+        "DINOv2 - self-supervised ViT, frozen features, drop-in for segmentation / classification",
+        "Sapiens (Meta 2024) - human pose, depth, segmentation; SOTA for human-centric tasks",
+        "SAM 2 - promptable segmentation (point, box, text); video-aware",
+        "Florence-2 (Microsoft) - open-vocab detection, captioning, segmentation in one tiny model",
+        "EVA / EVA-02 - strong backbones competitive with DINOv2 at smaller scales",
+        "Pattern: freeze FM weights, train small adapter; 100×-1000× less compute than scratch"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "DINOv2 features for retrieval",
+          "code": "import torch\nfrom torchvision import transforms\nfrom PIL import Image\n\nmodel = torch.hub.load('facebookresearch/dinov2', 'dinov2_vits14').cuda().eval()\ntfm = transforms.Compose([\n    transforms.Resize((224, 224)),\n    transforms.ToTensor(),\n    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),\n])\nx = tfm(Image.open('scene.jpg')).unsqueeze(0).cuda()\nwith torch.no_grad():\n    feat = model(x)        # → (1, 384) embedding\n# Cosine-similar features → similar scenes / objects"
+        }
+      ],
+      "links": [
+        {
+          "label": "DINOv2",
+          "url": "https://github.com/facebookresearch/dinov2"
+        },
+        {
+          "label": "Sapiens",
+          "url": "https://about.meta.com/realitylabs/codecavatars/sapiens/"
+        },
+        {
+          "label": "Florence-2",
+          "url": "https://huggingface.co/microsoft/Florence-2-large"
+        }
+      ]
+    },
+    {
+      "id": "real-world-rl",
+      "heading": "Real-world RL - beyond sim-to-real",
+      "body": "Sim-to-real is the 2020-2023 playbook: train in sim with domain randomization, deploy on hardware. The 2024-2026 frontier is real-world RL - train policies directly on the robot. Q-Transformer (DeepMind), Robot Learning at Scale (Google), and ALOHA-2 collect millions of real episodes across many robots. Residual policies start from a sim-trained baseline and use real-world data only to fix the gap.",
+      "bullets": [
+        "Q-Transformer - autoregressive Q-learning over discrete action tokens; scales to 1000+ episodes",
+        "ALOHA-2 - bimanual real-world IL; ~100 demos per task is enough for many manipulations",
+        "Residual policies - sim-trained base + small real-world correction; sample efficient",
+        "Offline RL - RT-X dataset, CQL, IQL; bootstrap from existing logs",
+        "World models on real data - Wayve's GAIA-1 trains driving in a learned world model",
+        "Practical: start with IL, add RL only when IL plateaus and you can collect 10K+ episodes"
+      ],
+      "links": [
+        {
+          "label": "Q-Transformer",
+          "url": "https://qtransformer.github.io/"
+        },
+        {
+          "label": "RT-X / Open-X",
+          "url": "https://robotics-transformer-x.github.io/"
+        }
+      ]
+    }
+  ]
+}

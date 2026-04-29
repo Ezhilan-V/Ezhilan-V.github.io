@@ -1,0 +1,87 @@
+<section class="vocabulary">
+
+  <learn-page-hero
+    icon="fa-book-open"
+    eyebrow="Vocabulary"
+    [title]="intro.title"
+    [tagline]="intro.tagline"
+    [body]="intro.body"
+    accent="#facc15">
+  </learn-page-hero>
+
+  <div class="vocabulary__controls">
+    <learn-search-input
+      [value]="query"
+      placeholder="Search 100+ robotics terms - try 'pose', 'SLAM', 'PID'…"
+      ariaLabel="Search robotics vocabulary"
+      (valueChange)="setQuery($event)">
+    </learn-search-input>
+
+    <div class="vocabulary__chips">
+      <button type="button"
+              class="vocabulary__chip"
+              [class.is-active]="activeCategory === 'all'"
+              (click)="setCategory('all')">
+        <i class="fas fa-th-large"></i>
+        All <span class="vocabulary__chip-count">{{ terms.length }}</span>
+      </button>
+      <button *ngFor="let c of categories; trackBy: trackCat"
+              type="button"
+              class="vocabulary__chip"
+              [class.is-active]="activeCategory === c.id"
+              [style.--accent]="c.accent"
+              (click)="setCategory(c.id)">
+        {{ c.label }}
+      </button>
+    </div>
+  </div>
+
+  <div class="vocabulary__count" *ngIf="query || activeCategory !== 'all'">
+    Showing <strong>{{ totalShown }}</strong> term{{ totalShown === 1 ? '' : 's' }}.
+  </div>
+
+  <ng-container *ngIf="totalShown > 0; else emptyTpl">
+    <div class="vocabulary__section" *ngFor="let sec of sections; trackBy: trackSection">
+      <div class="vocabulary__letter" [attr.id]="'letter-' + sec.letter">{{ sec.letter }}</div>
+
+      <div class="vocabulary__list">
+        <article *ngFor="let t of sec.terms; trackBy: trackTerm"
+                 class="term"
+                 [class.is-open]="isExpanded(t.term)"
+                 [style.--accent]="catAccent(t.category)">
+          <header class="term__head" (click)="toggle(t.term)" tabindex="0"
+                  (keydown.enter)="toggle(t.term)" (keydown.space)="toggle(t.term)">
+            <div class="term__head-main">
+              <h3 class="term__name">{{ t.term }}</h3>
+              <span class="term__cat">{{ catLabel(t.category) }}</span>
+            </div>
+            <p class="term__short">{{ t.short }}</p>
+            <i class="fas term__chev"
+               [class.fa-chevron-down]="!isExpanded(t.term)"
+               [class.fa-chevron-up]="isExpanded(t.term)"></i>
+          </header>
+
+          <div *ngIf="isExpanded(t.term)" class="term__body">
+            <p class="term__long">{{ t.long }}</p>
+            <button *ngIf="t.branch"
+                    type="button"
+                    class="term__link"
+                    (click)="goToSection(t, $event)">
+              <i class="fas fa-arrow-right"></i>
+              Read more in {{ branchTitle(t.branch) }}<span *ngIf="t.section"> · {{ t.section }}</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #emptyTpl>
+    <div class="vocabulary__empty">
+      <i class="fas fa-search"></i>
+      <p>No terms match.</p>
+      <button type="button" (click)="resetFilters()">Reset filters</button>
+    </div>
+  </ng-template>
+
+</section>

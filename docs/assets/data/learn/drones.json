@@ -1,0 +1,208 @@
+{
+  "slug": "drones",
+  "hero": {
+    "tagline": "Robots that fly - multirotor, fixed-wing, and the autopilots that fly them",
+    "intro": "Aerial robots add a third spatial dimension and a constant fight against gravity. The hardest parts of grounded robotics - balance, stability, fail-safes - are foreground concerns from the first power-up. This branch covers the modern drone stack: how a multirotor stays in the air (motor mixing, cascade attitude + position control), the production autopilots (PX4, Ardupilot, Betaflight), the MAVLink protocol every drone speaks, autonomous mission planning, swarms, and real-world applications from agriculture to inspection to defense."
+  },
+  "sections": [
+    {
+      "id": "drone-types",
+      "heading": "Drone types - multirotor, fixed-wing, VTOL",
+      "body": "Three families of aerial vehicles with very different physics and use cases. Multirotors (quad/hexa/octa) hover, fly slow, dead-stop on a dime - and burn battery doing it. Fixed-wing aircraft glide efficiently over long distances but need a runway and constant forward motion. VTOL hybrids (tilt-rotor, tilt-wing, lift+cruise) take off vertically then transition to wing-borne flight - best of both, mechanically complex.",
+      "bullets": [
+        "Quadrotor - 4 motors, hover, ~25 min flight time on 5000 mAh battery, the default class",
+        "Hexa / octa - redundancy (one motor fails → still flies), heavier payload",
+        "Fixed-wing - 60+ min flight, 100+ km range, but needs a runway and ~10 m/s minimum airspeed",
+        "VTOL hybrids - vertical takeoff + cruise efficiency; military and delivery (Wisk, Joby, Zipline)",
+        "Sizes: tinywhoop (~25g) → cinematic (~2 kg) → industrial (~20 kg) → eVTOL (~1000 kg)",
+        "Pick by mission: hover/inspect → multirotor; survey miles → fixed-wing; both → VTOL"
+      ]
+    },
+    {
+      "id": "multirotor-dynamics",
+      "widget": "mixer",
+      "heading": "Multirotor dynamics + motor mixing",
+      "body": "A quadrotor has 4 propellers that each produce a thrust force and a torque (from their drag). Two diagonally-opposite propellers spin one direction, the other two spin the opposite - yaw torques cancel in hover. Roll is induced by spinning the right pair faster than the left; pitch by spinning the rear faster than the front; yaw by spinning one diagonal pair faster than the other. The 'motor mixer' translates desired (thrust, roll, pitch, yaw) commands into per-motor RPM.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Quadrotor X-configuration motor mixer",
+          "code": "import numpy as np\n\n# Mixer: rows = motors (FL, FR, RR, RL), cols = (T, roll, pitch, yaw)\n# X-frame: FL spins CCW, FR CW, RR CCW, RL CW\nMIXER = np.array([\n    [1, -1, +1, +1],   # FL\n    [1, +1, +1, -1],   # FR\n    [1, +1, -1, +1],   # RR\n    [1, -1, -1, -1]    # RL\n])\n\ndef mix(T, roll, pitch, yaw):\n    \"\"\"Returns 4 normalized motor commands in [0, 1].\"\"\"\n    cmd = MIXER @ np.array([T, roll, pitch, yaw])\n    cmd = (cmd - cmd.min()) / (cmd.max() - cmd.min() + 1e-9)   # normalize\n    return np.clip(cmd, 0, 1)"
+        }
+      ],
+      "bullets": [
+        "Thrust scales with rotor speed²; for hover at mass m: each motor produces m·g/4",
+        "Hover efficiency: ~5-7 grams of thrust per Watt; bigger props are dramatically more efficient",
+        "Yaw authority is weak (drag-derived) - quadrotors spin slowly in yaw, hexas worse",
+        "Centre of gravity matters - off-CG = constant trim correction = wasted flight time"
+      ]
+    },
+    {
+      "id": "attitude-control",
+      "heading": "Attitude control - the inner loop",
+      "body": "A multirotor is unstable; the attitude controller runs at 500-1000 Hz on the flight controller's microcontroller and is what keeps it in the air. The standard architecture is cascaded PID: an outer attitude loop (target roll/pitch/yaw) outputs target body rates; an inner rate loop (target body rates from gyro) outputs torque. The mixer turns torque into per-motor commands. Tuning is mostly the inner rate loop - get it stable and the outer loop falls into place.",
+      "bullets": [
+        "Inner loop: rate controller. Input: gyro. Output: motor commands. ~500-1000 Hz",
+        "Outer loop: attitude controller. Input: orientation estimate. Output: rate setpoint. ~250-500 Hz",
+        "Tuning order: P → D → I, on roll → pitch → yaw, then test with gentle inputs",
+        "Pid → MPC: production drones (Skydio, DJI Pro) replace inner PID with model predictive control",
+        "Quaternion attitude controller - avoids singularities the Euler version has",
+        "INDI (Incremental Nonlinear Dynamic Inversion) - modern alternative, robust to model error"
+      ],
+      "links": [
+        {
+          "label": "Quaternion attitude control (Mellinger)",
+          "url": "https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=10.1.1.467.6661"
+        }
+      ],
+      "widget": "cascade-pid"
+    },
+    {
+      "id": "position-control",
+      "heading": "Position control - the outer loop",
+      "body": "On top of the attitude / rate cascade sits the position controller. Input: target (x, y, z) in world frame + estimated current position from GPS/VIO/optical-flow. Output: target acceleration → target attitude. A typical PX4 multirotor uses a P controller for position → P+D for velocity → conversion to thrust + tilt → attitude setpoint. GPS-denied flight (indoor, under bridges) needs an alternative position source - usually optical flow + lidar altimeter, or VIO.",
+      "bullets": [
+        "Position → velocity → acceleration → attitude - three nested loops",
+        "GPS hold: ±1 m typical with consumer GPS; ±5 cm with RTK base station",
+        "Indoor: downward optical flow + lidar/ToF altimeter (Bitcraze Crazyflie, PX4 indoor mode)",
+        "VIO (visual-inertial odometry): T265 (discontinued), Skydio's custom stack, OpenVINS",
+        "Wind compensation: integral term in velocity loop or feed-forward from estimated wind"
+      ]
+    },
+    {
+      "id": "autopilots",
+      "heading": "Autopilots - PX4, Ardupilot, Crazyflie (and FPV's Betaflight)",
+      "body": "For autonomy work, two open-source stacks dominate: PX4 (BSD, ROS 2 native via the px4_ros_com bridge, used by Skydio / Auterion / Wing) and Ardupilot (GPL, more mature for fixed-wing / VTOL / boats / rovers, used by inspection + survey vendors). Crazyflie firmware powers Bitcraze's tiny indoor research drone, popular in academia for swarm research. Betaflight is FPV-racing only (rate mode, no autonomy, no waypoints) - mention it for completeness but it is not what you reach for if you're building a robot. The serious 2026 hardware is the Pixhawk 6X / 6C with an H7 SoC and dual IMU.",
+      "bullets": [
+        "PX4 - BSD, Pixhawk hardware family, ROS 2 native, modern default for research + serious commercial drones",
+        "Ardupilot - GPL, supports more vehicle types, mature, used by inspection + survey vendors",
+        "Crazyflie firmware - tiny (~25 g) drone, Python API, perfect for swarm research",
+        "Betaflight - FPV racing only, rates not angles, no autonomy features. Skip for robotics",
+        "Hardware: Pixhawk 6X / 6C is the modern flight controller; H7 SoC, dual IMU"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "PX4 SITL + ROS 2 bridge",
+          "code": "# Build PX4 with SITL\ncd ~/{{ws}}/src && git clone --recursive https://github.com/PX4/PX4-Autopilot.git\ncd PX4-Autopilot && make px4_sitl gz_x500\n\n# In another shell - bring up the ROS 2 bridge\nsudo apt install -y ros-jazzy-px4-msgs ros-jazzy-px4-ros-com\nros2 launch px4_ros_com sensor_combined_listener.launch.py"
+        }
+      ],
+      "links": [
+        {
+          "label": "PX4 docs",
+          "url": "https://docs.px4.io/"
+        },
+        {
+          "label": "Ardupilot docs",
+          "url": "https://ardupilot.org/"
+        },
+        {
+          "label": "Bitcraze Crazyflie",
+          "url": "https://www.bitcraze.io/"
+        }
+      ]
+    },
+    {
+      "id": "mavlink",
+      "heading": "MAVLink - the drone protocol",
+      "body": "MAVLink is the messaging protocol drones use to talk to ground control stations (QGroundControl, Mission Planner) and companion computers. Compact binary format, ~280 standard message types (HEARTBEAT, ATTITUDE, GLOBAL_POSITION_INT, COMMAND_LONG), runs over serial or UDP. Both PX4 and Ardupilot speak it natively; pymavlink is the canonical Python library for writing your own GCS or autonomous mission scripts.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "pymavlink - connect, arm, take off, land",
+          "code": "from pymavlink import mavutil\nimport time\n\nm = mavutil.mavlink_connection('udp:127.0.0.1:14550')\nm.wait_heartbeat()\n\n# Switch to GUIDED mode\nm.mav.set_mode_send(m.target_system,\n    mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, 4)\n\n# Arm\nm.mav.command_long_send(m.target_system, m.target_component,\n    mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0,\n    1, 0, 0, 0, 0, 0, 0)\n\n# Takeoff to 5 m\nm.mav.command_long_send(m.target_system, m.target_component,\n    mavutil.mavlink.MAV_CMD_NAV_TAKEOFF, 0,\n    0, 0, 0, 0, 0, 0, 5)\n\ntime.sleep(20)\n# Land\nm.mav.command_long_send(m.target_system, m.target_component,\n    mavutil.mavlink.MAV_CMD_NAV_LAND, 0, 0, 0, 0, 0, 0, 0, 0)"
+        }
+      ],
+      "links": [
+        {
+          "label": "MAVLink developer docs",
+          "url": "https://mavlink.io/en/"
+        },
+        {
+          "label": "pymavlink",
+          "url": "https://github.com/ArduPilot/pymavlink"
+        }
+      ]
+    },
+    {
+      "id": "autonomous-flight",
+      "heading": "Autonomous flight - missions, geofence, fail-safes",
+      "body": "A 'mission' is an ordered list of waypoints + per-waypoint actions (take photo, drop payload, hold for N seconds). The autopilot executes the mission while the companion computer handles anything outside the autopilot's repertoire - vision, dynamic obstacle avoidance, decisions. Production drones run a layered fail-safe: GPS lost? Hover. Comms lost? Return to launch (RTL). Battery low? Land here. Geofence breach? Hard stop. Each fail-safe has its own threshold and action.",
+      "bullets": [
+        "Waypoint missions: WAYPOINT, LOITER, JUMP, conditional commands; planned in QGC / Mission Planner",
+        "Geofence: polygonal allowed area; breach = automatic action (RTL, land, brake)",
+        "Fail-safes: GPS loss, RC loss, telemetry loss, battery low, geofence - each independent",
+        "RTL (return to launch): climb to safe altitude, fly to home, land",
+        "Companion computer: NVIDIA Jetson / Raspberry Pi running ROS 2 + perception + decision",
+        "Obstacle avoidance: Skydio's deep learning stack, PX4's collision_prevention with SF45/B lidar"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Upload a 4-waypoint mission via pymavlink",
+          "code": "from pymavlink import mavutil\n\ndef upload_mission(m, waypoints):\n    \"\"\"waypoints = [(lat, lon, alt_m, hold_s), ...]\"\"\"\n    m.mav.mission_clear_all_send(m.target_system, m.target_component)\n    m.mav.mission_count_send(m.target_system, m.target_component, len(waypoints))\n\n    for i, (lat, lon, alt, hold) in enumerate(waypoints):\n        msg = m.recv_match(type='MISSION_REQUEST', blocking=True)\n        m.mav.mission_item_send(\n            m.target_system, m.target_component, i,\n            mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT,\n            mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,\n            0, 1,                       # current, autocontinue\n            hold, 5, 0, 0,              # hold time, accept radius, pass radius, yaw\n            lat, lon, alt)\n    m.recv_match(type='MISSION_ACK', blocking=True)"
+        }
+      ]
+    },
+    {
+      "id": "aerial-perception",
+      "heading": "Aerial perception - what cameras + sensors to fly",
+      "body": "Drones can carry every sensor a ground robot can - but with strict weight + power budgets. The standard payload set: a downward camera + lidar altimeter for indoor positioning, a forward camera for FPV + obstacle detection, a gimbaled camera for the actual mission imagery (RGB / thermal / multispectral). Larger drones add side LiDAR for inspection, gas sensors for pipeline survey, hyperspectral for agriculture.",
+      "bullets": [
+        "Downward optical flow (PX4Flow, Ascent Vision) - replaces GPS indoors",
+        "Lidar altimeter (TF-Mini, SF11) - accurate altitude, especially over varying terrain",
+        "Gimbal: 3-axis brushless gimbal stabilizes the imaging payload to ~0.01° accuracy",
+        "Thermal: FLIR Tau, FLIR Vue Pro - search & rescue, building diagnostics",
+        "Multispectral: MicaSense RedEdge, Sentera 6X - agriculture (NDVI / NDRE indices)",
+        "Lidar for inspection: Hesai XT32 or Velodyne Puck Lite - 360° point cloud over towers / pipes"
+      ]
+    },
+    {
+      "id": "swarm-drones",
+      "heading": "Drone swarms - light shows + autonomous swarms",
+      "body": "Drone shows (Intel, SkyMagic, High Great) are choreographed swarms - every drone's trajectory is pre-computed centrally and uploaded; the actual flight is just precise mission execution with RTK GPS. Autonomous swarms (Cambridge SkyMul, MIT's Aerial Construction, Saab's Swarmind) make decisions onboard without central coordination - using boids-style local rules, consensus, or learned policies. Defense applications (Loyal Wingman, Replicator, Anduril Roadrunner) drive much of the current state of the art.",
+      "bullets": [
+        "Light shows - centralized choreography, RTK GPS, ~1 cm accuracy required for collision avoidance",
+        "Autonomous swarms - onboard decision; local rules (boids), consensus, or learned policies",
+        "Comms: 2.4/5 GHz mesh radios (Doodle Labs, Silvus), 900 MHz fallback, low-bandwidth",
+        "Coordination: time-synchronized maneuvers via PTP or GPS-disciplined clocks",
+        "Crazyswarm - open-source platform for indoor swarm research (Crazyflie + Vicon)",
+        "Defense: U.S. DoD Replicator program targets thousands of attritable autonomous systems"
+      ],
+      "links": [
+        {
+          "label": "Crazyswarm 2",
+          "url": "https://github.com/IMRCLab/crazyswarm2"
+        },
+        {
+          "label": "Intel drone light shows",
+          "url": "https://inteldronelightshows.com/"
+        }
+      ]
+    },
+    {
+      "id": "drone-applications",
+      "heading": "Real applications - agriculture, inspection, delivery",
+      "body": "Drones earn their keep in jobs that would be expensive, dangerous, or impossible from the ground. Precision agriculture (DJI Agras, XAG) sprays + maps fields at 10× the throughput of a tractor. Inspection (Skydio X10, Asio Spire) covers cell towers, wind turbines, bridges without scaffolding. Delivery (Wing, Zipline, Manna, Amazon Prime Air) moves time-critical packages over short distances. Defense + intelligence is the largest market by revenue and growing rapidly with FPV swarms.",
+      "bullets": [
+        "Precision ag - NDVI maps, spot-spray, planting; 1 ha covered in ~10 min vs hours by tractor",
+        "Inspection - automated tower / turbine / bridge inspection; 10× faster than rope access",
+        "Delivery - Zipline (medical, Africa); Wing (Walmart, Texas); Manna (Ireland)",
+        "Cinematography - DJI Inspire / Mavic, autonomous tracking shots",
+        "Search + rescue - thermal cameras, NIST Robotics SAR challenges",
+        "Defense - Loyal Wingman, Switchblade, Replicator program",
+        "Regulation: FAA Part 107 (US) for commercial < 25 kg; BVLOS waivers for autonomous ops"
+      ],
+      "links": [
+        {
+          "label": "FAA Part 107",
+          "url": "https://www.faa.gov/uas/commercial_operators"
+        },
+        {
+          "label": "Skydio open-source SDK",
+          "url": "https://github.com/Skydio/aerial-tools"
+        }
+      ]
+    }
+  ]
+}

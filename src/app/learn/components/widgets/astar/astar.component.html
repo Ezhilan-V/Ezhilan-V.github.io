@@ -1,0 +1,66 @@
+<div class="astar">
+  <div class="astar__stage">
+    <canvas #canvas
+            (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)"
+            (pointerup)="onPointerUp()"
+            (pointerleave)="onPointerUp()"></canvas>
+    <div class="astar__hint">click + drag cells to add or remove walls</div>
+  </div>
+
+  <div class="astar__panel">
+    <div class="astar__panel-head">
+      <span class="astar__panel-title">A* search</span>
+      <span class="astar__status"
+            [class.is-found]="found"
+            [class.is-exhausted]="exhausted"
+            [class.is-running]="running">
+        <ng-container *ngIf="found">path found · {{ pathLen }} steps</ng-container>
+        <ng-container *ngIf="exhausted">no path</ng-container>
+        <ng-container *ngIf="running">searching · {{ steps }} expansions</ng-container>
+        <ng-container *ngIf="!running && !found && !exhausted">ready</ng-container>
+      </span>
+    </div>
+
+    <div class="astar__actions">
+      <button type="button" class="astar__btn astar__btn--primary"
+              (click)="running ? pause() : run()">
+        <i class="fas" [class.fa-play]="!running" [class.fa-pause]="running"></i>
+        {{ running ? 'pause' : (found || exhausted ? 'restart' : 'run') }}
+      </button>
+      <button type="button" class="astar__btn" (click)="reset()">
+        <i class="fas fa-undo"></i> reset search
+      </button>
+      <button type="button" class="astar__btn" (click)="clearWalls()">
+        <i class="fas fa-eraser"></i> clear walls
+      </button>
+      <button type="button" class="astar__btn" (click)="randomWalls()">
+        <i class="fas fa-dice"></i> random
+      </button>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Speed (ms / step)</span>
+        <span class="slider-row__val">{{ speed }} ms</span>
+      </div>
+      <input type="range" min="0" max="200" step="5" [value]="speed"
+             (input)="setSpeed($any($event.target).value)" aria-label="Search speed" />
+    </div>
+
+    <div class="astar__legend">
+      <span><i class="dot" style="background:#34d399"></i> start</span>
+      <span><i class="dot" style="background:#fb7185"></i> goal</span>
+      <span><i class="dot" style="background:rgba(56,189,248,0.5)"></i> open</span>
+      <span><i class="dot" style="background:rgba(167,139,250,0.5)"></i> closed</span>
+      <span><i class="dot" style="background:#fbbf24"></i> path</span>
+      <span><i class="dot" style="background:#1f2937"></i> wall</span>
+    </div>
+
+    <p class="astar__note">
+      A* expands the open node with the lowest <code>f = g + h</code>: <code>g</code> is cost from start,
+      <code>h</code> is the Manhattan-distance heuristic to the goal. Closed cells are already settled -
+      A* won't revisit them. Watch how the search hugs the heuristic gradient toward the goal.
+    </p>
+  </div>
+</div>

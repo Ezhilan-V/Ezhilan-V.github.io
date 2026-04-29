@@ -1,0 +1,15 @@
+<div class="path-canvas" #stage>
+  <canvas #canvas
+          (mousemove)="onMove($event)"
+          (mouseleave)="onLeave()"
+          (click)="onClick($event)"></canvas>
+
+  <div *ngIf="hoverId"
+       class="path-canvas__tooltip"
+       [style.left.px]="hoverPos.x + 14"
+       [style.top.px]="hoverPos.y + 14">
+    <strong>{{ hoverLabel }}</strong>
+    <span>{{ hoverDesc }}</span>
+    <em>click to open →</em>
+  </div>
+</div>

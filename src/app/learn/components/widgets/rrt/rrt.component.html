@@ -1,0 +1,55 @@
+<div class="rrt">
+  <div class="rrt__stage">
+    <canvas #canvas></canvas>
+  </div>
+
+  <div class="rrt__panel">
+    <div class="rrt__panel-head">
+      <span class="rrt__panel-title">RRT planner</span>
+      <span class="rrt__status"
+            [class.is-found]="goalReachedIdx >= 0"
+            [class.is-running]="running">
+        <ng-container *ngIf="goalReachedIdx >= 0">path · {{ path.length }} nodes · {{ iters }} samples</ng-container>
+        <ng-container *ngIf="running && goalReachedIdx < 0">growing · {{ iters }} samples</ng-container>
+        <ng-container *ngIf="!running && goalReachedIdx < 0">ready</ng-container>
+      </span>
+    </div>
+
+    <div class="rrt__actions">
+      <button type="button" class="rrt__btn rrt__btn--primary" (click)="toggleRun()">
+        <i class="fas" [class.fa-play]="!running" [class.fa-pause]="running"></i>
+        {{ running ? 'pause' : (goalReachedIdx >= 0 ? 'restart' : 'run') }}
+      </button>
+      <button type="button" class="rrt__btn" (click)="reset(false)">
+        <i class="fas fa-undo"></i> reset tree
+      </button>
+      <button type="button" class="rrt__btn" (click)="newScene()">
+        <i class="fas fa-dice"></i> new scene
+      </button>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Step size</span><span class="slider-row__val">{{ stepSize | number:'1.2-2' }} m</span></div>
+      <input type="range" min="0.1" max="1.0" step="0.05" [value]="stepSize"
+             (input)="onSlider('stepSize', $any($event.target).value)" aria-label="Step size" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Goal bias</span><span class="slider-row__val">{{ (goalBias * 100) | number:'1.0-0' }} %</span></div>
+      <input type="range" min="0" max="0.5" step="0.01" [value]="goalBias"
+             (input)="onSlider('goalBias', $any($event.target).value)" aria-label="Goal bias" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Iterations / frame</span><span class="slider-row__val">{{ speed }}</span></div>
+      <input type="range" min="1" max="40" step="1" [value]="speed"
+             (input)="onSlider('speed', $any($event.target).value)" aria-label="Iter speed" />
+    </div>
+
+    <p class="rrt__note">
+      RRT: sample a random point, find the nearest tree node, steer toward the sample by <code>stepSize</code>.
+      If the new edge is collision-free, add it. <b>Goal bias</b> = probability the sample is the goal itself
+      - pull it up and the tree races there; pull it down and the tree explores first.
+    </p>
+  </div>
+</div>

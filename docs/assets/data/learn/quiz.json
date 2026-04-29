@@ -1,0 +1,1730 @@
+{
+  "intro": {
+    "title": "Test Your Knowledge",
+    "tagline": "Answer questions. Get pointed at exactly what to read.",
+    "body": "Every question has one correct answer and an explanation. Get it wrong and you'll see a direct link to the section that covers it - that's the whole point: a quiz that teaches what it tests. Pick a category or run the mixed quiz."
+  },
+  "categories": [
+    { "id": "fundamentals",  "label": "Fundamentals",         "icon": "fa-book-open",       "accent": "#facc15", "description": "Math, frames, DoF, the basics every roboticist knows." },
+    { "id": "perception",    "label": "Perception & Vision",  "icon": "fa-eye",             "accent": "#a78bfa", "description": "Cameras, point clouds, SLAM, detection." },
+    { "id": "navigation",    "label": "Navigation",           "icon": "fa-compass",         "accent": "#34d399", "description": "Maps, localization, planners, costmaps." },
+    { "id": "manipulation",  "label": "Manipulation",         "icon": "fa-hand-paper",      "accent": "#38bdf8", "description": "Arms, IK, MoveIt, grasping, control." },
+    { "id": "control",       "label": "Control",              "icon": "fa-sliders",         "accent": "#f43f5e", "description": "PID, MPC, LQR, real-time loops." },
+    { "id": "ai-ml",         "label": "AI / ML",              "icon": "fa-brain",           "accent": "#fb7185", "description": "RL, imitation, VLMs, sim-to-real." },
+    { "id": "ros",           "label": "ROS 2 & Software",     "icon": "fa-rocket",          "accent": "#fbbf24", "description": "Topics, services, QoS, launch, real-time." }
+  ],
+  "questions": [
+    {
+      "id": "q-fund-dof",
+      "category": "fundamentals",
+      "level": "beginner",
+      "prompt": "A standard 6-axis industrial arm has how many degrees of freedom?",
+      "choices": [
+        { "id": "a", "text": "3" },
+        { "id": "b", "text": "6" },
+        { "id": "c", "text": "12" },
+        { "id": "d", "text": "It depends on the gripper" }
+      ],
+      "answer": "b",
+      "explanation": "Each independent joint contributes one degree of freedom. A 6-axis arm has 6 joints, so 6 DoF. Gripper fingers usually aren't counted as arm DoF.",
+      "branch": "mechanical-design",
+      "section": "rigid-body-basics"
+    },
+    {
+      "id": "q-fund-pose",
+      "category": "fundamentals",
+      "level": "beginner",
+      "prompt": "How many numbers does a full 3D pose carry?",
+      "choices": [
+        { "id": "a", "text": "3 (just position)" },
+        { "id": "b", "text": "6 (position + orientation)" },
+        { "id": "c", "text": "9 (position + a 3x3 rotation)" },
+        { "id": "d", "text": "16 (a homogeneous transform matrix)" }
+      ],
+      "answer": "b",
+      "explanation": "A pose is position (x, y, z) plus orientation (3 angles or a quaternion). The minimum count is 6. Quaternions use 4 numbers but represent the same 3 rotational DoF.",
+      "branch": "mechanical-design",
+      "section": "frames-rotations"
+    },
+    {
+      "id": "q-fund-quat",
+      "category": "fundamentals",
+      "level": "beginner",
+      "prompt": "Why do most ROS messages carry orientation as a quaternion instead of Euler angles?",
+      "choices": [
+        { "id": "a", "text": "Quaternions are easier for humans to read" },
+        { "id": "b", "text": "Quaternions avoid gimbal lock and compose without singularities" },
+        { "id": "c", "text": "Quaternions use less bandwidth" },
+        { "id": "d", "text": "ROS only supports quaternions for legacy reasons" }
+      ],
+      "answer": "b",
+      "explanation": "Quaternions are singularity-free for representing 3D rotations. Euler angles hit gimbal lock at the poles, breaking interpolation and integration.",
+      "branch": "mechanical-design",
+      "section": "frames-rotations"
+    },
+    {
+      "id": "q-fund-fk-vs-ik",
+      "category": "fundamentals",
+      "level": "beginner",
+      "prompt": "Which statement is true about forward vs inverse kinematics?",
+      "choices": [
+        { "id": "a", "text": "Forward kinematics is harder than inverse kinematics" },
+        { "id": "b", "text": "Inverse kinematics always has exactly one solution" },
+        { "id": "c", "text": "Forward kinematics is always solvable; inverse kinematics may have many or none" },
+        { "id": "d", "text": "They are the same operation in different units" }
+      ],
+      "answer": "c",
+      "explanation": "FK is a direct chain of transforms - one answer, always works. IK is the reverse mapping; for redundant arms it has infinitely many answers, and for unreachable poses, none.",
+      "branch": "mechanical-design",
+      "section": "inverse-kinematics"
+    },
+    {
+      "id": "q-fund-jacobian",
+      "category": "fundamentals",
+      "level": "intermediate",
+      "prompt": "What does the manipulator Jacobian J(q) map?",
+      "choices": [
+        { "id": "a", "text": "Joint positions to end-effector pose" },
+        { "id": "b", "text": "Joint velocities to end-effector velocity" },
+        { "id": "c", "text": "Joint torques to motor currents" },
+        { "id": "d", "text": "End-effector pose to joint positions" }
+      ],
+      "answer": "b",
+      "explanation": "The Jacobian linearly maps joint-space velocities to task-space velocities. Its transpose maps end-effector forces back to joint torques.",
+      "branch": "mechanical-design",
+      "section": "dynamics"
+    },
+    {
+      "id": "q-perc-pinhole",
+      "category": "perception",
+      "level": "beginner",
+      "prompt": "In the pinhole camera model, what do the intrinsics fx, fy, cx, cy describe?",
+      "choices": [
+        { "id": "a", "text": "The camera's pose in the world frame" },
+        { "id": "b", "text": "The internal projection - focal length and principal point" },
+        { "id": "c", "text": "Lens distortion coefficients" },
+        { "id": "d", "text": "The depth from camera to object" }
+      ],
+      "answer": "b",
+      "explanation": "Intrinsics are the camera's internal parameters: focal length and the optical center. Extrinsics are the camera's pose relative to another frame; distortion has its own coefficients.",
+      "branch": "computer-vision",
+      "section": "camera-fundamentals"
+    },
+    {
+      "id": "q-perc-sensor-pick",
+      "category": "perception",
+      "level": "beginner",
+      "prompt": "You need depth on a fast-moving outdoor robot in bright sunlight. Best primary sensor?",
+      "choices": [
+        { "id": "a", "text": "Structured-light RGB-D camera" },
+        { "id": "b", "text": "Stereo camera or 3D LiDAR" },
+        { "id": "c", "text": "Ultrasonic rangefinder" },
+        { "id": "d", "text": "IR proximity sensor" }
+      ],
+      "answer": "b",
+      "explanation": "Structured-light depth fails in sunlight (the IR pattern washes out). Stereo and LiDAR work outdoors. AVs use both, plus radar for weather.",
+      "branch": "sensors",
+      "section": "cameras"
+    },
+    {
+      "id": "q-perc-pcl",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "Which is true about point clouds?",
+      "choices": [
+        { "id": "a", "text": "They contain RGB color and nothing else" },
+        { "id": "b", "text": "They are unordered sets of 3D points, often with intensity or color" },
+        { "id": "c", "text": "They are 2D occupancy grids" },
+        { "id": "d", "text": "They represent dense voxel volumes" }
+      ],
+      "answer": "b",
+      "explanation": "A point cloud is an unordered list of 3D points (sometimes with extra channels). Voxels and occupancy grids are different data structures derived from clouds.",
+      "branch": "computer-vision",
+      "section": "point-clouds"
+    },
+    {
+      "id": "q-perc-loop-closure",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "What problem does loop closure solve in SLAM?",
+      "choices": [
+        { "id": "a", "text": "Recovering from a kidnapped-robot scenario" },
+        { "id": "b", "text": "Cancelling accumulated drift when the robot revisits a place" },
+        { "id": "c", "text": "Closing the control loop on the wheels" },
+        { "id": "d", "text": "Compressing the point cloud" }
+      ],
+      "answer": "b",
+      "explanation": "Without loop closure, SLAM accumulates drift forever. Recognising a previously-visited place lets pose-graph optimization snap the trajectory back into shape.",
+      "branch": "computer-vision",
+      "section": "visual-slam"
+    },
+    {
+      "id": "q-nav-bayes",
+      "category": "navigation",
+      "level": "beginner",
+      "prompt": "The Bayes filter alternates between which two operations?",
+      "choices": [
+        { "id": "a", "text": "Predict and update" },
+        { "id": "b", "text": "Plan and execute" },
+        { "id": "c", "text": "Sense and act" },
+        { "id": "d", "text": "Encode and decode" }
+      ],
+      "answer": "a",
+      "explanation": "Predict pushes the belief through a motion model; update multiplies by sensor likelihood and renormalizes. Every Kalman, particle, and grid filter is a special case.",
+      "branch": "navigation",
+      "section": "bayes-filter-intuition"
+    },
+    {
+      "id": "q-nav-amcl",
+      "category": "navigation",
+      "level": "beginner",
+      "prompt": "What does Nav2's AMCL do?",
+      "choices": [
+        { "id": "a", "text": "Builds a brand new map from scratch" },
+        { "id": "b", "text": "Localizes the robot in an already-known map using a particle filter" },
+        { "id": "c", "text": "Plans the global path" },
+        { "id": "d", "text": "Drives the wheels with a PID controller" }
+      ],
+      "answer": "b",
+      "explanation": "AMCL = Adaptive Monte-Carlo Localization. It assumes you have a map already (built with slam_toolbox or Cartographer) and tracks the robot's pose in it.",
+      "branch": "navigation",
+      "section": "localization"
+    },
+    {
+      "id": "q-nav-costmap",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "What does the inflation layer of a costmap do?",
+      "choices": [
+        { "id": "a", "text": "Marks unknown cells as occupied" },
+        { "id": "b", "text": "Adds a smooth cost gradient around obstacles to keep the planner away" },
+        { "id": "c", "text": "Compresses the grid for storage" },
+        { "id": "d", "text": "Filters lidar noise" }
+      ],
+      "answer": "b",
+      "explanation": "Without inflation, planners hug walls. The inflation layer decays cost from each obstacle so the planner picks the lane that gives clearance - tunable per robot footprint.",
+      "branch": "navigation",
+      "section": "costmaps"
+    },
+    {
+      "id": "q-nav-astar",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "A* finds an optimal path when the heuristic h(n) is …",
+      "choices": [
+        { "id": "a", "text": "Always zero" },
+        { "id": "b", "text": "Admissible (never overestimates) and consistent" },
+        { "id": "c", "text": "Equal to the actual remaining cost" },
+        { "id": "d", "text": "Random - A* is not optimal" }
+      ],
+      "answer": "b",
+      "explanation": "A* with h ≡ 0 reduces to Dijkstra (optimal but slow). With an admissible + consistent heuristic, it stays optimal and prunes the search tree.",
+      "branch": "navigation",
+      "section": "astar-playground"
+    },
+    {
+      "id": "q-nav-bt",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "Why do Nav2 and most modern AV stacks prefer behavior trees over finite state machines?",
+      "choices": [
+        { "id": "a", "text": "BTs are faster at runtime" },
+        { "id": "b", "text": "BTs are required by ROS 2" },
+        { "id": "c", "text": "BTs compose hierarchically - easier to extend, reuse, and visualize than transition-spaghetti FSMs" },
+        { "id": "d", "text": "FSMs cannot represent 'if obstacle then stop'" }
+      ],
+      "answer": "c",
+      "explanation": "FSMs explode in transitions as missions grow. BTs compose by selectors / sequences / decorators, which scales much more cleanly for non-trivial mission logic.",
+      "branch": "navigation",
+      "section": "behavior-trees"
+    },
+    {
+      "id": "q-manip-rrt",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "Why are sampling-based planners (RRT, RRT*, PRM) preferred over grid search for arm motion planning?",
+      "choices": [
+        { "id": "a", "text": "They always find the optimal path" },
+        { "id": "b", "text": "They scale to high-dimensional configuration spaces where grids are infeasible" },
+        { "id": "c", "text": "They don't need a collision checker" },
+        { "id": "d", "text": "They are simpler to implement than A*" }
+      ],
+      "answer": "b",
+      "explanation": "A 7-DoF arm's configuration space is too large to grid. Sampling-based planners explore probabilistically and connect collision-free samples, making the problem tractable.",
+      "branch": "manipulation",
+      "section": "motion-planning"
+    },
+    {
+      "id": "q-manip-moveit",
+      "category": "manipulation",
+      "level": "beginner",
+      "prompt": "What does MoveIt 2 give you out of the box, given a URDF + SRDF?",
+      "choices": [
+        { "id": "a", "text": "Just inverse kinematics" },
+        { "id": "b", "text": "Just collision checking" },
+        { "id": "c", "text": "IK + planning + collision checking + a Python/C++ API + execution" },
+        { "id": "d", "text": "A sim environment with photoreal rendering" }
+      ],
+      "answer": "c",
+      "explanation": "MoveIt is the full manipulation stack: parser, IK solvers, OMPL planners, collision pipeline, controllers integration, RViz plugin.",
+      "branch": "manipulation",
+      "section": "moveit-setup"
+    },
+    {
+      "id": "q-manip-impedance",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "When would you choose impedance control over pure position control?",
+      "choices": [
+        { "id": "a", "text": "When the robot must hit an exact position regardless of contact" },
+        { "id": "b", "text": "When the robot interacts with a stiff environment and must regulate contact force gently" },
+        { "id": "c", "text": "When you need the fastest possible motion" },
+        { "id": "d", "text": "Always - impedance control is strictly better" }
+      ],
+      "answer": "b",
+      "explanation": "Position-controlled rigid contact = high force spikes and damage. Impedance control commands a virtual stiffness, so contact is bounded and gentle.",
+      "branch": "control-systems",
+      "section": "force-impedance"
+    },
+    {
+      "id": "q-control-pid-tune",
+      "category": "control",
+      "level": "beginner",
+      "prompt": "You're tuning a PID position loop and notice steady oscillation around the target. What do you do first?",
+      "choices": [
+        { "id": "a", "text": "Increase Kp" },
+        { "id": "b", "text": "Decrease Kp or add some Kd" },
+        { "id": "c", "text": "Crank Ki way up" },
+        { "id": "d", "text": "Switch to MPC" }
+      ],
+      "answer": "b",
+      "explanation": "Oscillation = too much aggressive proportional gain. Reduce Kp or add derivative damping. Adding Ki only worsens oscillation; jumping to MPC is overkill.",
+      "branch": "control-systems",
+      "section": "pid-control"
+    },
+    {
+      "id": "q-control-mpc-when",
+      "category": "control",
+      "level": "intermediate",
+      "prompt": "What's the headline reason to use MPC over PID?",
+      "choices": [
+        { "id": "a", "text": "MPC has fewer parameters to tune" },
+        { "id": "b", "text": "MPC handles state and input constraints natively, plus multi-step prediction" },
+        { "id": "c", "text": "MPC runs faster than PID" },
+        { "id": "d", "text": "MPC works without a model" }
+      ],
+      "answer": "b",
+      "explanation": "PID can't enforce 'don't exceed 60 km/h' or 'stay in this lane' as constraints. MPC solves a constrained optimization every cycle and naturally bakes them in - at the cost of compute.",
+      "branch": "control-systems",
+      "section": "mpc"
+    },
+    {
+      "id": "q-control-rt",
+      "category": "control",
+      "level": "advanced",
+      "prompt": "Why do high-rate (≥ 1 kHz) controllers usually need a real-time kernel like PREEMPT_RT?",
+      "choices": [
+        { "id": "a", "text": "Vanilla Linux is too slow" },
+        { "id": "b", "text": "RT kernels guarantee bounded worst-case latency, so timing jitter doesn't destabilize the loop" },
+        { "id": "c", "text": "Vanilla Linux can't access GPIO" },
+        { "id": "d", "text": "ROS 2 only runs on RT kernels" }
+      ],
+      "answer": "b",
+      "explanation": "It's not about average speed - it's about the tail. A 1 kHz loop that occasionally stalls 10 ms because the kernel scheduled something else will make a stiff controller unstable.",
+      "branch": "compute",
+      "section": "rtos"
+    },
+    {
+      "id": "q-aiml-rl-vs-il",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "When should you reach for imitation learning instead of RL?",
+      "choices": [
+        { "id": "a", "text": "When you have lots of compute and a clean reward function" },
+        { "id": "b", "text": "When you have demonstrations but designing a reward function is hard" },
+        { "id": "c", "text": "When you need provable optimality" },
+        { "id": "d", "text": "Never - RL is always better" }
+      ],
+      "answer": "b",
+      "explanation": "RL needs a dense reward; designing one for dexterous manipulation is brutal. Imitation learning sidesteps that - collect 50–500 demos, train a policy, ship.",
+      "branch": "ai-ml",
+      "section": "imitation-learning"
+    },
+    {
+      "id": "q-aiml-vla",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "What does a Vision-Language-Action (VLA) model output?",
+      "choices": [
+        { "id": "a", "text": "Captions for an image" },
+        { "id": "b", "text": "Robot motor commands conditioned on an image and a text instruction" },
+        { "id": "c", "text": "A behavior tree" },
+        { "id": "d", "text": "A path on a 2D grid" }
+      ],
+      "answer": "b",
+      "explanation": "VLAs (RT-2, OpenVLA, π0) take image + instruction and output low-level action tokens / joint commands directly. They're the closest the field has come to a generalist robot policy.",
+      "branch": "ai-ml",
+      "section": "vla-models"
+    },
+    {
+      "id": "q-aiml-sim2real",
+      "category": "ai-ml",
+      "level": "advanced",
+      "prompt": "Domain randomization helps sim-to-real transfer mainly because …",
+      "choices": [
+        { "id": "a", "text": "It speeds up simulation" },
+        { "id": "b", "text": "Training under randomized dynamics, lighting, friction, etc., forces the policy to ignore sim-specific cues and become robust" },
+        { "id": "c", "text": "It eliminates the need for system identification" },
+        { "id": "d", "text": "Real robots are randomized, so sim must be too" }
+      ],
+      "answer": "b",
+      "explanation": "If every episode looks slightly different, the policy must learn the underlying task dynamics rather than overfitting to simulator quirks. The reality gap shrinks as the policy becomes invariant to the randomized factors.",
+      "branch": "ai-ml",
+      "section": "sim-to-real"
+    },
+    {
+      "id": "q-aiml-diffusion",
+      "category": "ai-ml",
+      "level": "advanced",
+      "prompt": "Diffusion policies handle which problem better than vanilla behavior cloning?",
+      "choices": [
+        { "id": "a", "text": "Multi-modal demonstrations (more than one correct action for the same state)" },
+        { "id": "b", "text": "Faster inference" },
+        { "id": "c", "text": "Lower sample complexity" },
+        { "id": "d", "text": "Provable optimality" }
+      ],
+      "answer": "a",
+      "explanation": "If demonstrators sometimes go left and sometimes go right around the same obstacle, mean-squared-error BC averages to going straight - into the obstacle. Diffusion samples one of the modes instead.",
+      "branch": "ai-ml",
+      "section": "diffusion-policies"
+    },
+    {
+      "id": "q-ros-topic-vs-service",
+      "category": "ros",
+      "level": "beginner",
+      "prompt": "In ROS 2, which is correct?",
+      "choices": [
+        { "id": "a", "text": "Topics are synchronous; services are async" },
+        { "id": "b", "text": "Topics are pub-sub streams; services are request/response" },
+        { "id": "c", "text": "Both topics and services guarantee delivery" },
+        { "id": "d", "text": "Services are deprecated in ROS 2" }
+      ],
+      "answer": "b",
+      "explanation": "Topics: many-to-many streaming. Services: synchronous RPC. For long-running goals with feedback, use Actions instead.",
+      "branch": "setup",
+      "section": "ros2-jazzy"
+    },
+    {
+      "id": "q-ros-qos",
+      "category": "ros",
+      "level": "intermediate",
+      "prompt": "Your ROS 2 subscriber gets nothing even though the publisher is running. Most likely cause?",
+      "choices": [
+        { "id": "a", "text": "Wrong DDS implementation installed" },
+        { "id": "b", "text": "Mismatched QoS profiles between publisher and subscriber" },
+        { "id": "c", "text": "Topic name typo" },
+        { "id": "d", "text": "Missing rosdep" }
+      ],
+      "answer": "b",
+      "explanation": "The #1 silent ROS 2 bug. Reliable publisher + best-effort subscriber, or KEEP_LAST 1 with a slow subscriber - discovery completes, but no messages flow. Topic typos give explicit errors; QoS mismatches don't.",
+      "branch": "compute",
+      "section": "qos-deep"
+    },
+    {
+      "id": "q-ros-action",
+      "category": "ros",
+      "level": "intermediate",
+      "prompt": "Which one of these is best implemented as a ROS 2 Action (not a topic or service)?",
+      "choices": [
+        { "id": "a", "text": "Streaming /scan from the LiDAR driver" },
+        { "id": "b", "text": "Setting a parameter once" },
+        { "id": "c", "text": "Asking the robot to navigate to a goal pose, with progress feedback and a cancel" },
+        { "id": "d", "text": "Reading the system clock" }
+      ],
+      "answer": "c",
+      "explanation": "Long-running, cancellable, with feedback during execution = Action. Pose goals, MoveIt plans, mission steps. Topics are wrong (no completion), services are wrong (no feedback).",
+      "branch": "setup",
+      "section": "ros2-jazzy"
+    },
+    {
+      "id": "q-ros-launch",
+      "category": "ros",
+      "level": "beginner",
+      "prompt": "What is a ROS 2 launch file primarily for?",
+      "choices": [
+        { "id": "a", "text": "Compiling C++ packages" },
+        { "id": "b", "text": "Bringing up many nodes with parameters and namespacing in one command" },
+        { "id": "c", "text": "Authoring URDFs" },
+        { "id": "d", "text": "Replaying bags" }
+      ],
+      "answer": "b",
+      "explanation": "Launch files (Python, sometimes XML or YAML) compose nodes, set parameters, push namespaces, and conditionally enable subsystems - the orchestration layer of every robot.",
+      "branch": "setup",
+      "section": "launch-system"
+    },
+    {
+      "id": "q-aiml-pi0-flow",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "What's the headline architectural innovation of Physical Intelligence's π0 / π0.5 VLAs?",
+      "choices": [
+        { "id": "a", "text": "Discrete action tokens like RT-2" },
+        { "id": "b", "text": "A flow-matching action head producing smooth continuous actions" },
+        { "id": "c", "text": "A 100B parameter backbone" },
+        { "id": "d", "text": "Operating without a vision encoder" }
+      ],
+      "answer": "b",
+      "explanation": "π0 / π0.5 fine-tune a VLM but replace token-classification action heads with flow matching, which gives smoother continuous actions and faster inference - a better fit for high-frequency dexterous control.",
+      "branch": "ai-ml",
+      "section": "vla-models"
+    },
+    {
+      "id": "q-aiml-groot-dual",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "NVIDIA's GR00T N1 humanoid VLA uses a dual-system architecture. What does each system do?",
+      "choices": [
+        { "id": "a", "text": "System 1 = camera, System 2 = LiDAR" },
+        { "id": "b", "text": "System 1 is a fast motor-action head; System 2 is a slower VLM doing perception + reasoning" },
+        { "id": "c", "text": "Two redundant policies for safety" },
+        { "id": "d", "text": "One for sim, one for real" }
+      ],
+      "answer": "b",
+      "explanation": "Borrowed from Kahneman's Thinking, Fast and Slow. System 2 (the VLM) handles slow semantic reasoning at low rate; System 1 handles fast motor control at high rate. The split lets a 2B model run real-time on a humanoid.",
+      "branch": "ai-ml",
+      "section": "vla-models"
+    },
+    {
+      "id": "q-aiml-cosmos-vjepa",
+      "category": "ai-ml",
+      "level": "advanced",
+      "prompt": "What is the main philosophical difference between NVIDIA Cosmos and Meta V-JEPA 2 as world models?",
+      "choices": [
+        { "id": "a", "text": "Cosmos is open source; V-JEPA 2 is closed" },
+        { "id": "b", "text": "Cosmos predicts in pixel space; V-JEPA 2 predicts in feature space and skips pixel reconstruction" },
+        { "id": "c", "text": "Cosmos is for robotics, V-JEPA 2 is for video generation only" },
+        { "id": "d", "text": "Cosmos is text-conditioned, V-JEPA 2 is image-only" }
+      ],
+      "answer": "b",
+      "explanation": "Cosmos generates full-resolution video frames (pixel-space). V-JEPA 2 follows Yann LeCun's bet that predicting in an abstract feature space is enough and avoids wasting capacity on pixel reconstruction.",
+      "branch": "ai-ml",
+      "section": "world-models"
+    },
+    {
+      "id": "q-manip-aloha-unleashed",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "What was the main lesson of the 2024 ALOHA Unleashed result?",
+      "choices": [
+        { "id": "a", "text": "A new algorithm beat Diffusion Policy" },
+        { "id": "b", "text": "Scale of demonstrations (26K demos x 5 tasks) plus Diffusion Policy is enough to learn hard bimanual tasks" },
+        { "id": "c", "text": "RL beats imitation learning on contact-rich tasks" },
+        { "id": "d", "text": "You only need 100 demos per task" }
+      ],
+      "answer": "b",
+      "explanation": "ALOHA Unleashed showed that aggressively scaling demonstration data (rather than tweaking algorithms) cracks deformable-object and contact-rich bimanual manipulation. The 'just scale demos' moment.",
+      "branch": "ai-ml",
+      "section": "imitation-learning"
+    },
+    {
+      "id": "q-manip-humanoid-prod",
+      "category": "manipulation",
+      "level": "beginner",
+      "prompt": "Which company's humanoid robot is deployed at BMW running their in-house Helix VLA?",
+      "choices": [
+        { "id": "a", "text": "Boston Dynamics (Atlas)" },
+        { "id": "b", "text": "Tesla (Optimus)" },
+        { "id": "c", "text": "Figure AI (Figure 02 / 03)" },
+        { "id": "d", "text": "1X (NEO)" }
+      ],
+      "answer": "c",
+      "explanation": "Figure 02 / 03 are deployed on the BMW production line running Figure's in-house VLA, called Helix. Atlas is at Hyundai, Optimus is mass-producing for Tesla's own factory, NEO ships to homes.",
+      "branch": "manipulation",
+      "section": "bimanual"
+    },
+    {
+      "id": "q-ros-jazzy-isaac",
+      "category": "ros",
+      "level": "beginner",
+      "prompt": "You're starting a new robotics project in 2026 and want to use Isaac Lab / Isaac Sim. Which ROS 2 distro should you pick?",
+      "choices": [
+        { "id": "a", "text": "Humble (it's still the most common)" },
+        { "id": "b", "text": "Jazzy (current LTS, officially tested with Isaac Sim 5.1 / 6.0)" },
+        { "id": "c", "text": "Kilted (latest non-LTS)" },
+        { "id": "d", "text": "Rolling" }
+      ],
+      "answer": "b",
+      "explanation": "Jazzy is the current LTS on Ubuntu 24.04 and the only LTS with official Isaac Sim 5.1 / 6.0 support. Humble is fine for legacy work but EOLs May 2027. Kilted is non-LTS with experimental Isaac support.",
+      "branch": "setup",
+      "section": "distro-choice"
+    },
+    {
+      "id": "q-fund-tf-tree",
+      "category": "fundamentals",
+      "level": "beginner",
+      "prompt": "Your robot has a /scan topic but RViz says \"transform from base_laser to base_link not available\". What's the most likely cause?",
+      "choices": [
+        { "id": "a", "text": "The LiDAR is broken" },
+        { "id": "b", "text": "The TF tree is broken — no node is publishing the static or dynamic transform between those frames" },
+        { "id": "c", "text": "The /scan topic is using the wrong QoS" },
+        { "id": "d", "text": "RViz needs to be reinstalled" }
+      ],
+      "answer": "b",
+      "explanation": "Whenever RViz can't render sensor data even though the topic is publishing, suspect TF first. Run `ros2 run tf2_tools view_frames` to render the tree as a PDF and find the missing edge.",
+      "branch": "mechanical-design",
+      "section": "frames-rotations"
+    },
+    {
+      "id": "q-perc-calibration",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "What does \"hand-eye calibration\" produce?",
+      "choices": [
+        { "id": "a", "text": "Camera intrinsics (focal length, principal point)" },
+        { "id": "b", "text": "The transform between the camera frame and the robot's end-effector or base frame" },
+        { "id": "c", "text": "A depth map" },
+        { "id": "d", "text": "Lens distortion coefficients" }
+      ],
+      "answer": "b",
+      "explanation": "Intrinsics are 'inside the camera', extrinsics are 'where is the camera relative to something else'. Hand-eye is the special extrinsic calibration that pins the camera to the gripper or the robot base.",
+      "branch": "sensors",
+      "section": "calibration"
+    },
+    {
+      "id": "q-perc-imu",
+      "category": "perception",
+      "level": "beginner",
+      "prompt": "Why do flight controllers always fuse IMU data with another sensor (GPS, vision, magnetometer)?",
+      "choices": [
+        { "id": "a", "text": "Single IMUs are too cheap to be reliable" },
+        { "id": "b", "text": "Integrating accelerometer and gyro signals causes unbounded drift over time" },
+        { "id": "c", "text": "IMUs only work indoors" },
+        { "id": "d", "text": "Two sensors halve the noise" }
+      ],
+      "answer": "b",
+      "explanation": "Accelerometer + gyro give you change-in-velocity and change-in-orientation. Integrating those to absolute pose accumulates noise. Adding an absolute reference (GPS for position, magnetometer or vision for heading) bounds the drift.",
+      "branch": "sensors",
+      "section": "imu"
+    },
+    {
+      "id": "q-control-rt",
+      "category": "control",
+      "level": "intermediate",
+      "prompt": "Your 1 kHz force-control loop occasionally jitters by 5 ms on a vanilla Ubuntu kernel. What's the canonical fix?",
+      "choices": [
+        { "id": "a", "text": "Buy a faster CPU" },
+        { "id": "b", "text": "Run the loop on a real-time kernel (PREEMPT_RT) with proper thread priorities" },
+        { "id": "c", "text": "Switch from Python to C++" },
+        { "id": "d", "text": "Lower the loop rate to 500 Hz" }
+      ],
+      "answer": "b",
+      "explanation": "Vanilla Linux is good at average throughput but has unbounded scheduling latency. PREEMPT_RT changes the scheduler so high-priority threads cannot be pre-empted by housekeeping work — that's what bounds jitter.",
+      "branch": "control-systems",
+      "section": "real-time-control"
+    },
+    {
+      "id": "q-control-state-space",
+      "category": "control",
+      "level": "advanced",
+      "prompt": "A linear state-space system ẋ = Ax + Bu, y = Cx is stable when…",
+      "choices": [
+        { "id": "a", "text": "All eigenvalues of A have negative real parts" },
+        { "id": "b", "text": "All eigenvalues of A have positive real parts" },
+        { "id": "c", "text": "B has full column rank" },
+        { "id": "d", "text": "C is the identity matrix" }
+      ],
+      "answer": "a",
+      "explanation": "Linear stability is decided by the closed-loop A matrix. Eigenvalues in the left half-plane (negative real parts) make perturbations decay; in the right half-plane they grow.",
+      "branch": "control-systems",
+      "section": "state-space"
+    },
+    {
+      "id": "q-control-lqr",
+      "category": "control",
+      "level": "advanced",
+      "prompt": "When you tune an LQR by changing Q (state cost) and R (input cost), what's the rule of thumb?",
+      "choices": [
+        { "id": "a", "text": "Increase Q to penalize large state errors more aggressively (faster response, but more control effort)" },
+        { "id": "b", "text": "Increase R to penalize large state errors" },
+        { "id": "c", "text": "Q and R have no effect on closed-loop behavior" },
+        { "id": "d", "text": "Set Q = 0 and tune R only" }
+      ],
+      "answer": "a",
+      "explanation": "Q weights how much you care about state error, R weights how much you care about input effort. Bigger Q / smaller R = aggressive controller. Bigger R / smaller Q = lazy controller. Tune the ratio.",
+      "branch": "control-systems",
+      "section": "state-space"
+    },
+    {
+      "id": "q-aiml-jetson-thor",
+      "category": "ai-ml",
+      "level": "beginner",
+      "prompt": "What's the headline reason NVIDIA released Jetson Thor in 2025?",
+      "choices": [
+        { "id": "a", "text": "Jetson Orin was deprecated" },
+        { "id": "b", "text": "VLAs and humanoid stacks need much more on-device compute than Orin can provide" },
+        { "id": "c", "text": "Cloud robotics replaced edge compute" },
+        { "id": "d", "text": "ROS 2 requires a new chip" }
+      ],
+      "answer": "b",
+      "explanation": "GR00T-style VLAs and full BEV perception running locally on a humanoid push past Orin's 275 TOPS. Thor's 2,000 TFLOPS FP4 is sized for that workload.",
+      "branch": "compute",
+      "section": "embedded-compute"
+    },
+    {
+      "id": "q-aiml-lerobot",
+      "category": "ai-ml",
+      "level": "beginner",
+      "prompt": "What is HuggingFace's LeRobot?",
+      "choices": [
+        { "id": "a", "text": "A new humanoid robot brand" },
+        { "id": "b", "text": "An open-source library + dataset hub for robot learning that bundles ACT, Diffusion Policy, π0, and standardized dataset formats" },
+        { "id": "c", "text": "A simulator from HuggingFace" },
+        { "id": "d", "text": "A fork of ROS 2" }
+      ],
+      "answer": "b",
+      "explanation": "LeRobot is the de-facto 2026 starting point for IL: one CLI, one common dataset format, ships ACT, Diffusion Policy, π0/π0.5 (via openpi), VQ-BeT, and loaders for Open-X, DROID, ALOHA, BridgeData.",
+      "branch": "ai-ml",
+      "section": "imitation-learning"
+    },
+    {
+      "id": "q-aiml-cosmos-purpose",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "How are NVIDIA Cosmos models being used in robot learning beyond just generating video?",
+      "choices": [
+        { "id": "a", "text": "Only for marketing" },
+        { "id": "b", "text": "Cosmos Policy turns the world model into an action-conditioned planner; Cosmos also synthesizes photoreal training data to fill gaps that physics simulation leaves" },
+        { "id": "c", "text": "They replace ROS 2" },
+        { "id": "d", "text": "They control real robots without any policy" }
+      ],
+      "answer": "b",
+      "explanation": "Cosmos serves two roles: (1) Cosmos Policy is a planner that imagines forward rollouts conditioned on actions, (2) Cosmos generates synthetic photoreal data that you mix into training datasets.",
+      "branch": "ai-ml",
+      "section": "world-models"
+    },
+    {
+      "id": "q-manip-trac-ik",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "Why is TRAC-IK the default IK solver in MoveIt 2 instead of plain KDL?",
+      "choices": [
+        { "id": "a", "text": "TRAC-IK is faster on average" },
+        { "id": "b", "text": "TRAC-IK combines damped least-squares with sequential quadratic programming and converges where KDL gives up" },
+        { "id": "c", "text": "KDL doesn't support 7-DOF arms" },
+        { "id": "d", "text": "TRAC-IK is the only solver that handles redundancy" }
+      ],
+      "answer": "b",
+      "explanation": "Both work on most poses. The reason TRAC-IK won is that it converges on hard poses (near singularities, partially constrained tasks) where KDL's pure Newton iteration fails. About 1 ms per call on a 7-DOF arm.",
+      "branch": "manipulation",
+      "section": "inverse-kinematics"
+    },
+    {
+      "id": "q-manip-pinocchio",
+      "category": "manipulation",
+      "level": "advanced",
+      "prompt": "What does Pinocchio give you that MoveIt does not?",
+      "choices": [
+        { "id": "a", "text": "Collision visualization in RViz" },
+        { "id": "b", "text": "Microsecond-fast forward kinematics, Jacobians, and analytical dynamics suitable for high-rate inner loops or RL rollouts" },
+        { "id": "c", "text": "A user interface for trajectory planning" },
+        { "id": "d", "text": "URDF parsing" }
+      ],
+      "answer": "b",
+      "explanation": "Pinocchio is a C++ rigid-body library focused on raw computational speed. It computes FK, body Jacobians, and inverse dynamics in microseconds — useful when MoveIt is too high-level (sim, learning, MPC).",
+      "branch": "manipulation",
+      "section": "inverse-kinematics"
+    },
+    {
+      "id": "q-perc-rtab",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "You're building a service robot with a RealSense depth camera and need real-time SLAM. Which is the strongest 2026 open-source pick?",
+      "choices": [
+        { "id": "a", "text": "slam_toolbox (it's the ROS 2 default)" },
+        { "id": "b", "text": "RTAB-Map (mature RGB-D SLAM with ROS 2 packages, used by service-robot vendors)" },
+        { "id": "c", "text": "FAST-LIO (LiDAR-only)" },
+        { "id": "d", "text": "Cartographer (deprecated)" }
+      ],
+      "answer": "b",
+      "explanation": "slam_toolbox is excellent for 2D laser SLAM. For RGB-D specifically, RTAB-Map is the mature open-source choice — supports loop closure with appearance-based descriptors, provides ROS 2 packages, well-documented.",
+      "branch": "navigation",
+      "section": "slam"
+    },
+    {
+      "id": "q-amr-vda5050",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "What is the VDA 5050 standard and why does it matter for AMRs?",
+      "choices": [
+        { "id": "a", "text": "A safety certification for cobots" },
+        { "id": "b", "text": "An open vendor-neutral protocol (JSON over MQTT) for fleet manager ↔ AMR communication; it lets you mix robots from different vendors in one fleet" },
+        { "id": "c", "text": "A drive-by-wire protocol for cars" },
+        { "id": "d", "text": "A robotics arm communication standard" }
+      ],
+      "answer": "b",
+      "explanation": "Before VDA 5050, every AMR vendor had its own fleet-manager protocol. VDA 5050 standardized the messages (orders, state, factsheets, instant actions) so a fleet manager can drive heterogeneous fleets.",
+      "branch": "amr",
+      "section": "vda-5050"
+    },
+    {
+      "id": "q-drone-autopilot",
+      "category": "control",
+      "level": "beginner",
+      "prompt": "You're building an autonomous inspection drone in 2026. Which autopilot stack is the right starting point?",
+      "choices": [
+        { "id": "a", "text": "Betaflight" },
+        { "id": "b", "text": "PX4 (BSD-licensed, ROS 2 native via px4_ros_com, used by Skydio / Auterion / Wing) or Ardupilot for fixed-wing / VTOL" },
+        { "id": "c", "text": "INAV" },
+        { "id": "d", "text": "There's no open-source option for autonomous drones" }
+      ],
+      "answer": "b",
+      "explanation": "Betaflight is FPV-racing only with no autonomy features. For autonomy, PX4 is the modern default; Ardupilot is the alternative when you need fixed-wing / VTOL / boat support.",
+      "branch": "drones",
+      "section": "autopilots"
+    },
+    {
+      "id": "q-drone-mavlink",
+      "category": "ros",
+      "level": "intermediate",
+      "prompt": "What is MAVLink?",
+      "choices": [
+        { "id": "a", "text": "A new ROS 2 distribution" },
+        { "id": "b", "text": "A lightweight binary message protocol for drone telemetry and commanding, spoken by every serious autopilot" },
+        { "id": "c", "text": "A drone simulator" },
+        { "id": "d", "text": "A drone manufacturer" }
+      ],
+      "answer": "b",
+      "explanation": "MAVLink defines the wire format (heartbeat, attitude, GPS, mission, command_long, etc.) that ground stations and autopilots use to talk over UART or UDP. Bridges to ROS 2 via mavros.",
+      "branch": "drones",
+      "section": "mavlink"
+    },
+    {
+      "id": "q-control-feedforward",
+      "category": "control",
+      "level": "intermediate",
+      "prompt": "Why combine feedforward with PID instead of using PID alone for high-performance trajectory tracking?",
+      "choices": [
+        { "id": "a", "text": "PID is unstable on its own" },
+        { "id": "b", "text": "Feedforward sends the model-predicted command directly so PID only fights residual error — much faster tracking, smaller integral wind-up" },
+        { "id": "c", "text": "Feedforward replaces PID entirely" },
+        { "id": "d", "text": "Feedforward is required for stability" }
+      ],
+      "answer": "b",
+      "explanation": "PID is reactive — it only acts on observed error. Feedforward is anticipatory — it precomputes the command from a model. PID then handles the difference (disturbances, model error). The combination tracks faster than either alone.",
+      "branch": "control-systems",
+      "section": "feedback-fundamentals"
+    },
+    {
+      "id": "q-fund-quaternion-norm",
+      "category": "fundamentals",
+      "level": "advanced",
+      "prompt": "After many quaternion multiplications during integration, you sometimes need to renormalize the quaternion. Why?",
+      "choices": [
+        { "id": "a", "text": "Floating-point error makes ‖q‖ drift away from 1, and only unit quaternions represent valid rotations" },
+        { "id": "b", "text": "Quaternions decay over time" },
+        { "id": "c", "text": "ROS requires renormalization for serialization" },
+        { "id": "d", "text": "It's purely cosmetic" }
+      ],
+      "answer": "a",
+      "explanation": "A unit quaternion encodes a rotation. Repeated multiplication accumulates fp error so ‖q‖ slowly drifts. Renormalize (q ← q/‖q‖) every few hundred steps so you don't end up with skewed rotations.",
+      "branch": "mechanical-design",
+      "section": "frames-rotations"
+    },
+    {
+      "id": "q-hri-cobot-stop",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "What's the difference between Cat 0, Cat 1, and Cat 2 stops in robot safety?",
+      "choices": [
+        { "id": "a", "text": "Cat 0 cuts power immediately; Cat 1 brakes under control then cuts power; Cat 2 brakes under control with power on" },
+        { "id": "b", "text": "Cat 0 is the slowest; Cat 2 is the fastest" },
+        { "id": "c", "text": "They're all the same; the categories are just for paperwork" },
+        { "id": "d", "text": "Only Cat 0 is real" }
+      ],
+      "answer": "a",
+      "explanation": "ISO 13850 defines them. Cat 0 (uncontrolled) cuts power instantly — fastest stop but the robot may coast. Cat 1 (controlled then power-off) brakes first then cuts power. Cat 2 keeps the robot energized after stopping (e.g., to hold a load).",
+      "branch": "hri",
+      "section": "cobot-safety"
+    },
+    {
+      "id": "q-perc-bev",
+      "category": "perception",
+      "level": "advanced",
+      "prompt": "Why have modern AV perception stacks moved from per-camera detection to BEV (bird's-eye view) fusion?",
+      "choices": [
+        { "id": "a", "text": "BEV is cheaper to compute" },
+        { "id": "b", "text": "Projecting all sensors into a top-down grid lets one transformer reason about distances, occlusions, and multi-sensor consistency natively" },
+        { "id": "c", "text": "Cameras are no longer needed" },
+        { "id": "d", "text": "BEV requires no calibration" }
+      ],
+      "answer": "b",
+      "explanation": "Per-camera 2D detection forces post-hoc geometric merging that's brittle. BEV models (BEVFusion, FUTR3D, Tesla's Occupancy Networks) project lidar, camera, radar into one top-down grid where a transformer learns object detection + occupancy directly.",
+      "branch": "autonomous-vehicles",
+      "section": "av-perception"
+    },
+    {
+      "id": "q-hri-vla-on-humanoid",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "Which production humanoid runs which in-house VLA?",
+      "choices": [
+        { "id": "a", "text": "Tesla Optimus runs OpenVLA" },
+        { "id": "b", "text": "Figure 02 / 03 runs Helix; Apptronik Apollo and 1X NEO often use NVIDIA GR00T derivatives" },
+        { "id": "c", "text": "All humanoids run π0" },
+        { "id": "d", "text": "None of them have working VLAs in production" }
+      ],
+      "answer": "b",
+      "explanation": "Figure has its own closed-source VLA called Helix. NVIDIA GR00T N1 / N1.5 is the closest thing to a vendor-neutral VLA and is used by Apptronik, 1X, Unitree (with fine-tuning). Tesla's policy is internal.",
+      "branch": "manipulation",
+      "section": "bimanual"
+    },
+    {
+      "id": "q-fund-rotation-matrix",
+      "category": "fundamentals",
+      "level": "intermediate",
+      "prompt": "Which property must any valid 3D rotation matrix R satisfy?",
+      "choices": [
+        { "id": "a", "text": "R is symmetric" },
+        { "id": "b", "text": "R is orthogonal AND det(R) = +1" },
+        { "id": "c", "text": "R has all positive entries" },
+        { "id": "d", "text": "R is upper triangular" }
+      ],
+      "answer": "b",
+      "explanation": "Orthogonal means R·R^T = I (preserves lengths and angles). det(R) = +1 (not -1) excludes reflections. Together: a proper rotation in SO(3).",
+      "branch": "mechanical-design",
+      "section": "frames-rotations"
+    },
+    {
+      "id": "q-fund-units",
+      "category": "fundamentals",
+      "level": "beginner",
+      "prompt": "Your robot's wrist is twisting wildly when you publish a target with theta = 90. What's the most likely cause?",
+      "choices": [
+        { "id": "a", "text": "The motor is broken" },
+        { "id": "b", "text": "Your code passed degrees but the API expects radians (90 rad ≈ 14.3 turns)" },
+        { "id": "c", "text": "The TF tree is wrong" },
+        { "id": "d", "text": "ROS 2 only supports radians" }
+      ],
+      "answer": "b",
+      "explanation": "ROS APIs use radians by convention. Pass 90 thinking it's degrees and you've commanded ~14 full revolutions. Always convert: math.radians(90) = 1.5708.",
+      "branch": "foundations",
+      "section": "debug-patterns"
+    },
+    {
+      "id": "q-fund-debug-tf",
+      "category": "fundamentals",
+      "level": "intermediate",
+      "prompt": "What's the canonical way to inspect a robot's TF tree in ROS 2?",
+      "choices": [
+        { "id": "a", "text": "ros2 topic echo /tf" },
+        { "id": "b", "text": "ros2 run tf2_tools view_frames - generates a PDF of the tree" },
+        { "id": "c", "text": "Open the URDF in a text editor" },
+        { "id": "d", "text": "There is no built-in tool" }
+      ],
+      "answer": "b",
+      "explanation": "view_frames subscribes for a few seconds and emits a PDF showing every frame, parent links, and update rates. Most-used debugging tool in ROS 2.",
+      "branch": "foundations",
+      "section": "debug-patterns"
+    },
+    {
+      "id": "q-perc-pcl-voxelgrid",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "What does a voxel-grid filter do to a point cloud?",
+      "choices": [
+        { "id": "a", "text": "Removes outliers by statistical analysis" },
+        { "id": "b", "text": "Downsamples the cloud by replacing all points in each voxel with their centroid" },
+        { "id": "c", "text": "Adds color to depth-only points" },
+        { "id": "d", "text": "Converts to a 2D occupancy grid" }
+      ],
+      "answer": "b",
+      "explanation": "Voxel-grid is the standard downsampling step. Pick a voxel size, every point in a voxel collapses to one centroid. Reduces 100K-point clouds to 5K with negligible information loss.",
+      "branch": "computer-vision",
+      "section": "point-clouds"
+    },
+    {
+      "id": "q-perc-icp",
+      "category": "perception",
+      "level": "advanced",
+      "prompt": "Iterative Closest Point (ICP) requires what to converge to a meaningful alignment?",
+      "choices": [
+        { "id": "a", "text": "A reasonable initial pose estimate (it's a local optimizer, easily trapped)" },
+        { "id": "b", "text": "Identical point clouds" },
+        { "id": "c", "text": "Color information" },
+        { "id": "d", "text": "Perfectly noise-free data" }
+      ],
+      "answer": "a",
+      "explanation": "ICP minimizes nearest-neighbor distance — local descent. With a bad initial guess it converges to the wrong basin. Always seed with global registration (FPFH + RANSAC) first.",
+      "branch": "computer-vision",
+      "section": "point-clouds"
+    },
+    {
+      "id": "q-perc-stereo",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "In a stereo camera setup, doubling the baseline distance has what effect?",
+      "choices": [
+        { "id": "a", "text": "Doubles depth accuracy at long range, but reduces minimum measurable distance" },
+        { "id": "b", "text": "Halves depth accuracy" },
+        { "id": "c", "text": "No effect on depth, only on field of view" },
+        { "id": "d", "text": "Eliminates the need for calibration" }
+      ],
+      "answer": "a",
+      "explanation": "Depth uncertainty scales as Z² / (f·b·δ_disparity). Bigger baseline → better far-field accuracy. But the cameras must both see the target, so the near limit increases.",
+      "branch": "sensors",
+      "section": "cameras"
+    },
+    {
+      "id": "q-nav-amcl-init",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "After bringing up a robot in a known map, AMCL is reporting a wildly wrong pose. What's the first thing to check?",
+      "choices": [
+        { "id": "a", "text": "Re-run SLAM from scratch" },
+        { "id": "b", "text": "Provide an initial pose estimate via the 2D Pose Estimate tool in RViz, or initial_pose params in the launch file" },
+        { "id": "c", "text": "Buy a better LiDAR" },
+        { "id": "d", "text": "Switch to GPS" }
+      ],
+      "answer": "b",
+      "explanation": "AMCL needs a hint to converge. Without an initial pose, particles spread across the entire map and may settle wrong. Always seed it with the known starting pose.",
+      "branch": "navigation",
+      "section": "localization"
+    },
+    {
+      "id": "q-nav-controller",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "In Nav2, what's the difference between the global and local planner?",
+      "choices": [
+        { "id": "a", "text": "Global plans the route across the full map; local picks short-horizon velocity commands that follow the global path while avoiding moving obstacles" },
+        { "id": "b", "text": "Global handles outdoors, local handles indoors" },
+        { "id": "c", "text": "They are identical, just named differently" },
+        { "id": "d", "text": "Local is for the wheels, global is for the arm" }
+      ],
+      "answer": "a",
+      "explanation": "Two-level architecture. Smac / NavFn (global) finds the route on the static map. DWB / MPPI / Regulated Pure Pursuit (local controller) takes the path + dynamic obstacles + the kinematic model and emits cmd_vel.",
+      "branch": "navigation",
+      "section": "planners-and-controllers"
+    },
+    {
+      "id": "q-nav-mppi",
+      "category": "navigation",
+      "level": "advanced",
+      "prompt": "MPPI (Model Predictive Path Integral) controller in Nav2 is preferred over DWB on rough terrain because…",
+      "choices": [
+        { "id": "a", "text": "It samples thousands of stochastic rollouts and naturally handles non-linear dynamics + complex cost terms" },
+        { "id": "b", "text": "It is faster than DWB" },
+        { "id": "c", "text": "It does not need a costmap" },
+        { "id": "d", "text": "It's the default for indoor robots" }
+      ],
+      "answer": "a",
+      "explanation": "DWB does dynamic-window sampling with simple kinematics. MPPI samples weighted rollouts of a non-linear model and integrates them — much better at handling dirt roads, slip, stop-and-go traffic. Costlier but worth it on rough terrain.",
+      "branch": "navigation",
+      "section": "planners-and-controllers"
+    },
+    {
+      "id": "q-manip-grasp-quality",
+      "category": "manipulation",
+      "level": "advanced",
+      "prompt": "What is 'force closure' in the context of grasping?",
+      "choices": [
+        { "id": "a", "text": "The contact set on the object can resist any external wrench - the grasp won't slip under any disturbance direction" },
+        { "id": "b", "text": "The fingers are fully closed" },
+        { "id": "c", "text": "The object is heavy enough to stay still" },
+        { "id": "d", "text": "Vacuum suction" }
+      ],
+      "answer": "a",
+      "explanation": "Mathematical guarantee that the contacts span the wrench space. Antipodal grasps with sufficient friction usually achieve it. Without force closure, any push will dislodge the object.",
+      "branch": "manipulation",
+      "section": "grasping"
+    },
+    {
+      "id": "q-manip-trajopt",
+      "category": "manipulation",
+      "level": "advanced",
+      "prompt": "When would you reach for a trajectory-optimization planner (TrajOpt, CHOMP, STOMP) instead of a sampling planner (RRT*)?",
+      "choices": [
+        { "id": "a", "text": "When you need a smooth, locally-optimal trajectory and have a good initial guess" },
+        { "id": "b", "text": "When the configuration space is huge and obstacles are sparse" },
+        { "id": "c", "text": "Never - sampling is always better" },
+        { "id": "d", "text": "Only for mobile robots" }
+      ],
+      "answer": "a",
+      "explanation": "RRT* explores broadly but produces jagged paths. TrajOpt/CHOMP/STOMP smooth or optimize an initial path under cost terms (clearance, velocity, jerk). Often: RRT* for the seed, TrajOpt for the polish.",
+      "branch": "manipulation",
+      "section": "motion-planning"
+    },
+    {
+      "id": "q-manip-srdf",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "What does an SRDF file add on top of a URDF?",
+      "choices": [
+        { "id": "a", "text": "Defines planning groups, named poses, virtual joints, and disabled-collision pairs - everything MoveIt needs that the URDF doesn't carry" },
+        { "id": "b", "text": "It's just a renamed URDF" },
+        { "id": "c", "text": "Visual rendering settings only" },
+        { "id": "d", "text": "Hardware drivers" }
+      ],
+      "answer": "a",
+      "explanation": "URDF describes the robot's bodies and joints. SRDF (Semantic Robot Description Format) layers MoveIt-specific metadata: which joints form the 'arm' group, named poses like 'home', collision-pairs that can be safely ignored.",
+      "branch": "manipulation",
+      "section": "moveit-setup"
+    },
+    {
+      "id": "q-control-windup",
+      "category": "control",
+      "level": "intermediate",
+      "prompt": "Your PID-controlled motor saturates (output capped). After saturation ends, the actuator overshoots wildly. What's the fix?",
+      "choices": [
+        { "id": "a", "text": "Implement integral anti-windup: clamp the I term or back-calculate it when the output saturates" },
+        { "id": "b", "text": "Increase Kp" },
+        { "id": "c", "text": "Switch to derivative-only" },
+        { "id": "d", "text": "Use two PIDs" }
+      ],
+      "answer": "a",
+      "explanation": "While saturated, error keeps accumulating in I. When saturation ends, I dumps a huge correction. Anti-windup (clamp I, or back-calculate I from the saturated output) prevents the dump.",
+      "branch": "control-systems",
+      "section": "pid-control"
+    },
+    {
+      "id": "q-control-stability-margin",
+      "category": "control",
+      "level": "advanced",
+      "prompt": "A controller with 60° phase margin and 12 dB gain margin is generally considered…",
+      "choices": [
+        { "id": "a", "text": "Robustly stable - rule-of-thumb minimums for industrial controllers" },
+        { "id": "b", "text": "Marginally stable" },
+        { "id": "c", "text": "Unstable" },
+        { "id": "d", "text": "Phase / gain margins are obsolete in 2026" }
+      ],
+      "answer": "a",
+      "explanation": "Industry rule-of-thumb: ≥45° phase margin, ≥6 dB gain margin. 60° / 12 dB is a healthy controller — predictable response, robust to model uncertainty.",
+      "branch": "control-systems",
+      "section": "feedback-fundamentals"
+    },
+    {
+      "id": "q-aiml-ppo-clip",
+      "category": "ai-ml",
+      "level": "advanced",
+      "prompt": "Why does PPO use the clipped surrogate objective rather than vanilla policy gradient?",
+      "choices": [
+        { "id": "a", "text": "Clipping prevents large policy updates that destabilize training - the policy stays close to the one used to collect the rollouts" },
+        { "id": "b", "text": "Clipping makes training faster" },
+        { "id": "c", "text": "Clipping replaces the critic" },
+        { "id": "d", "text": "It doesn't - PPO is the same as REINFORCE" }
+      ],
+      "answer": "a",
+      "explanation": "Vanilla policy gradient lets a large step crash the policy. PPO clips the importance-sampling ratio to [1-ε, 1+ε], bounding update size. Result: stable training without trust-region machinery.",
+      "branch": "ai-ml",
+      "section": "ppo-sac"
+    },
+    {
+      "id": "q-aiml-dagger",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "What does DAgger fix that vanilla behavior cloning cannot?",
+      "choices": [
+        { "id": "a", "text": "Distributional shift - BC sees only expert states; DAgger queries the expert at the robot's actually-visited (drifted) states and adds those labels" },
+        { "id": "b", "text": "Sample efficiency" },
+        { "id": "c", "text": "Multi-modal demonstrations" },
+        { "id": "d", "text": "Reward sparsity" }
+      ],
+      "answer": "a",
+      "explanation": "BC trains on expert demos only. After deployment the robot drifts to unfamiliar states and compounds errors. DAgger interleaves rollouts (robot drives) with expert relabeling, growing the dataset to cover drift.",
+      "branch": "ai-ml",
+      "section": "imitation-learning"
+    },
+    {
+      "id": "q-aiml-vqbet",
+      "category": "ai-ml",
+      "level": "advanced",
+      "prompt": "What's the trade-off between Diffusion Policy and VQ-BeT for IL?",
+      "choices": [
+        { "id": "a", "text": "Diffusion gives smoother continuous actions but is slower at inference; VQ-BeT discretizes actions, runs much faster, slight smoothness penalty" },
+        { "id": "b", "text": "VQ-BeT only works in simulation" },
+        { "id": "c", "text": "Diffusion can't handle multi-modal demos" },
+        { "id": "d", "text": "They are identical" }
+      ],
+      "answer": "a",
+      "explanation": "Diffusion Policy: 5-10 denoising steps per command, smooth multi-modal actions. VQ-BeT: tokenizes actions via VQ-VAE then predicts tokens with a transformer; one forward pass, much faster, slight discretization cost.",
+      "branch": "ai-ml",
+      "section": "diffusion-policies"
+    },
+    {
+      "id": "q-aiml-rt2",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "What's the key insight RT-2 introduced for VLAs?",
+      "choices": [
+        { "id": "a", "text": "Tokenize robot actions as text and co-fine-tune a VLM on web data + robot data, so the action head benefits from internet-scale priors" },
+        { "id": "b", "text": "RT-2 is purely supervised, no internet pretraining" },
+        { "id": "c", "text": "Replace cameras with LiDAR" },
+        { "id": "d", "text": "RT-2 generates URDFs" }
+      ],
+      "answer": "a",
+      "explanation": "Pre-2023, robot policies were trained from scratch on robot demos. RT-2 represented actions as discrete text tokens and co-fine-tuned a frozen VLM on web data + robot demos. Result: generalist behaviors that lift from web semantics.",
+      "branch": "ai-ml",
+      "section": "vla-models"
+    },
+    {
+      "id": "q-aiml-domain-rand",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "Domain randomization works for sim-to-real because…",
+      "choices": [
+        { "id": "a", "text": "Training under a wide distribution of physical / visual conditions forces the policy to be invariant to the simulator's quirks, so reality looks like 'just another sample'" },
+        { "id": "b", "text": "It speeds up simulation" },
+        { "id": "c", "text": "It eliminates the need for real-robot fine-tuning" },
+        { "id": "d", "text": "Real robots are randomized" }
+      ],
+      "answer": "a",
+      "explanation": "By varying friction, mass, lighting, textures, sensor noise every episode, the policy can't overfit to sim-specific cues. The reality gap collapses because reality falls inside the training distribution.",
+      "branch": "ai-ml",
+      "section": "sim-to-real"
+    },
+    {
+      "id": "q-ros-launch-include",
+      "category": "ros",
+      "level": "intermediate",
+      "prompt": "How do you include another launch file from a Python launch file in ROS 2?",
+      "choices": [
+        { "id": "a", "text": "IncludeLaunchDescription(PythonLaunchDescriptionSource(...))" },
+        { "id": "b", "text": "import launch_other" },
+        { "id": "c", "text": "exec(open(...).read())" },
+        { "id": "d", "text": "Includes are not supported" }
+      ],
+      "answer": "a",
+      "explanation": "Wrap the path with PythonLaunchDescriptionSource (or XmlLaunchDescriptionSource) and pass to IncludeLaunchDescription. You can also pass launch arguments through.",
+      "branch": "setup",
+      "section": "launch-system"
+    },
+    {
+      "id": "q-ros-rclpy-vs-rclcpp",
+      "category": "ros",
+      "level": "beginner",
+      "prompt": "Which ROS 2 client library should you choose for a hard real-time controller running at 1 kHz?",
+      "choices": [
+        { "id": "a", "text": "rclpy (Python)" },
+        { "id": "b", "text": "rclcpp (C++) - GIL-free, deterministic, jitter-friendly" },
+        { "id": "c", "text": "Either is fine" },
+        { "id": "d", "text": "Use raw DDS" }
+      ],
+      "answer": "b",
+      "explanation": "Python's GIL and GC make it unsuitable for hard real-time. C++ with PREEMPT_RT + rclcpp is the standard for high-rate controllers. Use Python for everything else - bringup, scripts, slow loops.",
+      "branch": "setup",
+      "section": "ros2-jazzy"
+    },
+    {
+      "id": "q-ros-composable",
+      "category": "ros",
+      "level": "advanced",
+      "prompt": "Why use composable nodes (component_container) instead of separate node processes?",
+      "choices": [
+        { "id": "a", "text": "Pubsub between components in the same process uses zero-copy intra-process transport, slashing latency" },
+        { "id": "b", "text": "Composable nodes are easier to write" },
+        { "id": "c", "text": "Required for ROS 2 Jazzy" },
+        { "id": "d", "text": "They run faster on the cloud" }
+      ],
+      "answer": "a",
+      "explanation": "Cross-process pubsub serializes + copies messages over DDS. Components hosted in the same container can pass message pointers - critical for high-rate camera + perception pipelines.",
+      "branch": "compute",
+      "section": "composition-lifecycle"
+    },
+    {
+      "id": "q-fund-eigen",
+      "category": "fundamentals",
+      "level": "intermediate",
+      "prompt": "Why is Eigen the de-facto C++ linear-algebra library in robotics?",
+      "choices": [
+        { "id": "a", "text": "Header-only, expression-templates for compile-time optimization, mature, used by ROS / MoveIt / Pinocchio" },
+        { "id": "b", "text": "It is the only C++ linear-algebra library" },
+        { "id": "c", "text": "It is part of the C++ standard library" },
+        { "id": "d", "text": "It is faster than NumPy" }
+      ],
+      "answer": "a",
+      "explanation": "Eigen ships as headers (no link step), uses expression templates so a*B + c becomes one fused loop, and matches the numerical correctness of LAPACK. ROS, MoveIt, Pinocchio, GTSAM, Ceres all use it.",
+      "branch": "foundations",
+      "section": "cpp-robotics"
+    },
+    {
+      "id": "q-perc-camera-distortion",
+      "category": "perception",
+      "level": "advanced",
+      "prompt": "If your detection bounding boxes appear to bulge inward on a fisheye camera, what's the typical fix?",
+      "choices": [
+        { "id": "a", "text": "Apply lens-distortion correction (OpenCV cv::undistort or remap with the calibrated K + D matrices) before feeding the image to the detector" },
+        { "id": "b", "text": "Buy a different camera" },
+        { "id": "c", "text": "Train the detector on more data" },
+        { "id": "d", "text": "Use grayscale only" }
+      ],
+      "answer": "a",
+      "explanation": "Wide-angle lenses bend straight lines. Calibrate to get K (intrinsics) + D (distortion coefficients), then undistort before processing. Most detectors are trained on rectified images.",
+      "branch": "computer-vision",
+      "section": "camera-fundamentals"
+    },
+    {
+      "id": "q-amr-charge",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "Why do AMRs typically dock to a wall-mounted charger via vision/AprilTags rather than purely odometry-based approach?",
+      "choices": [
+        { "id": "a", "text": "Odometry has accumulated drift; the final 30 cm needs sub-cm precision and visual fiducials provide it" },
+        { "id": "b", "text": "Vision is faster than odometry" },
+        { "id": "c", "text": "Wireless charging requires fiducials" },
+        { "id": "d", "text": "AprilTags improve battery life" }
+      ],
+      "answer": "a",
+      "explanation": "After 100m of driving, odometry can be 5-10 cm off. AprilTags / ArUco markers on the dock give the robot a precise short-range pose lock for the final approach.",
+      "branch": "amr",
+      "section": "charging-docking"
+    },
+    {
+      "id": "q-av-sotif",
+      "category": "ai-ml",
+      "level": "advanced",
+      "prompt": "What does ISO 21448 (SOTIF) cover that ISO 26262 does not?",
+      "choices": [
+        { "id": "a", "text": "Safety of the Intended Functionality - failures from system limitations or unforeseen scenarios when nothing is broken" },
+        { "id": "b", "text": "Hardware faults" },
+        { "id": "c", "text": "Software unit testing" },
+        { "id": "d", "text": "EMC compliance" }
+      ],
+      "answer": "a",
+      "explanation": "ISO 26262 covers what happens when components break. SOTIF covers what happens when nothing breaks but the system can't handle the scenario (a perception model failing on never-seen-before fog). Critical for ML-based AV functions.",
+      "branch": "autonomous-vehicles",
+      "section": "av-functional-safety"
+    },
+    {
+      "id": "q-multi-mapf",
+      "category": "navigation",
+      "level": "advanced",
+      "prompt": "Conflict-Based Search (CBS) in Multi-Agent Path Finding works by…",
+      "choices": [
+        { "id": "a", "text": "Planning each agent independently, then resolving inter-agent conflicts by adding constraints and re-planning - optimal under benign conditions" },
+        { "id": "b", "text": "Treating all agents as one giant planner" },
+        { "id": "c", "text": "Running A* in joint state space" },
+        { "id": "d", "text": "Greedy first-come-first-served scheduling" }
+      ],
+      "answer": "a",
+      "explanation": "CBS is a 2-level search. Low level: A* per agent ignoring others. High level: resolve conflicts by adding constraints to one of the conflicting agents and re-planning. Optimal, works on hundreds of agents.",
+      "branch": "multi-robot",
+      "section": "mapf"
+    },
+    {
+      "id": "q-drone-mixer",
+      "category": "control",
+      "level": "intermediate",
+      "prompt": "On a quadcopter, motor mixing converts what to what?",
+      "choices": [
+        { "id": "a", "text": "Body-frame torques + thrust → individual motor PWM commands" },
+        { "id": "b", "text": "GPS coordinates → motor commands" },
+        { "id": "c", "text": "Camera frames → flight commands" },
+        { "id": "d", "text": "Battery voltage → ESC settings" }
+      ],
+      "answer": "a",
+      "explanation": "The attitude controller emits desired roll/pitch/yaw torques + total thrust. The mixer maps that 4-vector to per-motor PWM via the geometry matrix (X-frame multirotor, etc.). Closing the inner loop.",
+      "branch": "drones",
+      "section": "multirotor-dynamics"
+    },
+    {
+      "id": "q-drone-failsafe",
+      "category": "control",
+      "level": "intermediate",
+      "prompt": "What's a sensible default fail-safe behavior when an autonomous drone loses GPS at 50m altitude?",
+      "choices": [
+        { "id": "a", "text": "Switch to altitude-hold (using barometer + IMU) and trigger return-to-launch via dead-reckoning, or land-in-place if RTL isn't safe" },
+        { "id": "b", "text": "Cut power immediately" },
+        { "id": "c", "text": "Continue the mission - GPS is optional" },
+        { "id": "d", "text": "Increase throttle to gain altitude" }
+      ],
+      "answer": "a",
+      "explanation": "Production fail-safes degrade gracefully: lose GPS → maintain altitude with baro+IMU, attempt RTL if heading is still trustworthy, otherwise controlled land-in-place. Cutting power is unsafe; continuing the mission is criminally dangerous.",
+      "branch": "drones",
+      "section": "autonomous-flight"
+    },
+    {
+      "id": "q-hri-shared-auth",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "In shared autonomy, 'mode confusion' refers to…",
+      "choices": [
+        { "id": "a", "text": "Neither the human nor the robot is sure who's currently in charge of which decisions" },
+        { "id": "b", "text": "Different sensor modes interfering" },
+        { "id": "c", "text": "GPU thermal throttling" },
+        { "id": "d", "text": "Network mode mismatch" }
+      ],
+      "answer": "a",
+      "explanation": "Classic HRI failure: handover happens silently, both parties assume the other is driving, robot drifts and human reacts late. Designed-in indicators (sound, light, haptic) prevent it.",
+      "branch": "hri",
+      "section": "shared-autonomy"
+    },
+    {
+      "id": "q-perc-april",
+      "category": "perception",
+      "level": "beginner",
+      "prompt": "What are AprilTags / ArUco markers most commonly used for in robotics?",
+      "choices": [
+        { "id": "a", "text": "Cheap fiducial markers for precise relative pose estimation - docking, calibration, AR overlays" },
+        { "id": "b", "text": "Replacement for QR codes" },
+        { "id": "c", "text": "Encoding video metadata" },
+        { "id": "d", "text": "Decorating robots" }
+      ],
+      "answer": "a",
+      "explanation": "Print a tag, point a camera at it, get sub-cm 6-DoF pose. Used everywhere: AMR docking, calibration rigs, hand-eye verification, multi-camera registration. April-Lab and OpenCV both ship libraries.",
+      "branch": "sensors",
+      "section": "calibration"
+    },
+    {
+      "id": "q-surg-rcm",
+      "category": "manipulation",
+      "level": "advanced",
+      "prompt": "On a laparoscopic surgical robot, what is the Remote Center of Motion (RCM) constraint?",
+      "choices": [
+        { "id": "a", "text": "The robot must always face a remote computer" },
+        { "id": "b", "text": "The instrument shaft must pivot through a fixed point - the patient's incision - while the tip moves freely" },
+        { "id": "c", "text": "The motion controller must run on the cloud" },
+        { "id": "d", "text": "The end-effector must stay still" }
+      ],
+      "answer": "b",
+      "explanation": "Every laparoscopic robot must enforce that the trocar incision point doesn't move. Either via mechanical linkage (da Vinci's parallelogram) or software null-space projection. The defining geometric constraint of surgical kinematics.",
+      "branch": "surgical",
+      "section": "rcm"
+    },
+    {
+      "id": "q-surg-iec",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "Which standard governs medical-device software lifecycle (classify modules A/B/C, traceable changes, etc.)?",
+      "choices": [
+        { "id": "a", "text": "IEC 62304" },
+        { "id": "b", "text": "ISO 26262 (that's automotive)" },
+        { "id": "c", "text": "ISO 9001 (general QMS, not specific)" },
+        { "id": "d", "text": "DO-178C (that's avionics)" }
+      ],
+      "answer": "a",
+      "explanation": "IEC 62304 is the medical-device-software standard. Class A/B/C reflects injury potential. Companion standards: ISO 13485 (QMS), ISO 14971 (risk management).",
+      "branch": "surgical",
+      "section": "regulatory"
+    },
+    {
+      "id": "q-surg-510k",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "What does the FDA 510(k) clearance pathway require?",
+      "choices": [
+        { "id": "a", "text": "Demonstrating substantial equivalence to a legally marketed predicate device" },
+        { "id": "b", "text": "Pre-market clinical trials lasting 5+ years" },
+        { "id": "c", "text": "Open-sourcing the device firmware" },
+        { "id": "d", "text": "Approval from the FAA" }
+      ],
+      "answer": "a",
+      "explanation": "510(k) is the most common route: show your device is equivalent to one already on the market. PMA (Pre-Market Approval) is the harder, clinical-trial path for novel devices. De Novo for novel-but-low-risk.",
+      "branch": "surgical",
+      "section": "regulatory"
+    },
+    {
+      "id": "q-ag-rtk",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "Why is RTK-GNSS the dominant outdoor localization solution for ag-robots?",
+      "choices": [
+        { "id": "a", "text": "It provides cm-level accuracy by combining a fixed base station broadcasting carrier-phase corrections to the rover over a 10-20 km radius" },
+        { "id": "b", "text": "It's the cheapest option" },
+        { "id": "c", "text": "It works under tree canopy" },
+        { "id": "d", "text": "It eliminates the need for an IMU" }
+      ],
+      "answer": "a",
+      "explanation": "Fields have no walls or fixed indoor landmarks. RTK gives 1-2 cm accuracy as long as the rover sees enough sky. Under canopy / orchard, fall back to dead-reckoning or visual cues.",
+      "branch": "agricultural",
+      "section": "rtk-gnss"
+    },
+    {
+      "id": "q-ag-isobus",
+      "category": "navigation",
+      "level": "intermediate",
+      "prompt": "What is ISOBUS / ISO 11783?",
+      "choices": [
+        { "id": "a", "text": "The agricultural CAN-bus standard for tractor ↔ implement communication, used by every modern farm equipment vendor" },
+        { "id": "b", "text": "An indoor robot fleet protocol" },
+        { "id": "c", "text": "A drone telemetry standard" },
+        { "id": "d", "text": "A new ROS 2 transport" }
+      ],
+      "answer": "a",
+      "explanation": "ISO 11783 (ISOBUS) is the family of standards covering Virtual Terminal (in-cab UI), Task Controller (variable-rate), AUX-N (controls), TIM (implement controls tractor). Like CAN's automotive role but for ag.",
+      "branch": "agricultural",
+      "section": "isobus"
+    },
+    {
+      "id": "q-ag-see-and-spray",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "John Deere See & Spray cuts herbicide use 60-90% by doing what?",
+      "choices": [
+        { "id": "a", "text": "Mixing herbicide more efficiently" },
+        { "id": "b", "text": "Per-plant detection of weed vs crop with computer vision, then firing nozzles only at weeds" },
+        { "id": "c", "text": "Replacing herbicide with lasers" },
+        { "id": "d", "text": "Shutting off when it senses bees" }
+      ],
+      "answer": "b",
+      "explanation": "Real-time CNN classification of weed vs crop on each row, with per-nozzle solenoids firing only when a weed is detected. Acquired from Blue River, now standard on Deere sprayers.",
+      "branch": "agricultural",
+      "section": "what-it-is"
+    },
+    {
+      "id": "q-ind-vendor-lang",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "Which industrial robot brand uses the language KRL?",
+      "choices": [
+        { "id": "a", "text": "ABB" },
+        { "id": "b", "text": "KUKA" },
+        { "id": "c", "text": "Fanuc" },
+        { "id": "d", "text": "Yaskawa" }
+      ],
+      "answer": "b",
+      "explanation": "KUKA Robot Language (KRL) for KUKA. ABB uses RAPID. Fanuc uses KAREL (advanced) plus TP. Yaskawa uses INFORM.",
+      "branch": "industrial",
+      "section": "languages"
+    },
+    {
+      "id": "q-ind-cobot-modes",
+      "category": "manipulation",
+      "level": "intermediate",
+      "prompt": "ISO/TS 15066 defines two main collaborative-operation modes. What are they?",
+      "choices": [
+        { "id": "a", "text": "Speed-and-Separation Monitoring (SSM) and Power-and-Force-Limiting (PFL)" },
+        { "id": "b", "text": "Manual and Automatic" },
+        { "id": "c", "text": "Local and Remote" },
+        { "id": "d", "text": "Online and Offline" }
+      ],
+      "answer": "a",
+      "explanation": "SSM: robot slows / stops as humans approach (laser scanners enforce). PFL: joint torques are limited so contact won't injure (the cobot model). Most modern cells combine both.",
+      "branch": "industrial",
+      "section": "safety"
+    },
+    {
+      "id": "q-ind-fieldbus",
+      "category": "control",
+      "level": "advanced",
+      "prompt": "Why is EtherCAT preferred over standard Ethernet for high-rate motion control?",
+      "choices": [
+        { "id": "a", "text": "Single-digit-µs cycle times with bounded jitter via distributed clocks - standard Ethernet stacks are non-deterministic" },
+        { "id": "b", "text": "EtherCAT cables are shielded better" },
+        { "id": "c", "text": "It uses optical fiber by default" },
+        { "id": "d", "text": "Standard Ethernet doesn't support 100 Mbps" }
+      ],
+      "answer": "a",
+      "explanation": "Standard Ethernet stacks (TCP / UDP, IP routing, OS scheduling) introduce variable jitter unsuitable for sub-ms motion loops. EtherCAT replaces the protocol with daisy-chained slaves and distributed clocks, giving deterministic single-digit-µs cycles.",
+      "branch": "industrial",
+      "section": "fieldbus"
+    },
+    {
+      "id": "q-ind-ros-industrial",
+      "category": "ros",
+      "level": "intermediate",
+      "prompt": "What does ROS-Industrial give you?",
+      "choices": [
+        { "id": "a", "text": "ROS 2 drivers for major industrial robots (Fanuc, ABB, UR, Motoman) so you can send JointTrajectory commands over Ethernet to a vendor controller still running real-time motion" },
+        { "id": "b", "text": "A replacement for vendor teach pendants" },
+        { "id": "c", "text": "A new programming language" },
+        { "id": "d", "text": "A safety certification" }
+      ],
+      "answer": "a",
+      "explanation": "ROS-Industrial bridges Linux + ROS to vendor controllers. The controller still runs the real-time motion + safety; ROS sends planned trajectories. Right tool for research, dual-arm work, ML perception integration. Wrong tool for replacing native programming in production.",
+      "branch": "industrial",
+      "section": "languages"
+    },
+    {
+      "id": "q-fund-eigen-vs-numpy",
+      "category": "fundamentals",
+      "level": "beginner",
+      "prompt": "When would you reach for Eigen instead of NumPy?",
+      "choices": [
+        { "id": "a", "text": "When you need C++ performance in a robot's real-time control loop or perception pipeline; NumPy's GIL + interpreter overhead is too slow" },
+        { "id": "b", "text": "When the problem is small" },
+        { "id": "c", "text": "When you don't have NumPy" },
+        { "id": "d", "text": "Never - NumPy is faster" }
+      ],
+      "answer": "a",
+      "explanation": "Python + NumPy is the right tool for prototypes, ML pipelines, scripts. C++ + Eigen is what you ship in production for control loops, perception nodes, and anything inside a real-time controller. They serve different niches.",
+      "branch": "foundations",
+      "section": "cpp-robotics"
+    },
+    {
+      "id": "q-fund-twist",
+      "category": "fundamentals",
+      "level": "advanced",
+      "prompt": "A 'twist' V = (ω, v) in se(3) represents what?",
+      "choices": [
+        { "id": "a", "text": "Instantaneous angular and linear velocity of a rigid body, treated as a single 6-vector in the Lie algebra of SE(3)" },
+        { "id": "b", "text": "The same as a quaternion" },
+        { "id": "c", "text": "A wrench (force + torque)" },
+        { "id": "d", "text": "A Cartesian position" }
+      ],
+      "answer": "a",
+      "explanation": "Twists live in se(3), the tangent space of SE(3). They unify angular + linear velocity for screw-theory analysis. Used in Modern Robotics, MoveIt, Pinocchio, Drake.",
+      "branch": "foundations",
+      "section": "math-cookbook"
+    },
+    {
+      "id": "q-aiml-ros1-to-2",
+      "category": "ros",
+      "level": "beginner",
+      "prompt": "What is the ROS 2 equivalent of `roscore` from ROS 1?",
+      "choices": [
+        { "id": "a", "text": "There is no equivalent - DDS handles peer-to-peer discovery automatically" },
+        { "id": "b", "text": "ros2 master" },
+        { "id": "c", "text": "rosbridge" },
+        { "id": "d", "text": "core_ros" }
+      ],
+      "answer": "a",
+      "explanation": "ROS 1 had a single master process for discovery (roscore). ROS 2 uses DDS, which is peer-to-peer - just `ros2 run` your nodes and they find each other. No master to start.",
+      "branch": "setup",
+      "section": "ros1-to-ros2"
+    },
+    {
+      "id": "q-aiml-catkin-vs-colcon",
+      "category": "ros",
+      "level": "beginner",
+      "prompt": "What's the ROS 2 equivalent of `catkin_make`?",
+      "choices": [
+        { "id": "a", "text": "colcon build (typically `colcon build --symlink-install`)" },
+        { "id": "b", "text": "ros2 make" },
+        { "id": "c", "text": "cargo build" },
+        { "id": "d", "text": "make build" }
+      ],
+      "answer": "a",
+      "explanation": "ROS 2 uses colcon as the meta-build tool. `--symlink-install` lets you edit Python files without rebuilding.",
+      "branch": "setup",
+      "section": "ros1-to-ros2"
+    },
+    {
+      "id": "q-perc-grounding-dino",
+      "category": "perception",
+      "level": "advanced",
+      "prompt": "What's the killer feature of Grounding DINO over a YOLO-class detector?",
+      "choices": [
+        { "id": "a", "text": "Open-vocabulary detection - you describe targets via free-text prompts ('the red mug') instead of training on a fixed class list" },
+        { "id": "b", "text": "It's smaller / faster" },
+        { "id": "c", "text": "It needs no training data" },
+        { "id": "d", "text": "It doesn't need a GPU" }
+      ],
+      "answer": "a",
+      "explanation": "YOLO needs fixed classes and labelled bounding boxes. Grounding DINO fuses a vision encoder with a text encoder so you point it at any phrase. Slower, but unlocks VLA-style prompted perception.",
+      "branch": "computer-vision",
+      "section": "object-detection"
+    },
+    {
+      "id": "q-perc-sam2",
+      "category": "perception",
+      "level": "intermediate",
+      "prompt": "What does SAM 2 (Segment Anything Model 2) do?",
+      "choices": [
+        { "id": "a", "text": "Promptable per-pixel segmentation - click a point or draw a box and it segments the object, including video tracking across frames" },
+        { "id": "b", "text": "Replaces YOLO for box detection" },
+        { "id": "c", "text": "Generates URDFs from images" },
+        { "id": "d", "text": "Compresses point clouds" }
+      ],
+      "answer": "a",
+      "explanation": "SAM 2 (Meta, 2024) extends the original SAM to video. Click anywhere, get a per-pixel mask that tracks across frames. Game-changer for object isolation in robotics + dataset labeling.",
+      "branch": "computer-vision",
+      "section": "image-processing"
+    },
+    {
+      "id": "q-aiml-jetson-thor-fp4",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "Why does Jetson Thor advertise 2,000 TFLOPS in FP4 specifically?",
+      "choices": [
+        { "id": "a", "text": "Modern VLAs and LLMs use 4-bit quantization at inference; FP4 throughput is what matters in practice for those models" },
+        { "id": "b", "text": "FP4 is the only format the chip supports" },
+        { "id": "c", "text": "FP4 means 4 cores" },
+        { "id": "d", "text": "Marketing convention - FP32 is the same number" }
+      ],
+      "answer": "a",
+      "explanation": "Production VLA inference uses 4-bit (FP4 / INT4) quantization to fit big models on edge silicon. Thor's hardware is sized for that workload — FP32 throughput is much smaller.",
+      "branch": "compute",
+      "section": "embedded-compute"
+    },
+    {
+      "id": "q-perc-april-tag-vs-aruco",
+      "category": "perception",
+      "level": "advanced",
+      "prompt": "Why might you pick AprilTag over the older ArUco for robotics?",
+      "choices": [
+        { "id": "a", "text": "AprilTag has more robust detection under partial occlusion + better hamming-distance error correction in its 2D code" },
+        { "id": "b", "text": "ArUco doesn't work in ROS" },
+        { "id": "c", "text": "AprilTag is patented" },
+        { "id": "d", "text": "ArUco is grayscale only" }
+      ],
+      "answer": "a",
+      "explanation": "Both encode an ID and give 6-DoF pose. AprilTag's encoding has stronger error correction and detection under occlusion / motion blur. Either works; AprilTag is the modern default for new ROS 2 projects.",
+      "branch": "sensors",
+      "section": "calibration"
+    },
+    {
+      "id": "q-aiml-vla-benchmark",
+      "category": "ai-ml",
+      "level": "intermediate",
+      "prompt": "Which is currently a strong, widely-used benchmark for evaluating VLAs in simulation?",
+      "choices": [
+        { "id": "a", "text": "SimplerEnv (correlates with real-robot success), CALVIN (long-horizon), and LIBERO (lifelong manipulation)" },
+        { "id": "b", "text": "ImageNet" },
+        { "id": "c", "text": "CIFAR-10" },
+        { "id": "d", "text": "MNIST" }
+      ],
+      "answer": "a",
+      "explanation": "SimplerEnv mirrors real-world manipulation closely; CALVIN tests long-horizon language-conditioned tasks; LIBERO covers lifelong manipulation. The standard 2026 evals.",
+      "branch": "ai-ml",
+      "section": "datasets-benchmarks"
+    },
+    {
+      "id": "q-fund-jacobian-singular",
+      "category": "fundamentals",
+      "level": "advanced",
+      "prompt": "Your damped least-squares IK is producing huge joint velocities near a target pose. What's the most likely diagnosis?",
+      "choices": [
+        { "id": "a", "text": "The target is near a kinematic singularity - the Jacobian is rank-deficient and small task velocities require huge joint velocities" },
+        { "id": "b", "text": "The damping coefficient is too large" },
+        { "id": "c", "text": "The robot needs more joints" },
+        { "id": "d", "text": "Rounding error in the floating-point math" }
+      ],
+      "answer": "a",
+      "explanation": "Singularity = Jacobian loses rank → its inverse blows up. DLS softens but doesn't eliminate the problem. Detect by monitoring the smallest singular value of J; back off / detour when it gets small.",
+      "branch": "mechanical-design",
+      "section": "dynamics"
+    },
+    {
+      "id": "q-perc-time-sync",
+      "category": "perception",
+      "level": "advanced",
+      "prompt": "Your stereo + IMU stack is reporting inconsistent depth + motion at high speed. The cameras and IMU are on the same machine. First thing to check?",
+      "choices": [
+        { "id": "a", "text": "Time synchronization between sensors - PTP or hardware-trigger every camera frame and timestamp it the moment it's exposed; never trust ROS receive-time" },
+        { "id": "b", "text": "Replace the cameras" },
+        { "id": "c", "text": "Increase camera resolution" },
+        { "id": "d", "text": "Switch to RGB-D" }
+      ],
+      "answer": "a",
+      "explanation": "At highway speeds a 10 ms timestamp error projects to 10 cm of position error. PTP (gPTP / 802.1AS) or hardware triggers + per-frame timestamps are non-negotiable. Receive-time from ROS adds OS jitter.",
+      "branch": "sensors",
+      "section": "time-sync"
+    },
+    {
+      "id": "q-control-impedance-vs-admit",
+      "category": "control",
+      "level": "advanced",
+      "prompt": "Impedance vs admittance control - what's the difference?",
+      "choices": [
+        { "id": "a", "text": "Impedance: position in, force out (the controller commands force to make the robot behave as a virtual spring/damper). Admittance: force in, position out (commanded position responds to measured force)" },
+        { "id": "b", "text": "Impedance is for arms, admittance is for mobile bases" },
+        { "id": "c", "text": "They're identical, just named differently" },
+        { "id": "d", "text": "Admittance is open-loop" }
+      ],
+      "answer": "a",
+      "explanation": "Causal duals. Impedance suits torque-controlled robots (Franka, KUKA iiwa) - command torques to render virtual stiffness. Admittance suits position-controlled robots - measure force, command corresponding position offset. Same compliant behavior, different inner-loop.",
+      "branch": "control-systems",
+      "section": "force-impedance"
+    }
+  ]
+}

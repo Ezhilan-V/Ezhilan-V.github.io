@@ -1,0 +1,51 @@
+<div class="diff-drive">
+  <div class="diff-drive__stage">
+    <canvas #canvas></canvas>
+  </div>
+
+  <div class="diff-drive__panel">
+    <div class="diff-drive__panel-head">
+      <span class="diff-drive__panel-title">Wheel velocities</span>
+      <div class="diff-drive__actions">
+        <button type="button" class="diff-drive__btn" (click)="togglePause()">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button type="button" class="diff-drive__btn" (click)="reset()">
+          <i class="fas fa-undo"></i> reset
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Left wheel  vL</span>
+        <span class="slider-row__val">{{ vL | number:'1.2-2' }} m/s</span>
+      </div>
+      <input type="range" min="-0.8" max="0.8" step="0.02" [value]="vL"
+             (input)="onSlider('vL', $any($event.target).value)" aria-label="Left wheel velocity" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Right wheel  vR</span>
+        <span class="slider-row__val">{{ vR | number:'1.2-2' }} m/s</span>
+      </div>
+      <input type="range" min="-0.8" max="0.8" step="0.02" [value]="vR"
+             (input)="onSlider('vR', $any($event.target).value)" aria-label="Right wheel velocity" />
+    </div>
+
+    <div class="diff-drive__presets">
+      <button type="button" (click)="applyPreset('forward')">straight</button>
+      <button type="button" (click)="applyPreset('arc')">gentle arc</button>
+      <button type="button" (click)="applyPreset('spin')">spin in place</button>
+      <button type="button" (click)="applyPreset('stop')">stop</button>
+    </div>
+
+    <div class="diff-drive__eq">
+      <code>vx = (vL + vR) / 2</code>
+      <code>ωz = (vR − vL) / L</code>
+      <p>Equal wheels → straight. Opposite signs → spin in place. Slight imbalance → an arc.</p>
+    </div>
+  </div>
+</div>

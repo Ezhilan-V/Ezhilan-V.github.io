@@ -1,0 +1,153 @@
+<section class="learn-home">
+
+  <!-- Hero -->
+  <header class="learn-home__hero">
+    <span class="learn-home__eyebrow">
+      <i class="fas fa-robot"></i> Learn Robotics
+    </span>
+    <h1 class="learn-home__title">{{ intro.title }}</h1>
+    <p class="learn-home__tagline">{{ intro.tagline }}</p>
+    <p class="learn-home__body">{{ intro.body }}</p>
+  </header>
+
+  <!-- Animated intuition: the robot loop -->
+  <div class="learn-home__intuition">
+    <learn-robot-loop (select)="goTo($event)"></learn-robot-loop>
+  </div>
+
+  <!-- Quick-access tools: paths, vocab, quiz -->
+  <div class="learn-home__group">
+    <div class="learn-home__group-head">
+      <span class="learn-home__group-label">Tools</span>
+      <span class="learn-home__group-hint">Pick a path · learn the words · test yourself</span>
+    </div>
+
+    <div class="learn-home__tools">
+      <a routerLink="/learn/paths" class="tool-card" style="--accent:#34d399">
+        <div class="tool-card__icon"><i class="fas fa-route"></i></div>
+        <div class="tool-card__body">
+          <span class="tool-card__eyebrow">Learning paths</span>
+          <h3>Pick a path</h3>
+          <p>Sequenced modules from beginner to advanced - and a canvas map of how every branch depends on every other branch.</p>
+        </div>
+        <div class="tool-card__cta">Start<i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a routerLink="/learn/vocabulary" class="tool-card" style="--accent:#facc15">
+        <div class="tool-card__icon"><i class="fas fa-book-open"></i></div>
+        <div class="tool-card__body">
+          <span class="tool-card__eyebrow">Vocabulary</span>
+          <h3>Speak the language</h3>
+          <p>80+ robotics + AI/ML terms, explained plainly. Searchable, filterable, every term linked to where it lives.</p>
+        </div>
+        <div class="tool-card__cta">Open<i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a routerLink="/learn/quiz" class="tool-card" style="--accent:#fb7185">
+        <div class="tool-card__icon"><i class="fas fa-circle-question"></i></div>
+        <div class="tool-card__body">
+          <span class="tool-card__eyebrow">Test yourself</span>
+          <h3>Quiz your knowledge</h3>
+          <p>Answer questions across every branch. Get one wrong and you'll get a direct link to the section that explains it.</p>
+        </div>
+        <div class="tool-card__cta">Begin<i class="fas fa-arrow-right"></i></div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Setup / Get Started callout -->
+  <div *ngIf="setup.length" class="learn-home__group">
+    <div class="learn-home__group-head">
+      <span class="learn-home__group-label">Get Started</span>
+      <span class="learn-home__group-hint">Read these first - installs + foundations</span>
+    </div>
+
+    <button *ngFor="let s of setup"
+            type="button"
+            class="setup-card"
+            (click)="goTo(s.slug)"
+            [style.--accent]="s.accent">
+      <div class="setup-card__icon">
+        <i class="fas" [class]="s.icon"></i>
+      </div>
+      <div class="setup-card__body">
+        <span class="setup-card__eyebrow">Start here</span>
+        <h3>{{ s.title }}</h3>
+        <p class="setup-card__tagline">{{ s.hero.tagline }}</p>
+        <p class="setup-card__desc">{{ s.description }}</p>
+        <ul class="setup-card__chips">
+          <li *ngFor="let sec of s.sectionTitles.slice(0, 6)">{{ sec.heading }}</li>
+          <li *ngIf="s.sectionTitles.length > 6" class="setup-card__chips-more">+{{ s.sectionTitles.length - 6 }} more</li>
+        </ul>
+      </div>
+      <div class="setup-card__cta">
+        Open <i class="fas fa-arrow-right"></i>
+      </div>
+    </button>
+  </div>
+
+  <!-- Technical (canonical) branches + diagram -->
+  <div class="learn-home__group">
+    <div class="learn-home__group-head">
+      <span class="learn-home__group-label">Technical Branches</span>
+      <span class="learn-home__group-hint">The 6 canonical fields of robotics</span>
+    </div>
+
+    <div class="learn-home__diagram-card">
+      <div class="learn-home__diagram-head">
+        <span class="learn-home__diagram-label">The Map</span>
+        <span class="learn-home__diagram-hint">click a branch to see its sub-branches</span>
+      </div>
+      <learn-branches-diagram (select)="goTo($event)"></learn-branches-diagram>
+    </div>
+
+    <div class="learn-home__cards">
+      <button *ngFor="let b of technical"
+              class="branch-card"
+              type="button"
+              (click)="goTo(b.slug)"
+              [style.--accent]="b.accent">
+        <div class="branch-card__icon">
+          <i class="fas" [class]="b.icon"></i>
+        </div>
+        <div class="branch-card__body">
+          <h3>{{ b.title }}</h3>
+          <p class="branch-card__tagline">{{ b.hero.tagline }}</p>
+          <p class="branch-card__desc">{{ b.description }}</p>
+        </div>
+        <div class="branch-card__cta">
+          Start <i class="fas fa-arrow-right"></i>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Applied & platform branches -->
+  <div *ngIf="applied.length" class="learn-home__group">
+    <div class="learn-home__group-head">
+      <span class="learn-home__group-label">Applied &amp; Platform</span>
+      <span class="learn-home__group-hint">The technical branches in real systems</span>
+    </div>
+
+    <div class="learn-home__cards">
+      <button *ngFor="let b of applied"
+              class="branch-card"
+              type="button"
+              (click)="goTo(b.slug)"
+              [style.--accent]="b.accent">
+        <div class="branch-card__icon">
+          <i class="fas" [class]="b.icon"></i>
+        </div>
+        <div class="branch-card__body">
+          <h3>{{ b.title }}</h3>
+          <p class="branch-card__tagline">{{ b.hero.tagline }}</p>
+          <p class="branch-card__desc">{{ b.description }}</p>
+        </div>
+        <div class="branch-card__cta">
+          Start <i class="fas fa-arrow-right"></i>
+        </div>
+      </button>
+    </div>
+  </div>
+
+</section>

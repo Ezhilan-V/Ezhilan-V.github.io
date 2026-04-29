@@ -34,7 +34,8 @@ import { Project } from '../profile.service';
 
         <!-- Image carousel -->
         <div class="img-wrap" *ngIf="currentProject.imageUrls?.length">
-          <img [src]="currentProject.imageUrls[currentImage]" [alt]="currentProject.title" class="dlg-img">
+          <img [src]="currentProject.imageUrls[currentImage]" [alt]="currentProject.title" class="dlg-img"
+               loading="lazy" decoding="async">
           <button class="img-nav prev" (click)="prevImage()" *ngIf="currentImage > 0">
             <mat-icon>chevron_left</mat-icon>
           </button>

@@ -1,0 +1,289 @@
+{
+  "slug": "amr",
+  "hero": {
+    "tagline": "Autonomous mobile robots - the warehouse and hospital workhorse",
+    "intro": "An AMR (Autonomous Mobile Robot) is a navigation stack on wheels - it senses obstacles, plans around them, talks to a fleet manager, charges itself, and integrates with the warehouse software that tells it what to move where. AMRs are the most-deployed mobile robot in the world today, in fulfillment centers, hospitals, factories, and last-mile delivery. This branch covers the full stack: drive systems, indoor localization, fleet protocols (VDA 5050), charging and docking, safety certification (ANSI R15.08), and how it all plugs into a WMS. If your job involves a robot that has to live in a real building, read this."
+  },
+  "sections": [
+    {
+      "id": "amr-fundamentals",
+      "heading": "AMR vs AGV vs autonomous vehicle",
+      "body": "These terms get confused constantly. AGVs (Automated Guided Vehicles) follow fixed guidance - magnetic tape, painted lines, embedded wires, or QR codes on the floor. They can't deviate. AMRs (Autonomous Mobile Robots) build a map and localize on it; they can re-route around new obstacles, take alternate paths, and operate in shared human spaces. Autonomous vehicles (cars, trucks, drones) are the same idea but at higher speeds and in unstructured outdoor environments - the algorithms overlap heavily but the certification, sensors, and dynamics differ.",
+      "bullets": [
+        "AGV - fixed path, lower cost, decades-old, brittle to layout changes",
+        "AMR - free navigation, more sensors + compute, handles dynamic obstacles, expensive per unit",
+        "Self-driving - same SLAM/perception stack, much higher speeds, road-specific perception (lane lines, traffic lights), regulated differently",
+        "Hybrid AGV - modern AGVs increasingly add dynamic obstacle avoidance, blurring the line",
+        "Picking the right one: AGVs win on cost when paths are fixed; AMRs win when layouts change weekly"
+      ],
+      "links": [
+        {
+          "label": "MHI AMR Industry Group",
+          "url": "https://www.mhi.org/mobile-automation"
+        }
+      ]
+    },
+    {
+      "id": "drive-systems",
+      "widget": "diffdrive",
+      "heading": "Drive systems - diff drive, mecanum, ackermann, swerve",
+      "body": "An AMR's drivetrain is the first design decision and it constrains everything downstream. Differential drive (TurtleBot, MiR) is cheap, robust, and turns in place - but can't sidestep. Mecanum (KUKA KMR, Fetch) gives full holonomic motion at the cost of efficiency and slip. Ackermann (cars) needs forward motion to turn - wrong choice for tight warehouses. Swerve drive (FRC robots, some industrial AMRs) gives independently steered wheels - best of all worlds but mechanically complex.",
+      "bullets": [
+        "Differential drive - 2 driven + 1+ casters; vx + ωz only, can rotate in place",
+        "Mecanum - 4 wheels with 45° rollers; full vx/vy/ωz; ~30% efficiency loss to roller slip",
+        "Ackermann - 2 driven + 2 steered; minimum turning radius; outdoor / fast",
+        "Swerve - 4 independently driven + steered modules; full holonomic, very mechanically complex",
+        "Tracked - 2 tracks; high traction off-road; high wear, scrubs floor, banned indoors"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Mecanum kinematics - body twist (vx, vy, ωz) → 4 wheel speeds",
+          "code": "import numpy as np\n\ndef mecanum_ik(vx, vy, wz, lx, ly, r):\n    # lx, ly = half-distances between wheels in x and y\n    # r = wheel radius\n    L = lx + ly\n    return (1 / r) * np.array([\n        vx - vy - L * wz,   # front-left\n        vx + vy + L * wz,   # front-right\n        vx + vy - L * wz,   # rear-left\n        vx - vy + L * wz    # rear-right\n    ])"
+        },
+        {
+          "language": "python",
+          "title": "Ackermann kinematics - vx + steering angle → ωz",
+          "code": "import math\n\ndef ackermann_omega(vx, steer_angle, wheel_base):\n    # steer_angle is the front virtual-wheel angle (bicycle model)\n    return vx * math.tan(steer_angle) / wheel_base\n\n# Minimum turning radius at max steer\nmin_r = wheel_base / math.tan(max_steer_rad)"
+        }
+      ]
+    },
+    {
+      "id": "amr-localization",
+      "heading": "Indoor localization - beyond AMCL",
+      "body": "AMCL on a 2D LiDAR works in most warehouses but fails in featureless spaces (long corridors, glass walls, mostly-empty floors). Production AMRs layer on additional cues - UWB beacons for absolute position, fiducial markers for known landmarks, ceiling-mounted cameras with QR codes, Wi-Fi / BLE fingerprinting as a coarse fallback, and wheel odometry as the always-on backbone. The fleet manager often blends all of these via robot_localization or a custom EKF.",
+      "bullets": [
+        "Wheel odometry - always available, drifts ~5% per metre (worse on slick floors)",
+        "2D LiDAR + AMCL - dominant indoor solution, breaks in symmetric spaces",
+        "UWB anchors (Decawave, Nooploop) - ~10 cm accuracy, infrastructure cost",
+        "Fiducial markers (AprilTag, ArUco) - cheap absolute fixes at chokepoints",
+        "Floor QR codes (Kiva-style) - when you control the floor and want determinism",
+        "VIO + IMU - backup when LiDAR is occluded by people"
+      ],
+      "codeBlocks": [
+        {
+          "language": "yaml",
+          "title": "robot_localization - fuse wheel odom + IMU + AMCL pose",
+          "code": "ekf_filter_node:\n  ros__parameters:\n    frequency: 30.0\n    two_d_mode: true\n    publish_tf: true\n\n    odom0: /wheel/odom\n    odom0_config: [false, false, false,\n                   false, false, false,\n                   true,  false, false,\n                   false, false, true,\n                   false, false, false]\n\n    imu0: /imu/data\n    imu0_config: [false, false, false,\n                  false, false, true,\n                  false, false, false,\n                  false, false, true,\n                  false, false, false]\n\n    pose0: /amcl_pose\n    pose0_config: [true,  true,  false,\n                   false, false, true,\n                   false, false, false,\n                   false, false, false,\n                   false, false, false]\n    pose0_differential: false"
+        }
+      ],
+      "links": [
+        {
+          "label": "robot_localization",
+          "url": "https://docs.ros.org/en/jazzy/p/robot_localization/"
+        },
+        {
+          "label": "Decawave UWB",
+          "url": "https://www.qorvo.com/products/p/DWM1000"
+        }
+      ]
+    },
+    {
+      "id": "fleet-architecture",
+      "heading": "Fleet architecture - Open-RMF and friends",
+      "body": "Once you have more than two robots, you need a fleet manager - software that knows where each robot is, what task each is doing, how to dispatch the next pickup, and how to keep robots from blocking each other at intersections. Open-RMF (Robotics Middleware Framework) is the open-source standard, originally from the Singapore healthcare deployment. Commercial alternatives: Vecna, MiR Fleet, OTTO Fleet, AutoStore (different category). Most fleet managers expose REST + MQTT APIs for integration.",
+      "bullets": [
+        "Fleet manager - central brain, talks to N robots over the network",
+        "Traffic supervision - graph of waypoints + lanes; locks segments to prevent collisions",
+        "Task dispatcher - receives orders (from WMS / MES), assigns to nearest available robot",
+        "Building integration - Open-RMF talks to elevators, doors, charging stations as 'asset adapters'",
+        "Multi-vendor - VDA 5050 lets you mix robots from different vendors under one fleet manager"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Stand up Open-RMF in Docker",
+          "code": "docker run --rm -it --network host \\\n    -v $HOME/{{ws}}/maps:/maps \\\n    ghcr.io/open-rmf/rmf:latest \\\n    ros2 launch rmf_demos office.launch.xml"
+        }
+      ],
+      "links": [
+        {
+          "label": "Open-RMF",
+          "url": "https://github.com/open-rmf/rmf"
+        },
+        {
+          "label": "Open-RMF docs",
+          "url": "https://osrf.github.io/ros2multirobotbook/"
+        }
+      ]
+    },
+    {
+      "id": "vda-5050",
+      "heading": "VDA 5050 - vendor-neutral fleet protocol",
+      "body": "VDA 5050 is the German Automotive Industry Association's open standard for AMR ↔ fleet manager communication. It uses MQTT to exchange JSON messages - the fleet sends an `order` (graph of waypoints + actions), the robot publishes `state` (pose, battery, errors) and `visualization` (path), and either side can request `instantActions`. It's how you mix robots from MiR, Fetch, OTTO, and your own custom builds under a single fleet manager.",
+      "bullets": [
+        "Topics: orders, state, visualization, connection, instantActions, factsheet",
+        "Transport: MQTT 3.1.1 / 5.0 - typically port 1883 inside the warehouse network",
+        "Versioned: as of 2025, v2.0 is widely deployed; v2.1 adds a few action types",
+        "Implementations exist in Python, C++, .NET - most vendors ship one of these",
+        "Adoption is uneven - read each vendor's compliance matrix before promising interop"
+      ],
+      "codeBlocks": [
+        {
+          "language": "json",
+          "title": "VDA 5050 order - drive A → B, then pick",
+          "code": "{\n  \"headerId\": 42,\n  \"timestamp\": \"2026-04-28T18:11:42.123Z\",\n  \"version\": \"2.0.0\",\n  \"manufacturer\": \"AcmeBots\",\n  \"serialNumber\": \"AMR-001\",\n  \"orderId\": \"ord-abc-001\",\n  \"orderUpdateId\": 0,\n  \"nodes\": [\n    { \"nodeId\": \"A\", \"sequenceId\": 0,\n      \"nodePosition\": { \"x\": 0,  \"y\": 0,  \"theta\": 0, \"mapId\": \"shop\" },\n      \"actions\": [], \"released\": true },\n    { \"nodeId\": \"B\", \"sequenceId\": 2,\n      \"nodePosition\": { \"x\": 12, \"y\": 4,  \"theta\": 1.57, \"mapId\": \"shop\" },\n      \"actions\": [\n        { \"actionType\": \"pick\", \"actionId\": \"pick-1\", \"blockingType\": \"HARD\" }\n      ],\n      \"released\": true }\n  ],\n  \"edges\": [\n    { \"edgeId\": \"A-B\", \"sequenceId\": 1, \"startNodeId\": \"A\", \"endNodeId\": \"B\",\n      \"actions\": [], \"released\": true, \"maxSpeed\": 0.8 }\n  ]\n}"
+        },
+        {
+          "language": "python",
+          "title": "Subscribe to a robot's state",
+          "code": "import json, paho.mqtt.client as mqtt\n\ndef on_message(client, _, msg):\n    state = json.loads(msg.payload)\n    print(f\"battery: {state['batteryState']['batteryCharge']:.0%}, \"\n          f\"pose: ({state['agvPosition']['x']:.2f}, {state['agvPosition']['y']:.2f})\")\n\nc = mqtt.Client('fleet-manager')\nc.connect('broker.local', 1883)\nc.subscribe('uagv/v2/AcmeBots/AMR-001/state')\nc.on_message = on_message\nc.loop_forever()"
+        }
+      ],
+      "links": [
+        {
+          "label": "VDA 5050 v2.0 spec (PDF)",
+          "url": "https://www.vda.de/en/topics/safety-and-standards/vda-5050.html"
+        }
+      ]
+    },
+    {
+      "id": "charging-docking",
+      "heading": "Charging & docking",
+      "body": "Battery life kills more AMR pilots than navigation does. The robot needs to know when it's getting low, schedule a return to the dock, drive precisely onto the contacts, charge to a strategic state-of-charge, and undock without bumping anything. Most fleets keep robots in the 20-80% SOC band to extend pack life - that means more charge cycles, smaller per-cycle energy.",
+      "bullets": [
+        "Contact charging - copper bus + spring-loaded contact pads; cheap, reliable, requires precise alignment",
+        "Inductive / wireless - no contact wear; lower efficiency (75-85%); higher cost",
+        "Hot-swap battery - manual but eliminates downtime; requires staff",
+        "Opportunity charging - short top-ups during natural wait times (e.g., conveyor delays)",
+        "Dock detection: AprilTag on dock + lidar reflectors; servo into pose with vision-based PID",
+        "Fleet-level charge scheduling - keep N% of fleet charging at any time, rotate"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Servo onto a dock using AprilTag pose feedback",
+          "code": "from rclpy.node import Node\nfrom apriltag_msgs.msg import AprilTagDetectionArray\nfrom geometry_msgs.msg import Twist\n\nclass DockServo(Node):\n    def __init__(self):\n        super().__init__('dock_servo')\n        self.create_subscription(AprilTagDetectionArray,\n            '/dock/tags', self.cb, 10)\n        self.cmd = self.create_publisher(Twist, '/cmd_vel', 10)\n\n    def cb(self, msg):\n        if not msg.detections: return self.cmd.publish(Twist())\n        d = msg.detections[0]\n        # Tag pose in camera frame: position.x = lateral, position.z = forward distance\n        lateral = d.pose.pose.pose.position.x\n        forward = d.pose.pose.pose.position.z - 0.05  # 5 cm offset\n        twist = Twist()\n        twist.linear.x  = max(min(0.5 * forward, 0.05), -0.05)\n        twist.angular.z = max(min(-1.5 * lateral, 0.3), -0.3)\n        self.cmd.publish(twist)"
+        }
+      ]
+    },
+    {
+      "id": "amr-safety",
+      "heading": "Safety certification - ANSI R15.08 & ISO 13482",
+      "body": "An AMR moving through a warehouse with humans is a regulated machine. ANSI R15.08 (US) and ISO 3691-4 (Europe - lift trucks, but applied to AMRs) define the safety functions: protective stop, emergency stop, safety-rated speed and force limits, and the safety-rated PLd / SIL2 control architecture that enforces them. The safety stack is separate from the autonomy stack - a dedicated safety PLC reads safety-rated lidar scans (SICK microScan3, Hokuyo UAM) and cuts power to the motors if anything enters the protected field at speed.",
+      "bullets": [
+        "Two parallel control stacks: 'autonomy' (best-effort) and 'safety' (must-not-fail)",
+        "Safety-rated lidar - SICK microScan3 / nanoScan3, Hokuyo UAM; PLd, SIL2 certified",
+        "Safety PLC - Pilz, SICK Flexi Soft, Beckhoff TwinSAFE; runs the safety logic deterministically",
+        "Speed-zone management - slower in human zones, faster in caged areas",
+        "ANSI R15.08-1 (machine), R15.08-2 (system), R15.08-3 (user) - three-part US standard",
+        "Risk assessment per layout - required deliverable before deployment"
+      ],
+      "links": [
+        {
+          "label": "ANSI R15.08 overview",
+          "url": "https://www.a3automate.org/"
+        },
+        {
+          "label": "SICK safe AMR sensors",
+          "url": "https://www.sick.com/us/en/industries/intralogistics/mobile-platforms-and-amrs/c/g589631"
+        }
+      ]
+    },
+    {
+      "id": "wms-integration",
+      "heading": "WMS / MES / ERP integration",
+      "body": "Robots are useless if they don't know what to move. The Warehouse Management System (WMS - Manhattan, Blue Yonder, Körber, SAP EWM) holds inventory and orders. The fleet manager subscribes to pick / putaway tasks from the WMS and dispatches them to robots. Most integrations are REST-over-HTTPS or AMQP/MQTT; SAP shops often use IDoc or SAP MM. Standardization is poor - every WMS exposes its own task contract.",
+      "bullets": [
+        "WMS - what to move, from where, to where, by when (inventory truth)",
+        "MES - manufacturing execution; AMRs feed parts to assembly lines",
+        "Fleet manager - translates WMS tasks → robot motion + actions",
+        "Common integration patterns: REST polling, MQTT pub/sub, AMQP queues",
+        "Latency budget: typical pick task creation → first robot motion < 5 s",
+        "Idempotency + retries - networks fail; tasks must not double-execute"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Pull pending tasks from a WMS REST API",
+          "code": "import httpx, asyncio\n\nasync def pull_tasks(wms_url, token):\n    async with httpx.AsyncClient(timeout=10) as c:\n        while True:\n            r = await c.get(\n                f'{wms_url}/api/v1/tasks?status=READY',\n                headers={'Authorization': f'Bearer {token}'})\n            r.raise_for_status()\n            for task in r.json()['tasks']:\n                await dispatch_to_fleet(task)\n            await asyncio.sleep(2)"
+        }
+      ]
+    },
+    {
+      "id": "amr-traffic",
+      "heading": "Traffic management & conflict resolution",
+      "body": "Two AMRs heading toward the same intersection is a coordination problem, not a navigation problem - each robot's local planner alone can't solve it. Open-RMF uses a graph-based traffic supervisor: paths are sequences of lane segments, and the supervisor locks segments before robots traverse them. Conflicts are resolved by negotiation (the lower-priority robot reroutes or waits). Other approaches: token-based (one token per intersection), reservation tables (TEA*), and CBS-style multi-agent path finding for tighter optimization.",
+      "bullets": [
+        "Lane graph - explicit map of traversable segments + intersections",
+        "Reservation table - robots claim (segment, time) tuples; conflicts denied",
+        "Priority schemes: FIFO, payload-weighted, deadline-driven",
+        "Deadlock prevention: detect cycles in wait-for graph; force one robot to back off",
+        "MAPF (CBS, ECBS, PBS) - optimal multi-robot pathfinding, expensive at scale",
+        "Practical fallback: if planner can't resolve, robots stop and ask human operator"
+      ],
+      "links": [
+        {
+          "label": "RMF traffic supervisor",
+          "url": "https://github.com/open-rmf/rmf_traffic"
+        },
+        {
+          "label": "MAPF benchmark",
+          "url": "https://movingai.com/benchmarks/mapf/index.html"
+        }
+      ]
+    },
+    {
+      "id": "legged-amrs",
+      "widget": "gait",
+      "heading": "Legged AMRs - gaits and quadrupeds",
+      "body": "Wheeled AMRs dominate flat warehouse floors, but legged platforms (Boston Dynamics Spot, Unitree Go2/H1, Anymal, Ghost Robotics) are taking over inspection routes that include stairs, gravel, slopes, and unstructured outdoor terrain. The hard parts: planning footsteps, maintaining balance under disturbance, and choosing which gait (walk, trot, gallop) to use based on speed and stability requirements. The widget below shows the canonical quadruped gait patterns - try the buttons to see how Spot, a horse, and a cheetah differ.",
+      "bullets": [
+        "Walk - three legs always grounded, max stability, slow",
+        "Trot - diagonal pairs swing together, dynamic but still recoverable, default for Spot/Anymal",
+        "Pace / bound / gallop - increasingly aerial, faster, less stable",
+        "Quasi-static (walk) vs dynamic (trot+) - different control architectures",
+        "MPC for dynamic gaits - re-plan footstep + body trajectory at 100+ Hz",
+        "RL policies (Anymal, Cassie) increasingly replace hand-engineered controllers"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Bring up Unitree Go2 in simulation (Isaac Lab)",
+          "code": "cd ~/{{ws}}/IsaacLab\n./isaaclab.sh -p source/standalone/demos/quadrupeds.py \\\n    --robot Unitree-Go2"
+        }
+      ],
+      "links": [
+        {
+          "label": "Champ - open-source quadruped controller",
+          "url": "https://github.com/chvmp/champ"
+        },
+        {
+          "label": "Quad-SDK",
+          "url": "https://github.com/robomechanics/quad-sdk"
+        },
+        {
+          "label": "Isaac Lab quadruped tasks",
+          "url": "https://isaac-sim.github.io/IsaacLab/main/source/overview/showroom.html"
+        }
+      ]
+    },
+    {
+      "id": "build-an-amr",
+      "heading": "Building an AMR - TurtleBot 4 to custom",
+      "body": "Working backwards from the easiest path: TurtleBot 4 is a complete AMR for prototyping. Clearpath Husky / Dingo are the next step up - bigger battery, better motors, IP-rated chassis. Beyond that, you're designing your own - picking a motor controller (RoboteQ, ODrive, custom), a safety lidar, a charging system, building the chassis, and integrating it all. The software stack stays largely the same: ROS 2 + Nav2 + your fleet manager.",
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Bring up a Clearpath Husky in simulation",
+          "code": "sudo apt install -y ros-jazzy-husky-desktop ros-jazzy-husky-simulator\nros2 launch husky_gazebo husky_playpen.launch.py\n# In another terminal:\nros2 launch husky_navigation amcl_demo.launch.py"
+        },
+        {
+          "language": "yaml",
+          "title": "Custom URDF skeleton for a small AMR",
+          "code": "<?xml version=\"1.0\"?>\n<robot name=\"amr_lite\">\n  <link name=\"base_link\">\n    <visual>\n      <geometry><box size=\"0.6 0.5 0.25\"/></geometry>\n    </visual>\n    <inertial>\n      <mass value=\"30.0\"/>\n      <inertia ixx=\"1.2\" iyy=\"1.5\" izz=\"2.4\"\n               ixy=\"0\" ixz=\"0\" iyz=\"0\"/>\n    </inertial>\n  </link>\n  <!-- 2 driven wheels, 2 casters, lidar mount, top plate ... -->\n</robot>"
+        }
+      ],
+      "links": [
+        {
+          "label": "TurtleBot 4",
+          "url": "https://turtlebot.github.io/turtlebot4-user-manual/"
+        },
+        {
+          "label": "Clearpath Husky",
+          "url": "https://docs.clearpathrobotics.com/docs/robots/outdoor_robots/husky/"
+        }
+      ]
+    }
+  ]
+}

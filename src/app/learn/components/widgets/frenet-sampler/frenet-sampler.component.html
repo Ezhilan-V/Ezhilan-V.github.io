@@ -1,0 +1,62 @@
+<div class="frenet">
+  <div class="frenet__stage">
+    <canvas #canvas
+            (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)"
+            (pointerup)="onPointerUp()"
+            (pointerleave)="onPointerUp()"></canvas>
+    <div class="frenet__hud">
+      <span class="frenet__hud-tag">drag the red obstacle to test the planner</span>
+    </div>
+  </div>
+
+  <div class="frenet__panel">
+    <div class="frenet__panel-head">
+      <span class="frenet__panel-title">Frenet trajectory sampler</span>
+      <div class="frenet__actions">
+        <button type="button" class="frenet__btn" (click)="togglePause()">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button type="button" class="frenet__btn" (click)="reset()">
+          <i class="fas fa-undo"></i> reset
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Lateral samples</span><span class="slider-row__val">{{ numSamples }}</span></div>
+      <input type="range" min="3" max="21" step="2" [value]="numSamples"
+             (input)="onSlider('numSamples', $any($event.target).value)" aria-label="Sample count" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Vehicle speed</span><span class="slider-row__val">{{ speed | number:'1.1-1' }} m/s</span></div>
+      <input type="range" min="0" max="14" step="0.5" [value]="speed"
+             (input)="onSlider('speed', $any($event.target).value)" aria-label="Speed" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Centerline weight</span><span class="slider-row__val">{{ wCenter | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="3" step="0.1" [value]="wCenter"
+             (input)="onSlider('wCenter', $any($event.target).value)" aria-label="Centerline weight" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Obstacle weight</span><span class="slider-row__val">{{ wObs | number:'1.1-1' }}</span></div>
+      <input type="range" min="0" max="20" step="0.5" [value]="wObs"
+             (input)="onSlider('wObs', $any($event.target).value)" aria-label="Obstacle weight" />
+    </div>
+
+    <div class="frenet__legend">
+      <span><i class="line" style="background:rgba(251,191,36,0.7)"></i> centerline</span>
+      <span><i class="line" style="background:#fbbf24"></i> chosen trajectory</span>
+      <span><i class="line" style="background:rgba(148,163,184,0.4)"></i> rejected samples</span>
+      <span><i class="dot" style="background:#38bdf8"></i> ego vehicle</span>
+      <span><i class="dot" style="background:#f87171"></i> obstacle</span>
+    </div>
+
+    <p class="frenet__note">
+      Each timestep the planner samples N quintic polynomials in lateral d(s), scores them against
+      <b>centerline</b> + <b>obstacle</b> + <b>change</b> costs, and picks the cheapest. Drag the red box
+      across the road to force a re-route. Crank obstacle weight up - the planner gives more clearance.
+    </p>
+  </div>
+</div>

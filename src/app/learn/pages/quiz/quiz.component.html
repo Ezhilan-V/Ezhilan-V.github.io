@@ -1,0 +1,137 @@
+<section class="quiz">
+
+  <ng-container *ngIf="view === 'select'">
+    <learn-page-hero
+      icon="fa-circle-question"
+      eyebrow="Test Your Knowledge"
+      [title]="intro.title"
+      [tagline]="intro.tagline"
+      [body]="intro.body"
+      accent="#fb7185">
+    </learn-page-hero>
+
+    <div class="quiz__cards">
+      <button type="button" class="quiz-card quiz-card--mixed" (click)="start('mixed')">
+        <div class="quiz-card__icon"><i class="fas fa-shuffle"></i></div>
+        <div class="quiz-card__body">
+          <span class="quiz-card__eyebrow">Mixed</span>
+          <h3>Run the mixed quiz</h3>
+          <p>10 questions sampled from every branch.</p>
+        </div>
+        <div class="quiz-card__cta">
+          {{ countFor('mixed') }} questions
+          <i class="fas fa-arrow-right"></i>
+        </div>
+      </button>
+
+      <button *ngFor="let c of categories"
+              type="button"
+              class="quiz-card"
+              (click)="start(c.id)"
+              [style.--accent]="c.accent">
+        <div class="quiz-card__icon">
+          <i class="fas" [class]="c.icon"></i>
+        </div>
+        <div class="quiz-card__body">
+          <span class="quiz-card__eyebrow">{{ c.label }}</span>
+          <h3>{{ c.label }}</h3>
+          <p>{{ c.description }}</p>
+        </div>
+        <div class="quiz-card__cta">
+          {{ countFor(c.id) }} questions
+          <i class="fas fa-arrow-right"></i>
+        </div>
+      </button>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="view === 'play'">
+    <header class="quiz__playhead">
+      <button type="button" class="quiz__back" (click)="back()">
+        <i class="fas fa-arrow-left"></i> Quiz menu
+      </button>
+      <div class="quiz__progress">
+        <span>{{ index + 1 }} / {{ questions.length }}</span>
+        <div class="quiz__progress-bar">
+          <div class="quiz__progress-fill" [style.width.%]="((index + 1) / questions.length) * 100"></div>
+        </div>
+      </div>
+    </header>
+
+    <article *ngIf="current() as q" class="question" [style.--accent]="'#fb7185'">
+      <span class="question__cat">{{ catLabel(q.category) }} <span *ngIf="q.level">· {{ q.level }}</span></span>
+      <h2 class="question__prompt">{{ q.prompt }}</h2>
+
+      <div class="question__choices">
+        <button *ngFor="let c of q.choices"
+                type="button"
+                class="choice"
+                [class.is-picked]="picked === c.id && !revealed"
+                [class.is-correct]="isCorrectChoice(c.id)"
+                [class.is-wrong]="isWrongChoice(c.id)"
+                [disabled]="revealed"
+                (click)="pick(c.id)">
+          <span class="choice__bullet">{{ c.id.toUpperCase() }}</span>
+          <span class="choice__text">{{ c.text }}</span>
+          <i *ngIf="isCorrectChoice(c.id)" class="fas fa-check choice__mark"></i>
+          <i *ngIf="isWrongChoice(c.id)"   class="fas fa-times choice__mark"></i>
+        </button>
+      </div>
+
+      <div *ngIf="revealed" class="explanation"
+           [class.is-correct]="picked === q.answer"
+           [class.is-wrong]="picked !== q.answer">
+        <div class="explanation__head">
+          <i class="fas" [class.fa-circle-check]="picked === q.answer" [class.fa-circle-xmark]="picked !== q.answer"></i>
+          <span *ngIf="picked === q.answer">Correct.</span>
+          <span *ngIf="picked !== q.answer">Not quite - the answer is <strong>{{ q.answer.toUpperCase() }}</strong>.</span>
+        </div>
+        <p class="explanation__body">{{ q.explanation }}</p>
+        <button *ngIf="picked !== q.answer && q.branch" type="button" class="explanation__link" (click)="goToSection(q, $event)">
+          <i class="fas fa-book-open"></i>
+          Read the section that covers this →
+        </button>
+      </div>
+
+      <div class="question__actions">
+        <button *ngIf="!revealed" type="button" class="primary-btn" (click)="submit()" [disabled]="!picked">
+          Submit
+        </button>
+        <button *ngIf="revealed" type="button" class="primary-btn" (click)="next()">
+          {{ index < questions.length - 1 ? 'Next question' : 'See results' }}
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </article>
+  </ng-container>
+
+  <ng-container *ngIf="view === 'result'">
+    <learn-page-hero
+      icon="fa-flag-checkered"
+      eyebrow="Quiz complete"
+      [title]="scoreLabel()"
+      [tagline]="score() + ' / ' + questions.length + '  ·  ' + scorePct() + '%'"
+      [body]="wrongQuestions().length === 0 ? 'You aced it. Pick another category to keep stretching.' : 'Below are the ones you missed - each links straight to the section that explains it.'"
+      accent="#fb7185">
+    </learn-page-hero>
+
+    <div *ngIf="wrongQuestions().length > 0" class="result__list">
+      <h3 class="result__heading"><i class="fas fa-bookmark"></i> Missed questions</h3>
+      <article *ngFor="let q of wrongQuestions()" class="result-card">
+        <span class="result-card__cat">{{ catLabel(q.category) }}</span>
+        <h4>{{ q.prompt }}</h4>
+        <p class="result-card__explain">{{ q.explanation }}</p>
+        <button *ngIf="q.branch" type="button" class="result-card__link" (click)="goToSection(q)">
+          <i class="fas fa-arrow-right"></i>
+          Read it now
+        </button>
+      </article>
+    </div>
+
+    <div class="result__actions">
+      <button type="button" class="primary-btn" (click)="retry()"><i class="fas fa-rotate"></i> Retry this quiz</button>
+      <button type="button" class="ghost-btn" (click)="back()"><i class="fas fa-th-large"></i> Pick another</button>
+    </div>
+  </ng-container>
+
+</section>

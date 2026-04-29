@@ -1,0 +1,80 @@
+<section class="paths">
+
+  <learn-page-hero
+    icon="fa-route"
+    eyebrow="Learning Paths"
+    [title]="intro.title"
+    [tagline]="intro.tagline"
+    [body]="intro.body"
+    accent="#34d399">
+  </learn-page-hero>
+
+  <div class="paths__map">
+    <div class="paths__map-head">
+      <span class="paths__map-label">Branch dependency map</span>
+      <span class="paths__map-hint">click any node to open it</span>
+    </div>
+    <learn-path-canvas (select)="onPathBranchSelect($event)"></learn-path-canvas>
+  </div>
+
+  <nav class="paths__tabs" aria-label="Choose a learning path">
+    <button *ngFor="let p of paths"
+            type="button"
+            class="paths__tab"
+            [class.is-active]="activePathId === p.id"
+            [style.--accent]="p.accent"
+            (click)="setActive(p.id)">
+      <i class="fas" [class]="p.icon"></i>
+      <div>
+        <strong>{{ p.title }}</strong>
+        <span>{{ p.tagline }}</span>
+      </div>
+    </button>
+  </nav>
+
+  <ng-container *ngIf="active() as path">
+    <div class="path-detail" [style.--accent]="path.accent">
+      <header class="path-detail__head">
+        <div class="path-detail__head-icon">
+          <i class="fas" [class]="path.icon"></i>
+        </div>
+        <div>
+          <h2>{{ path.title }}</h2>
+          <p class="path-detail__tagline">{{ path.tagline }}</p>
+          <p class="path-detail__meta">
+            <i class="fas fa-clock"></i> {{ path.duration }}
+            <span class="path-detail__meta-sep">·</span>
+            <i class="fas fa-user-graduate"></i> {{ path.audience }}
+            <span class="path-detail__meta-sep">·</span>
+            <i class="fas fa-bookmark"></i> {{ totalStops(path) }} stops
+          </p>
+        </div>
+      </header>
+
+      <ol class="ladder">
+        <li *ngFor="let m of path.modules; let i = index" class="ladder__module">
+          <header class="ladder__module-head">
+            <span class="ladder__step">{{ (i + 1).toString().padStart(2, '0') }}</span>
+            <div class="ladder__module-meta">
+              <span class="ladder__level" [class]="levelClass(m.level)">{{ m.level }}</span>
+              <h3>{{ m.label }}</h3>
+              <p>{{ m.summary }}</p>
+            </div>
+          </header>
+
+          <ul class="ladder__stops">
+            <li *ngFor="let s of m.stops">
+              <button type="button" class="stop" (click)="goToStop(s, $event)">
+                <i class="fas fa-circle stop__bullet"></i>
+                <span class="stop__label">{{ s.label }}</span>
+                <span class="stop__branch">{{ s.branch }}</span>
+                <i class="fas fa-arrow-right stop__cta"></i>
+              </button>
+            </li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+  </ng-container>
+
+</section>

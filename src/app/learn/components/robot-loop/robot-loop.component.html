@@ -1,0 +1,26 @@
+<div class="robot-loop">
+  <div class="robot-loop__head">
+    <span class="robot-loop__eyebrow">What a robot really is</span>
+    <h3 class="robot-loop__title">A robot is a loop, running forever</h3>
+    <p class="robot-loop__caption">
+      <strong [style.color]="current().accent">{{ current().label }}.</strong>
+      <span class="robot-loop__caption-text">
+        <ng-container *ngIf="activeStage === 'sense'">Sensors stream raw measurements: pixels, ranges, joint angles, IMU readings.</ng-container>
+        <ng-container *ngIf="activeStage === 'think'">Code interprets, predicts, plans: where am I, where do I go, what's the next safe motion?</ng-container>
+        <ng-container *ngIf="activeStage === 'act'">Commands flow to the actuators: motors spin, joints move, the world changes - and we sense again.</ng-container>
+      </span>
+    </p>
+  </div>
+
+  <div class="robot-loop__stage" #stage>
+    <canvas #canvas
+            (mousemove)="onMove($event)"
+            (mouseleave)="onLeave()"
+            (click)="onClick($event)"
+            aria-label="Animated diagram of the robot's sense - think - act loop"></canvas>
+  </div>
+
+  <div class="robot-loop__hint">
+    <i class="fas fa-circle-info"></i> click any stage to jump to the branch that owns it
+  </div>
+</div>

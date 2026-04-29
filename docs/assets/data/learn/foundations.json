@@ -1,0 +1,399 @@
+{
+  "slug": "foundations",
+  "hero": {
+    "tagline": "The math and code every robotics book assumes you already know",
+    "intro": "Most robotics tutorials drop you into matrix transforms and Bayesian filters without warning. This branch is the prereq pack so that doesn't happen to you. Linear algebra (poses + frames are just matrices), calculus and optimization (planners minimize cost), probability (sensors are noisy), Python and C++ idioms (numpy and Eigen show up everywhere), debugging patterns, and curated books. None of it is robotics-specific yet - that's the point. Skip what you already know."
+  },
+  "sections": [
+    {
+      "id": "why-foundations",
+      "heading": "Why these foundations actually matter",
+      "body": "Robotics looks like an engineering discipline (it builds machines) but it runs on the math of physics, statistics, and optimization. You can copy ROS 2 tutorials all day and the moment a TF tree breaks, an EKF diverges, or your IK solver oscillates, you'll need the underlying math to even understand what's wrong. Same for code - you'll spend more time staring at numpy broadcasting bugs and Eigen template errors than at robot kinematics.\n\nThe good news: the math is finite. Solid linear algebra + calculus + probability covers 90% of what shows up. The remaining 10% (Lie groups, optimization on manifolds, info theory) you pick up as needed.",
+      "bullets": [
+        "Linear algebra → kinematics, control, perception, every ML model",
+        "Calculus + optimization → planning, MPC, RL, Newton-style IK solvers",
+        "Probability + statistics → Kalman / particle filters, sensor fusion, inference",
+        "Numerical methods → IK iterations, ODE integration, control loop stability",
+        "ROS 2 patterns + debugging → 50% of your time in any real project",
+        "Knowing where to look → papers with code, ROS Answers, GitHub issues, Discords"
+      ]
+    },
+    {
+      "id": "linear-algebra",
+      "widget": "linalg",
+      "heading": "Linear algebra - the language of poses",
+      "body": "Every pose, every transform, every control law is a matrix expression. The non-negotiable basics: matrix multiplication and its meaning as composed transforms, dot/cross product, transpose, inverse, eigenvalues + eigenvectors, SVD, rank and null space. The robotics-specific extensions: rotation matrices SO(3), homogeneous transforms SE(3), the Lie algebra so(3) (skew-symmetric matrices that exponentiate into rotations), and the Jacobian (the gradient of an end-effector pose with respect to joint angles).\n\nYou'll write almost none of this from scratch - numpy and Eigen do the heavy lifting. But you absolutely need the intuition for what a singular Jacobian means (the IK solver is about to explode), what a non-orthonormal rotation matrix means (you've drifted; re-orthonormalize), and what 'in the null space of J' means (free motion that doesn't move the end-effector). Drag the vectors in the widget below to feel dot products and rotations.",
+      "bullets": [
+        "Matrix multiplication = composition of linear transforms; reading order is right-to-left",
+        "Eigenvalues of a covariance matrix = principal axes of uncertainty",
+        "SVD = swiss-army knife for least squares, pseudoinverse, low-rank approximation, ICP",
+        "Rotations: 3×3 matrix or quaternion or axis-angle - same underlying SO(3) group",
+        "Jacobian J: small joint changes → end-effector velocity. det(J) → 0 = singularity",
+        "Lie groups (SO(3), SE(3)) - manifold-valued state needs special integration / interpolation"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "The 5 numpy operations you'll write 1000 times",
+          "code": "import numpy as np\n\nA = np.array([[1, 2], [3, 4]])\nb = np.array([5, 6])\n\nA @ b              # matrix-vector multiply (NOT A * b - that's elementwise!)\nA.T                # transpose\nnp.linalg.inv(A)   # full inverse - avoid; prefer solve\nnp.linalg.solve(A, b)              # Ax = b without explicit inverse\nnp.linalg.pinv(A)                  # pseudoinverse for rectangular A\nu, s, vt = np.linalg.svd(A)        # SVD"
+        },
+        {
+          "language": "python",
+          "title": "Damped pseudoinverse - the IK workhorse",
+          "code": "import numpy as np\n\ndef damped_pinv(J, lam=0.05):\n    \"\"\"Damped least-squares pseudoinverse - well-behaved near singularities.\"\"\"\n    I = np.eye(J.shape[0])\n    return J.T @ np.linalg.inv(J @ J.T + lam * lam * I)\n\n# Use case: q_dot = damped_pinv(J(q)) @ end_effector_velocity"
+        }
+      ],
+      "links": [
+        {
+          "label": "3blue1brown - Essence of Linear Algebra",
+          "url": "https://www.3blue1brown.com/topics/linear-algebra"
+        },
+        {
+          "label": "Modern Robotics Ch 3 (rigid-body motions)",
+          "url": "https://hades.mech.northwestern.edu/index.php/Modern_Robotics"
+        },
+        {
+          "label": "MIT 18.06 (Strang)",
+          "url": "https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/"
+        }
+      ]
+    },
+    {
+      "id": "calculus-optimization",
+      "heading": "Calculus + optimization",
+      "body": "Calculus shows up everywhere a robot makes a continuous decision. Derivatives describe how outputs respond to inputs (Jacobians are matrices of partial derivatives). Integrals turn velocity → position, acceleration → velocity (every controller integrates somewhere). Optimization - minimizing a cost subject to constraints - is the unifying frame for path planning, MPC, learning-from-demonstrations, and basically every modern decision algorithm.\n\nYou don't need real analysis. You need: chain rule, gradient + gradient descent, the Hessian and Newton's method, Lagrange multipliers (constrained optimization), and convexity - knowing when a problem is convex (one global minimum) vs non-convex (you're stuck with local minima).",
+      "bullets": [
+        "Chain rule = the engine of every backpropagation pass and Jacobian computation",
+        "Gradient descent: x ← x − α∇f(x). Almost everything in ML is a variant",
+        "Newton's method: x ← x − H⁻¹∇f. Converges fast when H exists; expensive in high-dim",
+        "Convex vs non-convex: convex means QP/SOCP solvers find the global minimum",
+        "Lagrange multipliers: handle equality constraints; KKT for inequalities",
+        "Numerical integration: Euler (1st order, fast, drifts) → RK4 (4th order, slower, accurate)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Gradient descent for a tiny least-squares problem",
+          "code": "import numpy as np\n\nA = np.random.randn(50, 5)\nb = A @ np.array([1.0, 2, 3, 4, 5]) + 0.1 * np.random.randn(50)\n\nx = np.zeros(5)\nfor _ in range(2000):\n    grad = 2 * A.T @ (A @ x - b)         # ∇ ||Ax - b||²\n    x -= 0.005 * grad\nprint(x)                                  # ≈ [1, 2, 3, 4, 5]\n# Closed form (sanity check): np.linalg.lstsq(A, b)[0]"
+        },
+        {
+          "language": "python",
+          "title": "Convex QP via cvxpy - basis of MPC",
+          "code": "import cvxpy as cp\nimport numpy as np\n\nx = cp.Variable(3)\nQ = np.eye(3); c = np.array([1, -2, 0.5])\nprob = cp.Problem(cp.Minimize(0.5 * cp.quad_form(x, Q) + c @ x),\n                  [x >= -1, x <= 1, cp.sum(x) == 0.5])\nprob.solve()\nprint(x.value)"
+        }
+      ],
+      "links": [
+        {
+          "label": "3blue1brown - Essence of Calculus",
+          "url": "https://www.3blue1brown.com/topics/calculus"
+        },
+        {
+          "label": "Boyd - Convex Optimization (free book)",
+          "url": "https://web.stanford.edu/~boyd/cvxbook/"
+        },
+        {
+          "label": "cvxpy",
+          "url": "https://www.cvxpy.org/"
+        }
+      ]
+    },
+    {
+      "id": "probability-stats",
+      "heading": "Probability + statistics",
+      "body": "Robots are built on noisy sensors and uncertain models, so robotics is fundamentally probabilistic. You need: Bayes' theorem (the prior + likelihood → posterior recipe behind every state estimator), Gaussians (mean + covariance and how they propagate through linear transforms), maximum likelihood (the cost function behind every fit), and the central limit theorem (why 'noise looks Gaussian' is usually true enough).\n\nThe prereqs unlock entire robotics subfields: Kalman filters become 'Bayes' rule for Gaussians', particle filters become 'Bayes' rule for arbitrary distributions', SLAM becomes 'maximum a posteriori over a pose graph', RL becomes 'maximize expected reward'.",
+      "bullets": [
+        "P(A|B) = P(B|A)P(A) / P(B) - Bayes' theorem is the unifying equation of state estimation",
+        "Gaussians: closed under linear transforms; product of Gaussians is Gaussian",
+        "Covariance matrices: eigenvalues = uncertainty along principal axes",
+        "MLE = maximize likelihood under data; equivalent to minimizing negative log-likelihood",
+        "MAP = MLE + prior. RL is MAP with reward as log-likelihood",
+        "Markov assumption: future depends only on present, not history. Drives MDPs, HMMs, KFs"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Multivariate Gaussian propagation - the core of any KF",
+          "code": "import numpy as np\n\n# Prior: x ~ N(mu, Sigma)\nmu    = np.array([0.0, 0.0])\nSigma = np.array([[1.0, 0.0], [0.0, 0.5]])\n\n# Linear transform: y = A x + N(0, Q)\nA = np.array([[1.0, 0.1], [0.0, 1.0]])\nQ = 0.01 * np.eye(2)\n\nmu_y    = A @ mu                      # mean propagates as A·mu\nSigma_y = A @ Sigma @ A.T + Q         # cov propagates as A·Σ·Aᵀ + Q\n# That's literally the Kalman predict step."
+        },
+        {
+          "language": "python",
+          "title": "Bayes update - posterior from prior + likelihood (1D)",
+          "code": "import numpy as np\n\ndef gauss_product(mu1, var1, mu2, var2):\n    \"\"\"Posterior mean + variance from two independent Gaussian beliefs.\"\"\"\n    var = 1 / (1 / var1 + 1 / var2)\n    mu  = var * (mu1 / var1 + mu2 / var2)\n    return mu, var\n\n# Sensor measurement update: belief = prior * likelihood / norm\nprior_mu, prior_var = 5.0, 2.0\nmeas_mu,  meas_var  = 6.5, 1.0\nposterior_mu, posterior_var = gauss_product(prior_mu, prior_var, meas_mu, meas_var)\n# posterior_mu ≈ 6.0  (pulled toward the lower-variance measurement)"
+        }
+      ],
+      "links": [
+        {
+          "label": "Probabilistic Robotics (Thrun)",
+          "url": "https://www.cambridge.org/core/books/probabilistic-robotics/2A0F0E6FB16FA1AAEC0B0457D33D8AB7"
+        },
+        {
+          "label": "Sebastian Thrun - Udacity AI for Robotics",
+          "url": "https://www.udacity.com/course/artificial-intelligence-for-robotics--cs373"
+        },
+        {
+          "label": "Kalman intuition (visual)",
+          "url": "https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/"
+        }
+      ]
+    },
+    {
+      "id": "python-robotics",
+      "heading": "Python for robotics - the patterns you'll use daily",
+      "body": "Python is the lingua franca of robotics ML and prototyping. The robotics-specific muscle memory: numpy for linear algebra, scipy.spatial.transform for rotations, scipy.optimize for solvers, matplotlib for quick plots, and rclpy for ROS 2 nodes. The common gotchas - broadcasting rules, in-place vs out-of-place ops, GIL constraints for real-time, and the cost of pure-Python loops on big tensors - are the things that separate slow code from fast code.",
+      "bullets": [
+        "Vectorize: replace for-loops with numpy ops. 100× speedup is normal",
+        "Broadcasting rules: align trailing dimensions, missing dims = size 1",
+        "Avoid np.linalg.inv(A) - use np.linalg.solve(A, b) instead (faster + more accurate)",
+        "scipy.spatial.transform.Rotation handles every conversion you'll need",
+        "asyncio + rclpy: async-friendly node structures",
+        "GIL: pure-Python parallelism is fake. Use multiprocessing or NumPy under the hood for real parallelism"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Idiomatic ROS 2 Python node template",
+          "code": "import rclpy\nfrom rclpy.node import Node\nfrom geometry_msgs.msg import Twist\nfrom sensor_msgs.msg import LaserScan\n\nclass MyNode(Node):\n    def __init__(self):\n        super().__init__('my_node')\n        self.declare_parameter('rate', 10.0)\n        rate = self.get_parameter('rate').value\n\n        self.sub = self.create_subscription(LaserScan, '/scan', self.on_scan, 10)\n        self.pub = self.create_publisher(Twist, '/cmd_vel', 10)\n        self.create_timer(1.0 / rate, self.on_tick)\n        self.last_min_range = float('inf')\n\n    def on_scan(self, msg: LaserScan):\n        self.last_min_range = float(min(msg.ranges))\n\n    def on_tick(self):\n        cmd = Twist()\n        cmd.linear.x = 0.2 if self.last_min_range > 0.5 else 0.0\n        self.pub.publish(cmd)\n\ndef main():\n    rclpy.init(); rclpy.spin(MyNode())"
+        },
+        {
+          "language": "python",
+          "title": "Vectorize before optimizing - the perception speedup pattern",
+          "code": "import numpy as np\n\n# Slow: per-pixel python loop (~10 sec for 1280×720)\ndef threshold_slow(img, lo, hi):\n    out = np.zeros_like(img)\n    for y in range(img.shape[0]):\n        for x in range(img.shape[1]):\n            if lo <= img[y, x] <= hi: out[y, x] = 255\n    return out\n\n# Fast: numpy mask (~1 ms for 1280×720). Same result.\ndef threshold_fast(img, lo, hi):\n    return np.where((img >= lo) & (img <= hi), 255, 0).astype(np.uint8)"
+        }
+      ],
+      "links": [
+        {
+          "label": "scipy.spatial.transform.Rotation",
+          "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html"
+        },
+        {
+          "label": "rclpy docs",
+          "url": "https://docs.ros.org/en/jazzy/p/rclpy/"
+        }
+      ]
+    },
+    {
+      "id": "cpp-robotics",
+      "heading": "C++ for robotics - modern idioms",
+      "body": "Real-time robot control runs in C++ for predictable timing. Modern C++ (C++17 / 20) is far less painful than the C++98 you might have learned: smart pointers handle memory, range-for loops are clean, std::variant + std::optional remove most pointer-juggling, structured bindings make APIs readable. For robotics specifically: Eigen for linear algebra, Boost.PFR / cereal for serialization, fmt for logging.\n\nThe killer feature for real-time: deterministic memory. Allocate everything upfront, use object pools or std::array, never call malloc / new in the hot loop. ROS 2 + ros2_control follow this convention.",
+      "bullets": [
+        "std::shared_ptr / std::unique_ptr: never new / delete by hand again",
+        "Eigen: header-only linear algebra, expression-template magic for fast math",
+        "auto, range-for, structured bindings - modern C++ reads like Python now",
+        "constexpr + concepts (C++20): catch bugs at compile time, not runtime",
+        "Real-time hot loop: no malloc, no exceptions, no virtual calls. Pre-allocate everything",
+        "rclcpp pubs/subs use shared_ptr-by-default; understand the IPC vs serialization trade"
+      ],
+      "codeBlocks": [
+        {
+          "language": "cpp",
+          "title": "Modern ROS 2 C++ node template",
+          "code": "#include <rclcpp/rclcpp.hpp>\n#include <geometry_msgs/msg/twist.hpp>\n#include <sensor_msgs/msg/laser_scan.hpp>\n\nclass MyNode : public rclcpp::Node {\npublic:\n  MyNode() : Node(\"my_node\") {\n    sub_ = create_subscription<sensor_msgs::msg::LaserScan>(\n        \"/scan\", 10,\n        [this](sensor_msgs::msg::LaserScan::SharedPtr msg) { on_scan(msg); });\n    pub_ = create_publisher<geometry_msgs::msg::Twist>(\"/cmd_vel\", 10);\n    timer_ = create_wall_timer(\n        std::chrono::milliseconds(100),\n        [this]() { tick(); });\n  }\n\nprivate:\n  void on_scan(sensor_msgs::msg::LaserScan::SharedPtr msg) {\n    min_range_ = *std::min_element(msg->ranges.begin(), msg->ranges.end());\n  }\n  void tick() {\n    geometry_msgs::msg::Twist cmd;\n    cmd.linear.x = (min_range_ > 0.5) ? 0.2 : 0.0;\n    pub_->publish(cmd);\n  }\n\n  rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr sub_;\n  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr     pub_;\n  rclcpp::TimerBase::SharedPtr                                 timer_;\n  float min_range_{std::numeric_limits<float>::infinity()};\n};\n\nint main(int argc, char** argv) {\n  rclcpp::init(argc, argv);\n  rclcpp::spin(std::make_shared<MyNode>());\n  rclcpp::shutdown();\n  return 0;\n}"
+        },
+        {
+          "language": "cpp",
+          "title": "Eigen - linear algebra without misery",
+          "code": "#include <Eigen/Dense>\n#include <iostream>\n\nint main() {\n  Eigen::Matrix3d R;       // 3×3 rotation\n  R = Eigen::AngleAxisd(M_PI_4, Eigen::Vector3d::UnitZ()).toRotationMatrix();\n\n  Eigen::Vector3d p(1, 0, 0);\n  Eigen::Vector3d p_rotated = R * p;          // matrix-vector multiply\n\n  Eigen::Quaterniond q(R);                    // implicit conversion\n  std::cout << q.coeffs().transpose() << std::endl;\n}"
+        }
+      ],
+      "links": [
+        {
+          "label": "Eigen tutorial",
+          "url": "https://eigen.tuxfamily.org/dox/GettingStarted.html"
+        },
+        {
+          "label": "Modern C++ for ROS 2",
+          "url": "https://docs.ros.org/en/jazzy/Concepts/About-ROS-2-Client-Libraries.html"
+        },
+        {
+          "label": "fmtlib",
+          "url": "https://fmt.dev/"
+        }
+      ]
+    },
+    {
+      "id": "debug-patterns",
+      "heading": "Debugging robots - patterns that save your weekend",
+      "body": "Half of robotics is debugging. Production teams have a vocabulary of repeating failure modes: 'tf is wrong' (mismatched frames), 'topic frequency dropped' (publisher died), 'silent diverged' (NaN crept in), 'works in sim, fails on hardware' (timing or signal noise). The fix-loop is always the same: reproduce in a recording, narrow to the smallest case, instrument, fix, regression-test by replaying the bag.",
+      "bullets": [
+        "First step every time: ros2 topic hz <topic> - is the topic alive at the expected rate?",
+        "ros2 topic echo --once - print one message; does it look right?",
+        "ros2 run tf2_tools view_frames - generates frames.pdf showing the live TF tree",
+        "ros2 bag record everything when something weird happens - replay it later",
+        "Foxglove Studio = the modern bag visualizer; faster than RViz for forensic analysis",
+        "GDB/lldb for C++ crashes; py-spy for Python performance; perf for kernel-level profiling"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "5-command first-aid for any ROS 2 node",
+          "code": "# 1. Is the node alive?\nros2 node list | grep my_node\n\n# 2. What does it publish/subscribe?\nros2 node info /my_node\n\n# 3. Is its main topic publishing?\nros2 topic hz /my_node/output\n\n# 4. What does the message actually look like?\nros2 topic echo /my_node/output --once\n\n# 5. Is TF healthy?\nros2 run tf2_tools view_frames\nxdg-open frames.pdf"
+        },
+        {
+          "language": "bash",
+          "title": "Catch a NaN before it propagates",
+          "code": "# In Python\nimport numpy as np\nassert np.all(np.isfinite(state)), f'NaN in state: {state}'\n\n# In C++ with Eigen\nassert(state.allFinite() && \"NaN in state\");"
+        }
+      ],
+      "links": [
+        {
+          "label": "ROS 2 troubleshooting",
+          "url": "https://docs.ros.org/en/jazzy/How-To-Guides/Topics-Services-Actions.html"
+        },
+        {
+          "label": "Foxglove Studio",
+          "url": "https://foxglove.dev/studio"
+        },
+        {
+          "label": "py-spy (Python profiler)",
+          "url": "https://github.com/benfred/py-spy"
+        }
+      ]
+    },
+    {
+      "id": "math-cookbook",
+      "heading": "Robotics math cookbook - the formulas you'll actually use",
+      "body": "Every robotics textbook scatters its key formulas across chapters. This is the one-page lookup you'll reach for in real work: composing transforms, converting between rotation representations, integrating angular velocity, computing twists. Bookmark it.",
+      "bullets": [
+        "Homogeneous transform: T = [[R, t], [0, 1]] - 4x4 matrix encoding rotation R + translation t",
+        "Compose transforms: T_AC = T_AB · T_BC (apply right-to-left in row-vector form)",
+        "Invert a transform: T_BA = [[R^T, -R^T·t], [0, 1]] - O(1) close-form, no matrix inverse needed",
+        "Quaternion to rotation matrix: R = I + 2w·[v]× + 2[v]×² where v = (x,y,z), [·]× is the skew-symmetric form",
+        "Quaternion compose: q1·q2 (Hamilton product). NEVER add quaternions",
+        "Quaternion slerp: smooth interpolation along the great-circle on S^3, used for trajectory orientation",
+        "Axis-angle to quaternion: q = (sin(θ/2)·ω̂, cos(θ/2)) where ω̂ is the unit axis",
+        "Rodrigues' formula: R = I + sin(θ)·[ω̂]× + (1-cos(θ))·[ω̂]× ² - rotation matrix from axis-angle",
+        "Twist (body velocity): V = (ω, v) - angular + linear velocity. Lives in se(3)",
+        "Adjoint: maps a twist between frames. Ad_T · V_A = V_B for relative motion",
+        "Integrate angular velocity: q(t+dt) = q(t) ⊗ exp(½·dt·ω) (use quaternion exp - keeps unit norm)",
+        "Skew-symmetric matrix: [v]× turns cross product into matrix multiply. v × u = [v]× · u",
+        "Pose error: log(T_target^-1 · T_current) - a 6-vector twist suitable for any controller"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "scipy + numpy: every conversion you'll ever do",
+          "code": "import numpy as np\nfrom scipy.spatial.transform import Rotation as R, Slerp\n\n# Quaternion (xyzw) → rotation matrix\nq = [0, 0, np.sin(np.pi/4), np.cos(np.pi/4)]   # 90° about z\nrot = R.from_quat(q)\nM = rot.as_matrix()             # 3x3\n\n# Compose two rotations\nq1 = R.from_euler('z', 90, degrees=True)\nq2 = R.from_euler('y', 30, degrees=True)\nq12 = q1 * q2                   # apply q2 then q1\n\n# Slerp between two orientations\nkey_times = [0, 1]\nkey_rots  = R.from_quat([[0,0,0,1], [0,0,np.sin(np.pi/4),np.cos(np.pi/4)]])\nslerp = Slerp(key_times, key_rots)\nq_at_05 = slerp([0.5]).as_quat()\n\n# Homogeneous transform compose / invert\ndef T_from(R_, t):\n    T = np.eye(4); T[:3,:3] = R_; T[:3,3] = t; return T\ndef T_inv(T):\n    R_ = T[:3,:3]; t = T[:3,3]\n    Ti = np.eye(4); Ti[:3,:3] = R_.T; Ti[:3,3] = -R_.T @ t; return Ti\n\nT_AB = T_from(M, [1, 0, 0])\nT_BA = T_inv(T_AB)\n\n# Skew-symmetric\ndef skew(v):\n    x, y, z = v\n    return np.array([[0,-z, y],[ z, 0,-x],[-y, x, 0]])\n\n# Rodrigues: axis-angle → rotation matrix\ndef rodrigues(axis, theta):\n    a = axis / np.linalg.norm(axis)\n    K = skew(a)\n    return np.eye(3) + np.sin(theta)*K + (1-np.cos(theta))*(K @ K)"
+        },
+        {
+          "language": "cpp",
+          "title": "Eigen / Sophus equivalents in C++",
+          "code": "#include <Eigen/Geometry>\n#include <sophus/se3.hpp>   // optional but cleaner\n\nusing Eigen::Vector3d;\nusing Eigen::Quaterniond;\nusing Eigen::AngleAxisd;\nusing Eigen::Matrix3d;\nusing Eigen::Matrix4d;\n\n// Quaternion → rotation matrix\nQuaterniond q(AngleAxisd(M_PI/2, Vector3d::UnitZ()));\nMatrix3d M = q.toRotationMatrix();\n\n// Compose\nQuaterniond q1(AngleAxisd(M_PI/2, Vector3d::UnitZ()));\nQuaterniond q2(AngleAxisd(M_PI/6, Vector3d::UnitY()));\nQuaterniond q12 = q1 * q2;\n\n// Homogeneous transform compose / invert\nMatrix4d T = Matrix4d::Identity();\nT.block<3,3>(0,0) = M;\nT.block<3,1>(0,3) = Vector3d(1, 0, 0);\nMatrix4d Tinv = Matrix4d::Identity();\nTinv.block<3,3>(0,0) = M.transpose();\nTinv.block<3,1>(0,3) = -M.transpose() * Vector3d(1, 0, 0);\n\n// Sophus: SE(3) with proper Lie-group ops\nSophus::SE3d X(M, Vector3d(1,0,0));\nSophus::SE3d Xinv = X.inverse();\nVector6d xi = X.log();        // twist (omega, v)\nSophus::SE3d Y = Sophus::SE3d::exp(xi);  // back to SE3\n"
+        }
+      ],
+      "links": [
+        {
+          "label": "Modern Robotics (Park & Lynch) - free textbook",
+          "url": "https://hades.mech.northwestern.edu/index.php/Modern_Robotics"
+        },
+        {
+          "label": "Sophus - C++ Lie groups",
+          "url": "https://github.com/strasdat/Sophus"
+        },
+        {
+          "label": "scipy.spatial.transform.Rotation reference",
+          "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html"
+        }
+      ]
+    },
+    {
+      "id": "books-courses",
+      "heading": "Books, courses, papers - what to read",
+      "body": "Curated, opinionated, no filler. Pick one book per area and finish it before moving on. Open courseware - MIT OCW, Stanford SOE, Coursera specializations - works if you commit. For modern ML / VLA papers, follow Papers With Code and the Hugging Face blog; the field moves fast.",
+      "bullets": [
+        "Modern Robotics (Lynch, Park) - kinematics + dynamics + planning. FREE PDF",
+        "Probabilistic Robotics (Thrun, Burgard, Fox) - every state estimator, definitive",
+        "Robotics Modelling, Planning and Control (Siciliano) - the European canon",
+        "Convex Optimization (Boyd, Vandenberghe) - FREE; the optimization bible",
+        "Sutton & Barto - Reinforcement Learning. FREE; the RL canon",
+        "Deep Learning (Goodfellow) - the ML side",
+        "Programming Robots with ROS (Quigley) - practical ROS 1, mostly transfers to 2",
+        "ChatGPT / Claude as a study partner - explain a paper to it, have it quiz you back"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Free books / courses worth bookmarking",
+          "code": "# Modern Robotics book + course (Northwestern, Lynch + Park):\nhttps://hades.mech.northwestern.edu/index.php/Modern_Robotics\nhttps://www.coursera.org/specializations/modernrobotics\n\n# Probabilistic Robotics - chapters preview:\nhttps://docs.ufpr.br/~danielsantos/ProbabilisticRobotics.pdf\n\n# Sutton & Barto RL (free):\nhttp://incompleteideas.net/book/the-book-2nd.html\n\n# Karpathy - neural nets from scratch:\nhttps://karpathy.ai/zero-to-hero.html\n\n# Stanford CS223A (Khatib) - full robotics course videos:\nhttps://www.youtube.com/playlist?list=PLoROMvodv4rMeercb-kvGLUrOq4HR6BZD\n\n# Boyd convex optimization - videos:\nhttps://www.youtube.com/playlist?list=PL3940DD956CDF0622"
+        }
+      ],
+      "links": [
+        {
+          "label": "Papers With Code (Robotics)",
+          "url": "https://paperswithcode.com/area/robotics"
+        },
+        {
+          "label": "Hugging Face robotics blog",
+          "url": "https://huggingface.co/blog/lerobot"
+        }
+      ]
+    },
+    {
+      "id": "communities",
+      "heading": "Communities - where to ask, where to share",
+      "body": "Robotics is too broad for any single person to know. Knowing where to ask is a skill. The good places: ROS Discourse (best for serious technical questions), the ROS / Open Robotics Discord, the r/ROS subreddit, GitHub issues on the package you're stuck on, Stack Overflow's `ros2` tag, and X/Twitter / BlueSky for following research directly from authors. For ML-heavy work, the Hugging Face / LeRobot Discord is now the most active community.",
+      "bullets": [
+        "ROS Discourse (discourse.ros.org) - the canonical Q&A; takes ROS 2 questions seriously",
+        "ROS / Open Robotics Discord - fastest casual help; mentions get attention",
+        "GitHub issues on the package you're stuck on - search closed issues first",
+        "Stack Overflow tag: ros2 - declining in volume but still well-indexed by Google",
+        "r/ROS, r/robotics - community Q&A, projects, drama",
+        "X / BlueSky researchers: @gerkey, @drethage, @sergeylevine, @chelseabfinn, @karpathy",
+        "Conferences worth attending: ICRA (May), IROS (Oct), CoRL (Nov), RSS (June), ROSCon (Oct)",
+        "LeRobot / Hugging Face - modern hub for VLA + IL communities"
+      ],
+      "links": [
+        {
+          "label": "ROS Discourse",
+          "url": "https://discourse.ros.org/"
+        },
+        {
+          "label": "Open Robotics Discord",
+          "url": "https://discord.gg/openrobotics"
+        },
+        {
+          "label": "Hugging Face LeRobot",
+          "url": "https://github.com/huggingface/lerobot"
+        },
+        {
+          "label": "ROSCon talks (free, all years)",
+          "url": "https://roscon.ros.org/"
+        }
+      ]
+    },
+    {
+      "id": "careers-interviews",
+      "heading": "Careers & interview prep",
+      "body": "The robotics job market splits into a handful of recognizable roles. Robotics Software Engineer (general): C++/Python, ROS 2, perception or planning depth. Perception Engineer: vision + lidar fusion, deep learning, sometimes MLOps. Controls Engineer: state-space, MPC, embedded comfort. ML / Foundation Model Engineer: PyTorch, distributed training, manipulation policies. Systems / Embedded: real-time Linux, drivers, hardware bring-up. Pick the role you want to be in and weight your study to match - generalist Github profiles win fewer offers than focused ones.\n\nInterviews are usually a mix of: a coding screen (LeetCode-easy/medium, often graph/heap), a robotics-specific round (TF math, control intuition, debugging story), a system-design round (architect a perception or planning stack on a whiteboard), and a culture/behavioral. Bring a portfolio of working projects with videos.",
+      "bullets": [
+        "Pick a role: Robotics SWE / Perception / Controls / ML / Embedded - different prep",
+        "Coding screen: LeetCode easy-mediums, focus on graphs, heaps, sliding window, BFS/DFS",
+        "Robotics deep-dive: 'walk me through Kalman / PID / TF / a Jacobian'",
+        "System design: 'design a robot that picks groceries from a shelf'. Show layered thinking",
+        "Bring videos: a 30-second clip of your project running beats any GitHub README",
+        "Hiring market: top roles at Tesla, Boston Dynamics, Waymo, Anduril, Skydio, Figure, Apptronik, Physical Intelligence, Nvidia (Isaac), Amazon Robotics, John Deere, Skydio, RIVR",
+        "Salary band (US, 2026): $130k–$220k base for SWE-level robotics roles; +30-50% TC at top labs"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Common interview question - implement a 1D Kalman filter from scratch",
+          "code": "class KF1D:\n    def __init__(self, x0, p0, q, r):\n        self.x, self.P, self.Q, self.R = x0, p0, q, r\n\n    def predict(self):\n        self.P += self.Q\n\n    def update(self, z):\n        K       = self.P / (self.P + self.R)\n        self.x  = self.x + K * (z - self.x)\n        self.P  = (1 - K) * self.P\n\nkf = KF1D(x0=0, p0=1, q=0.01, r=0.1)\nfor z in [0.5, 1.2, 1.0, 0.9]:\n    kf.predict(); kf.update(z)\n    print(f'x={kf.x:.2f}, σ={kf.P**0.5:.2f}')"
+        }
+      ],
+      "links": [
+        {
+          "label": "Robotics interview prep (community-curated)",
+          "url": "https://github.com/PetarV-/TikZ"
+        },
+        {
+          "label": "Karpathy's advice for ML engineers",
+          "url": "https://karpathy.github.io/2019/04/25/recipe/"
+        },
+        {
+          "label": "LeetCode (free tier)",
+          "url": "https://leetcode.com/"
+        }
+      ]
+    }
+  ]
+}

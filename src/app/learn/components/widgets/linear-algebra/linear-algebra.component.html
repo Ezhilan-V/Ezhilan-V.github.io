@@ -1,0 +1,60 @@
+<learn-widget-shell
+  title="Vectors, dot product, rotation"
+  subtitle="Drag the tips of a (cyan) and b (violet). Slide θ to rotate a. Watch the dot product and cross product update."
+  accent="#38bdf8"
+  [ratio]="0.62"
+  [minHeight]="320"
+  [maxHeight]="460"
+  (canvasReady)="onCanvasReady($event)"
+  (canvasResize)="onCanvasResize($event)">
+
+  <div class="la-controls">
+
+    <learn-presets [presets]="presets" (select)="applyPreset($event)"></learn-presets>
+
+    <learn-slider
+      label="θ (rotate a)"
+      unit="°"
+      [min]="-180"
+      [max]="180"
+      [step]="1"
+      [value]="thetaDeg"
+      (valueChange)="setTheta($event)">
+    </learn-slider>
+
+    <div class="la-readout">
+      <div class="la-readout__row">
+        <span>a</span>
+        <code>({{ a.x }}, {{ a.y }})</code>
+      </div>
+      <div class="la-readout__row">
+        <span>b</span>
+        <code>({{ b.x }}, {{ b.y }})</code>
+      </div>
+      <div class="la-readout__row">
+        <span>‖a‖</span>
+        <code>{{ normA() }}</code>
+      </div>
+      <div class="la-readout__row">
+        <span>‖b‖</span>
+        <code>{{ normB() }}</code>
+      </div>
+      <div class="la-readout__row">
+        <span>a · b</span>
+        <code>{{ dot() }}</code>
+      </div>
+      <div class="la-readout__row">
+        <span>a × b (z)</span>
+        <code>{{ cross() }}</code>
+      </div>
+      <div class="la-readout__row">
+        <span>∠(a, b)</span>
+        <code>{{ angleDeg() }}°</code>
+      </div>
+      <div class="la-readout__row" *ngIf="thetaDeg !== 0">
+        <span>R(θ) a</span>
+        <code>({{ rotated().x }}, {{ rotated().y }})</code>
+      </div>
+    </div>
+  </div>
+</learn-widget-shell>

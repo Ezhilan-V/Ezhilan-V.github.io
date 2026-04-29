@@ -1,0 +1,328 @@
+{
+  "slug": "manipulation",
+  "hero": {
+    "tagline": "Arms, hands, fingers - moving things in the real world",
+    "intro": "Manipulation is everything that turns a desired pose ('put the gripper here, oriented like this') into the joint commands the motors will follow. It bundles kinematics (where is the hand right now?), motion planning (a safe path through clutter), control (faithfully executing that path), and grasping (closing the fingers without crushing the cup). This branch starts with a 3-DOF leg you can drag in your browser, then moves to MoveIt 2 (the production manipulation stack for ROS), classical motion planners, force-aware control, and the modern learning-based approaches that have taken over dexterous tasks."
+  },
+  "sections": [
+    {
+      "id": "what-is-kinematics",
+      "heading": "Forward kinematics, in two paragraphs",
+      "body": "A serial robot is a chain of rigid links connected by joints. Each joint has an angle (or, for sliders, a length). Forward kinematics (FK) is the question: given all the joint values, where in space is the end-effector, and which way is it pointing?\n\nThe usual recipe is the Denavit–Hartenberg convention: assign a coordinate frame to every joint, write down four numbers per joint (a, α, d, θ), and the end-effector pose is the product of the per-joint transforms. The widget below shows it for one hexapod leg - drag the sliders and watch the foot move.",
+      "bullets": [
+        "Every joint has 4 DH parameters: link length a, twist α, offset d, angle θ",
+        "Multiplying the per-joint 4×4 transforms gives end-effector pose in base frame",
+        "Modern alternative: URDF + tf2 - same math, less paperwork"
+      ]
+    },
+    {
+      "id": "fk-playground",
+      "heading": "Try it: 3-DOF hexapod leg",
+      "body": "Three revolute joints - coxa (yaw), femur (pitch), tibia (pitch). Drag any slider; the foot position [x, y, z] in the body frame updates live. This is the same chain that lives in every leg of a Spot-style hexapod or quadruped.",
+      "widget": "kinematics"
+    },
+    {
+      "id": "inverse-kinematics",
+      "widget": "ik",
+      "heading": "Inverse kinematics - the other direction",
+      "body": "FK is easy: angles in, pose out. IK is the inverse and much harder: given a desired pose, what joint angles will get the end-effector there? Some robots have a closed-form analytical solution (6-DOF arms with a spherical wrist do); most need iterative numerical solvers.\n\nFor 6+ DOF arms, IK can have multiple solutions (elbow up vs elbow down), no solution (unreachable target), or infinite solutions (redundant joints). Modern stacks like MoveIt 2 use TRAC-IK as the default (a hybrid of damped least-squares + sequential quadratic programming - converges where KDL gives up). For analytical IK on UR5/Franka/PUMA-style arms, IKFast generates closed-form C++ code from your URDF. For high-rate inner loops (real-time controllers, RL rollouts) use Pinocchio - it's the production-grade rigid-body library written in C++ with Python bindings, and it computes FK + Jacobians + dynamics in microseconds.",
+      "bullets": [
+        "Analytical IK: instant but specific to the robot's geometry. Generate it with IKFast",
+        "Numerical IK: Newton-Raphson, damped least squares - works for any chain",
+        "TRAC-IK: drop-in MoveIt default, solves where KDL fails, ~1 ms on a 7-DOF arm",
+        "Pinocchio: production C++ rigid-body library for FK + Jacobians + dynamics at sim/control speeds",
+        "Redundant arms (7+ DOF) need a secondary objective (avoid joints, max manipulability)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Damped least-squares IK from scratch",
+          "code": "import numpy as np\n\ndef dls_ik(forward_kin, jacobian, target_pose, q0, lam=0.05, tol=1e-3, max_it=100):\n    q = q0.copy()\n    for _ in range(max_it):\n        err = target_pose - forward_kin(q)\n        if np.linalg.norm(err) < tol: return q\n        J = jacobian(q)\n        # (J^T J + λ²I)^-1 J^T err - damped pseudo-inverse\n        dq = np.linalg.solve(J.T @ J + lam**2 * np.eye(len(q)), J.T @ err)\n        q = q + dq\n    return q  # may not have converged"
+        }
+      ],
+      "links": [
+        {
+          "label": "TRAC-IK solver",
+          "url": "https://traclabs.com/projects/trac-ik/"
+        },
+        {
+          "label": "Pinocchio (rigid-body library)",
+          "url": "https://stack-of-tasks.github.io/pinocchio/"
+        },
+        {
+          "label": "IKFast generator",
+          "url": "https://docs.ros.org/en/jazzy/Tutorials/Advanced/IKFast.html"
+        }
+      ]
+    },
+    {
+      "id": "urdf",
+      "heading": "URDF - describe your robot to ROS",
+      "body": "URDF (Unified Robot Description Format) is XML that lists every link (rigid body) and joint (connection) of your robot, plus visual meshes, collision meshes, and inertial properties. Every ROS perception, planning, and visualization tool reads URDFs. xacro is the macro language you'll actually write - URDF gets verbose.",
+      "codeBlocks": [
+        {
+          "language": "xml",
+          "title": "Minimal 2-link arm URDF",
+          "code": "<robot name=\"two_link\">\n  <link name=\"base_link\"/>\n\n  <joint name=\"shoulder\" type=\"revolute\">\n    <parent link=\"base_link\"/>\n    <child  link=\"upper_arm\"/>\n    <origin xyz=\"0 0 0.1\" rpy=\"0 0 0\"/>\n    <axis xyz=\"0 0 1\"/>\n    <limit lower=\"-3.14\" upper=\"3.14\" effort=\"10\" velocity=\"1\"/>\n  </joint>\n\n  <link name=\"upper_arm\">\n    <visual>\n      <geometry><cylinder length=\"0.4\" radius=\"0.02\"/></geometry>\n      <origin xyz=\"0 0 0.2\"/>\n    </visual>\n  </link>\n\n  <joint name=\"elbow\" type=\"revolute\">\n    <parent link=\"upper_arm\"/>\n    <child  link=\"forearm\"/>\n    <origin xyz=\"0 0 0.4\"/>\n    <axis xyz=\"0 1 0\"/>\n    <limit lower=\"-2.0\" upper=\"2.0\" effort=\"10\" velocity=\"1\"/>\n  </joint>\n\n  <link name=\"forearm\"/>\n</robot>"
+        },
+        {
+          "language": "bash",
+          "title": "Visualize your URDF in RViz",
+          "code": "ros2 launch urdf_tutorial display.launch.py model:=$(pwd)/two_link.urdf"
+        }
+      ],
+      "links": [
+        {
+          "label": "URDF tutorials",
+          "url": "https://docs.ros.org/en/jazzy/Tutorials/Intermediate/URDF/URDF-Main.html"
+        },
+        {
+          "label": "xacro reference",
+          "url": "https://github.com/ros/xacro/wiki"
+        }
+      ]
+    },
+    {
+      "id": "frames-rotations",
+      "widget": "rotation3d",
+      "heading": "Coordinate frames & rotations",
+      "body": "Robotics is full of frames - world, base_link, camera, end-effector - and you constantly need to express points and poses in different ones. Get the math wrong and your robot grabs at thin air. The vocabulary you'll meet: rotation matrices (3×3), Euler angles (roll/pitch/yaw, intuitive but suffer gimbal lock), axis-angle, and quaternions (4 numbers, no singularities, the de-facto standard in code).\n\nROS 2 ships TF2 - a directed tree of named frames with timestamped transforms. Any node can ask 'where is the camera relative to the gripper at time t?' and TF interpolates the answer.",
+      "bullets": [
+        "Rotation matrix R: orthonormal 3×3, det(R) = +1 - composes by multiplication",
+        "Euler ZYX (yaw-pitch-roll) - intuitive but has gimbal lock at pitch = ±90°",
+        "Quaternion q = (w, x, y, z) - singularity-free, half the storage of a matrix, slerp-friendly",
+        "Axis-angle (ω̂, θ) - intuitive interpretation; convert to/from quaternions easily",
+        "TF2 - ROS 2's frame transform broadcaster + listener, indexed by time",
+        "Right-hand rule: every rotation positive about the axis the right thumb points along"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "scipy - convert between rotation representations",
+          "code": "from scipy.spatial.transform import Rotation as R\nimport numpy as np\n\n# Quaternion (x, y, z, w) ROS convention\nq = [0, 0, np.sin(np.pi / 4), np.cos(np.pi / 4)]   # 90° about Z\nrot = R.from_quat(q)\n\nprint(rot.as_euler('zyx', degrees=True))   # → [90, 0, 0]\nprint(rot.as_matrix())\nprint(rot.as_rotvec())                      # axis * angle"
+        },
+        {
+          "language": "python",
+          "title": "TF2 in ROS 2 - look up a transform between frames",
+          "code": "import rclpy\nfrom rclpy.node import Node\nfrom tf2_ros import Buffer, TransformListener\nfrom rclpy.duration import Duration\n\nclass TfLookup(Node):\n    def __init__(self):\n        super().__init__('tf_lookup')\n        self.buf = Buffer()\n        self.tl  = TransformListener(self.buf, self)\n        self.create_timer(0.5, self.tick)\n\n    def tick(self):\n        try:\n            t = self.buf.lookup_transform(\n                'base_link', 'camera_link',\n                rclpy.time.Time(),  # latest available\n                Duration(seconds=0.1))\n            self.get_logger().info(\n                f'cam at ({t.transform.translation.x:.2f}, '\n                f'{t.transform.translation.y:.2f}, '\n                f'{t.transform.translation.z:.2f})')\n        except Exception as e:\n            self.get_logger().warn(str(e))"
+        },
+        {
+          "language": "bash",
+          "title": "Visualise the live TF tree",
+          "code": "ros2 run tf2_tools view_frames\n# Generates frames.pdf - the directed tree of all frames + their last update rate"
+        }
+      ],
+      "links": [
+        {
+          "label": "TF2 docs",
+          "url": "https://docs.ros.org/en/jazzy/Concepts/About-Tf2.html"
+        },
+        {
+          "label": "scipy.spatial.transform.Rotation",
+          "url": "https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.transform.Rotation.html"
+        },
+        {
+          "label": "Quaternion intuition (3blue1brown)",
+          "url": "https://www.3blue1brown.com/topics/quaternions"
+        }
+      ]
+    },
+    {
+      "id": "moveit-setup",
+      "heading": "Plan with MoveIt 2",
+      "body": "MoveIt 2 is the standard motion-planning stack in ROS 2. The setup assistant generates a config package for your URDF; from there, plans go through OMPL, Pilz industrial motion, or any plugin. MoveIt handles collision checking against an octomap, time parameterization, and trajectory execution.",
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Install MoveIt 2 + a sample arm",
+          "code": "cd ~/{{ws}}/src\ngit clone -b jazzy https://github.com/ros-planning/moveit2_tutorials.git\nvcs import < moveit2_tutorials/moveit2_tutorials.repos\ncd ~/{{ws}}\nrosdep install --from-paths src --ignore-src -r -y\ncolcon build --mixin release"
+        },
+        {
+          "language": "bash",
+          "title": "Launch the demo",
+          "code": "source ~/{{ws}}/install/setup.bash\nros2 launch moveit2_tutorials demo.launch.py rviz_tutorial:=true"
+        }
+      ],
+      "links": [
+        {
+          "label": "MoveIt 2 tutorials",
+          "url": "https://moveit.picknik.ai/main/index.html"
+        }
+      ]
+    },
+    {
+      "id": "motion-planning",
+      "widget": "rrt",
+      "heading": "Motion planning algorithms",
+      "body": "Planning algorithms fall into two camps. Sampling-based planners (RRT, PRM, RRT*) randomly sample configurations and connect them; they're complete in the limit but produce jerky paths. Optimization-based planners (CHOMP, STOMP, TrajOpt) take a seed trajectory and refine it for smoothness and clearance; they're faster but can get stuck in local minima.",
+      "bullets": [
+        "RRT-Connect - fast default in MoveIt, good for cluttered scenes",
+        "RRT* - asymptotically optimal but slower; great when you can wait",
+        "CHOMP / STOMP - gradient / stochastic optimization for smoothness",
+        "Time-Optimal Path Parameterization (TOPPRA) - speeds up an existing path"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Pick a planner and plan to a pose",
+          "code": "from moveit_py.core import MoveItPy\nfrom geometry_msgs.msg import PoseStamped\n\nmoveit = MoveItPy(node_name='moveit_py')\narm = moveit.get_planning_component('panda_arm')\n\ngoal = PoseStamped()\ngoal.header.frame_id = 'panda_link0'\ngoal.pose.position.x = 0.4\ngoal.pose.position.y = 0.0\ngoal.pose.position.z = 0.5\ngoal.pose.orientation.w = 1.0\n\narm.set_start_state_to_current_state()\narm.set_goal_state(pose_stamped_msg=goal, pose_link='panda_hand')\nplan = arm.plan(planner_id='RRTConnect')\nif plan: arm.execute()"
+        }
+      ],
+      "links": [
+        {
+          "label": "OMPL planners",
+          "url": "https://ompl.kavrakilab.org/planners.html"
+        }
+      ]
+    },
+    {
+      "id": "control-basics",
+      "widget": "pid",
+      "heading": "Control basics - PID and impedance",
+      "body": "Once you have a desired trajectory, a controller actually executes it on the hardware. PID (proportional-integral-derivative) is the universal starting point: u = Kp·e + Ki·∫e dt + Kd·de/dt, where e is the error between desired and measured. P drives toward the goal, I eliminates steady-state error, D damps the response. Impedance control extends this to mechanical interaction - the robot behaves like a virtual spring-damper, so contact with the world is gentle.\n\nTune the widget below: high Kp = stiff, fast, oscillatory; high Kd = damped but sluggish; high Ki = no steady-state error but risk of windup. The mass-spring-damper plant gives you a feel for the tradeoffs without ever touching hardware.",
+      "bullets": [
+        "P term - pulls toward the setpoint; too high → oscillation",
+        "I term - eats steady-state error; too high → wind-up + overshoot",
+        "D term - damps the rate of change; too high → noise amplification",
+        "Anti-windup - clamp the integral when the actuator saturates",
+        "Tuning rules of thumb: Ziegler-Nichols, manual loop-shaping, or just try presets",
+        "Impedance / admittance: P+D acts as a virtual spring-damper for contact tasks"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Discrete-time PID controller class",
+          "code": "class PID:\n    def __init__(self, Kp, Ki, Kd, u_max=float('inf')):\n        self.Kp, self.Ki, self.Kd = Kp, Ki, Kd\n        self.u_max = u_max\n        self.e_prev = 0.0\n        self.e_int = 0.0\n\n    def step(self, setpoint, measurement, dt):\n        e = setpoint - measurement\n        self.e_int += e * dt\n        # Anti-windup: clamp integrator to keep raw u bounded\n        if self.Ki:\n            lim = self.u_max / abs(self.Ki)\n            self.e_int = max(-lim, min(lim, self.e_int))\n        e_dot = (e - self.e_prev) / dt if dt > 0 else 0.0\n        self.e_prev = e\n        u = self.Kp*e + self.Ki*self.e_int + self.Kd*e_dot\n        return max(-self.u_max, min(self.u_max, u))"
+        },
+        {
+          "language": "yaml",
+          "title": "ros2_control - set PID gains for a position controller",
+          "code": "joint_position_controller:\n  ros__parameters:\n    joints: [shoulder, elbow, wrist]\n    command_interfaces: [position]\n    state_interfaces:   [position, velocity]\n    gains:\n      shoulder: { p: 60.0, i: 0.5, d: 4.0, i_clamp: 5.0 }\n      elbow:    { p: 50.0, i: 0.5, d: 3.0, i_clamp: 5.0 }\n      wrist:    { p: 30.0, i: 0.0, d: 1.5, i_clamp: 0.0 }"
+        }
+      ],
+      "links": [
+        {
+          "label": "ros2_control docs",
+          "url": "https://control.ros.org/"
+        },
+        {
+          "label": "Modern Robotics - Ch.11 (control)",
+          "url": "https://hades.mech.northwestern.edu/index.php/Modern_Robotics"
+        }
+      ]
+    },
+    {
+      "id": "pick-place",
+      "heading": "Pick-and-place skeleton",
+      "body": "Once you have FK, IK, and a planner, pick-and-place is just three goals chained together: pre-grasp pose, grasp pose, post-grasp lift. Production systems also add approach/retreat constraints (move along the gripper z-axis only), collision exclusions (let the gripper touch the object during grasp), and post-grasp object attachment so collision checks treat the held object as part of the gripper.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Simplest possible pick",
+          "code": "from moveit_commander import MoveGroupCommander\nfrom geometry_msgs.msg import Pose\n\narm = MoveGroupCommander('panda_arm')\ngripper = MoveGroupCommander('hand')\n\ndef pick(target: Pose):\n    pre = clone(target);  pre.position.z += 0.10\n    post = clone(target); post.position.z += 0.20\n\n    arm.set_pose_target(pre);    arm.go()\n    gripper.set_named_target('open');   gripper.go()\n    arm.set_pose_target(target); arm.go()\n    gripper.set_named_target('closed'); gripper.go()\n    arm.set_pose_target(post);   arm.go()"
+        }
+      ]
+    },
+    {
+      "id": "grasping",
+      "heading": "Grasping - antipodal, force closure, learned",
+      "body": "Choosing where to grab an object is its own subfield. Classical grasp planning solves an optimization: find two contact points such that the friction cones contain a line connecting them (antipodal grasp), or such that any wrench can be resisted (force closure).\n\nLearned grasp planners (GraspNet, Contact-GraspNet, AnyGrasp) take a point cloud or RGB-D image and output ranked 6-DoF grasp poses end-to-end. These are the modern default for cluttered bin-picking.",
+      "bullets": [
+        "Antipodal grasp - two contact points, opposing normals, friction cone overlap",
+        "Force closure - n contact points able to resist any disturbance wrench",
+        "Learned planners - GraspNet, Contact-GraspNet, AnyGrasp, Dex-Net"
+      ],
+      "links": [
+        {
+          "label": "AnyGrasp paper / code",
+          "url": "https://github.com/graspnet/anygrasp_sdk"
+        },
+        {
+          "label": "Dex-Net",
+          "url": "https://berkeleyautomation.github.io/dex-net/"
+        }
+      ],
+      "widget": "force-closure"
+    },
+    {
+      "id": "force-control",
+      "heading": "Force / impedance control",
+      "body": "Position control says 'go to this joint angle.' Force control says 'push with this much wrench.' Impedance control is the middle ground: behave like a virtual spring-damper so that contact with the world is gentle. Used everywhere humans and robots share workspace - assembly, polishing, surgical robots, cobots.",
+      "bullets": [
+        "Pure position control + stiff joints = robot punches the table when off by 1mm",
+        "Admittance control: measure force, command position correction (works on stiff robots with FT sensor)",
+        "Impedance control: command torques directly to behave like K(x_des - x) - D ẋ (needs torque-controlled motors)"
+      ]
+    },
+    {
+      "id": "trajectory-toppra",
+      "heading": "Time-optimal trajectory parameterization (TOPP-RA)",
+      "body": "A motion planner gives you a path - a sequence of joint configurations. To execute it, you need a trajectory: a path with timestamps that respects velocity, acceleration, and torque limits. Naively setting a fixed timestep wastes capability; TOPP-RA (Time-Optimal Path Parameterization based on Reachability Analysis) computes the fastest valid timing in polynomial time. It's a standard MoveIt 2 plugin and worth using for any production motion that needs to be both safe and fast.",
+      "bullets": [
+        "Path = where to go. Trajectory = where to go + when",
+        "Constraints: per-joint vmax/amax, joint torques, Cartesian end-effector limits",
+        "TOPP-RA: convex, fast, optimal under linear constraints",
+        "Iterative parabolic time parameterization (default fallback) - simpler but slower paths",
+        "MoveIt 2: set time_parameterization: TOPP in your moveit_config to enable"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "TOPP-RA stand-alone - parameterize a waypoint path",
+          "code": "import numpy as np\nimport toppra as ta\nimport toppra.constraint as constraint\nimport toppra.algorithm as algo\n\nwaypoints = np.array([\n    [0.0, 0.0, 0.0], [0.5, -0.3, 0.2], [1.0, 0.0, 0.4],\n    [0.5, 0.3, 0.2], [0.0, 0.0, 0.0]])\npath = ta.SplineInterpolator(np.linspace(0, 1, len(waypoints)), waypoints)\n\nvlim = np.array([[-1.0, 1.0]] * 3)\nalim = np.array([[-2.0, 2.0]] * 3)\n\ninstance = algo.TOPPRA(\n    [constraint.JointVelocityConstraint(vlim),\n     constraint.JointAccelerationConstraint(alim)],\n    path, solver_wrapper='seidel')\njnt_traj = instance.compute_trajectory()\nprint('duration:', jnt_traj.duration, 's')"
+        }
+      ],
+      "links": [
+        {
+          "label": "TOPP-RA paper / code",
+          "url": "https://github.com/hungpham2511/toppra"
+        }
+      ]
+    },
+    {
+      "id": "ros2-control",
+      "heading": "ros2_control - the controller framework",
+      "body": "ros2_control is the standard layer between your hardware drivers (motors, encoders) and your high-level planners (MoveIt). It provides a real-time deterministic control loop, a plugin system for hardware interfaces, and a controller manager that loads / unloads controllers (PID, joint trajectory, gravity comp, force-mode). If you build your own arm or AMR, you almost certainly want ros2_control.",
+      "bullets": [
+        "Hardware interface plugin - talks to the actual motor drivers (CAN, EtherCAT, USB)",
+        "Resource manager - tracks state interfaces (position, velocity, effort) per joint",
+        "Controllers - joint_position, joint_trajectory, diff_drive, admittance, force_torque",
+        "Realtime - runs in a SCHED_FIFO thread; no Python in the loop, only C++",
+        "Spawner: load controllers without restarting your robot stack"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "List + spawn a controller",
+          "code": "ros2 control list_hardware_interfaces\nros2 control list_controllers\nros2 control load_controller --set-state active joint_trajectory_controller"
+        }
+      ],
+      "links": [
+        {
+          "label": "ros2_control docs",
+          "url": "https://control.ros.org/"
+        }
+      ]
+    },
+    {
+      "id": "bimanual",
+      "heading": "Bimanual, dual-arm & humanoid manipulation",
+      "body": "Two arms doing one task (folding a cloth, tying a knot, handing off an object) is dramatically harder than two arms doing two separate tasks. The challenge is coordination - both arms share a closed kinematic chain via the held object, so motion of one arm constrains the other. ALOHA (Stanford), Mobile ALOHA, ALOHA Unleashed (26K demos x 5 tasks, 2024), and the open ALOHA 2 hardware are the research playgrounds; LeRobot mirrors them all in a common dataset format. Production dual-arm: KUKA iiwa pairs / Franka FR3 / dual-Sawyer with shared MoveIt planning groups.\n\nThe big change in 2026 is that humanoid robots are the dominant new bimanual platform. Tesla Optimus Gen 3 (mass production at Fremont since Jan 2026) ships 22 DoF per hand with tendon-driven biomimetic actuation. Figure 02 / 03 are deployed at BMW running Figure's Helix VLA. Apptronik Apollo (Mercedes-Benz, $5B valuation Feb 2026), 1X NEO (consumer pre-orders, deliveries 2026), Boston Dynamics electric Atlas (Hyundai), and Unitree's H1 / G1 are the rest of the production fleet. NVIDIA's GR00T N1 / N1.5 dual-system VLA is the closest thing to a vendor-neutral policy across all of these.",
+      "bullets": [
+        "Closed-chain constraint - holding the same object means both arms move as one rigid system",
+        "Coordinated planning - plan for both arms jointly, not independently",
+        "Hand-offs - pre-grasp, grasp, sync, release - needs precise timing",
+        "Demonstration data: ALOHA / ALOHA Unleashed remains the open standard; LeRobot Hub is the 2026 distribution channel",
+        "Imitation learning + diffusion / flow-matching policies have largely replaced classical bimanual planning",
+        "Humanoid platforms (Optimus, Figure 02 / 03, Apollo, NEO, Atlas, Unitree H1) are the new bimanual targets - 30+ DoF whole-body, dexterous hands",
+        "VLA on humanoids: GR00T N1 / N1.5 (NVIDIA), Helix (Figure), π0.5 (Physical Intelligence) all run on humanoid form factors in 2026"
+      ],
+      "links": [
+        {
+          "label": "ALOHA / Mobile ALOHA",
+          "url": "https://mobile-aloha.github.io/"
+        }
+      ]
+    }
+  ]
+}

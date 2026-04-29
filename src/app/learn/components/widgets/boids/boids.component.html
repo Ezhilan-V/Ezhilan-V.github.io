@@ -1,0 +1,62 @@
+<div class="boids">
+  <div class="boids__stage">
+    <canvas #canvas
+            (pointerdown)="setPredator($event)"
+            (pointermove)="$event.buttons && setPredator($event)"
+            (pointerleave)="clearPredator()"></canvas>
+    <div class="boids__hint">tap & hold to drop a predator</div>
+  </div>
+
+  <div class="boids__panel">
+    <div class="boids__panel-head">
+      <span class="boids__panel-title">Reynolds boids</span>
+      <div class="boids__actions">
+        <button type="button" class="boids__btn" (click)="togglePause()">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button type="button" class="boids__btn" (click)="reset()">
+          <i class="fas fa-undo"></i> reset
+        </button>
+      </div>
+    </div>
+
+    <div class="boids__presets">
+      <button type="button" (click)="applyPreset('classic')">classic</button>
+      <button type="button" (click)="applyPreset('tight-flock')">tight flock</button>
+      <button type="button" (click)="applyPreset('scattered')">scattered</button>
+      <button type="button" (click)="applyPreset('lined-up')">lined up</button>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Cohesion</span><span class="slider-row__val">{{ cohesion | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="3" step="0.05" [value]="cohesion" (input)="onSlider('cohesion', $any($event.target).value)" aria-label="Cohesion" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Alignment</span><span class="slider-row__val">{{ alignment | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="3" step="0.05" [value]="alignment" (input)="onSlider('alignment', $any($event.target).value)" aria-label="Alignment" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Separation</span><span class="slider-row__val">{{ separation | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="3" step="0.05" [value]="separation" (input)="onSlider('separation', $any($event.target).value)" aria-label="Separation" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Neighbour radius</span><span class="slider-row__val">{{ neighborR | number:'1.2-2' }} m</span></div>
+      <input type="range" min="0.4" max="2.5" step="0.05" [value]="neighborR" (input)="onSlider('neighborR', $any($event.target).value)" aria-label="Neighbour radius" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Boid count</span><span class="slider-row__val">{{ count }}</span></div>
+      <input type="range" min="20" max="300" step="5" [value]="count" (input)="onSlider('count', $any($event.target).value)" aria-label="Count" />
+    </div>
+
+    <p class="boids__note">
+      Cohesion pulls each agent toward its neighbours' centroid; alignment matches their average heading;
+      separation pushes away when too close. Predator avoidance is layered on top. No central control -
+      flocking just emerges.
+    </p>
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<div class="cmi">
+  <div class="cmi__stage">
+    <canvas #canvas
+            (pointerdown)="onPointerDown($event)"
+            (pointermove)="onPointerMove($event)"
+            (pointerup)="onPointerUp()"
+            (pointerleave)="onPointerUp()"></canvas>
+    <div class="cmi__hint">click + drag cells to add or remove walls</div>
+  </div>
+
+  <div class="cmi__panel">
+    <div class="cmi__panel-head">
+      <span class="cmi__panel-title">Costmap inflation</span>
+      <div class="cmi__actions">
+        <button type="button" class="cmi__btn" (click)="scatter()">
+          <i class="fas fa-dice"></i> random
+        </button>
+        <button type="button" class="cmi__btn" (click)="reset()">
+          <i class="fas fa-eraser"></i> clear walls
+        </button>
+        <button type="button" class="cmi__btn" (click)="toggleRobot()">
+          <i class="fas" [class.fa-eye]="!showRobot" [class.fa-eye-slash]="showRobot"></i>
+          robot
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Inflation radius</span><span class="slider-row__val">{{ inflationCells }} cells</span></div>
+      <input type="range" min="0" max="10" step="1" [value]="inflationCells"
+             (input)="onSlider('inflationCells', $any($event.target).value)" aria-label="Inflation radius" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Cost decay</span><span class="slider-row__val">{{ decay | number:'1.2-2' }}</span></div>
+      <input type="range" min="0.1" max="1.5" step="0.05" [value]="decay"
+             (input)="onSlider('decay', $any($event.target).value)" aria-label="Cost decay" />
+    </div>
+
+    <div class="cmi__legend">
+      <span><i class="cell" style="background:#1f2937"></i> wall</span>
+      <span><i class="cell" style="background:#f87171"></i> high cost</span>
+      <span><i class="cell" style="background:#fb923c"></i> medium</span>
+      <span><i class="cell" style="background:#fbbf24"></i> low</span>
+      <span><i class="cell" style="background:#0e1a2c"></i> free (cost 0)</span>
+    </div>
+
+    <p class="cmi__note">
+      Each cell's cost is derived from the Chebyshev distance to the nearest wall:
+      <code>cost = exp(−decay · d)</code>. The green circle is your robot's footprint -
+      planners that respect costs will keep its centre away from red cells. Crank inflation up
+      and the planner will route around obstacles with comfortable clearance.
+    </p>
+  </div>
+</div>

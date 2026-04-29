@@ -1,0 +1,84 @@
+{
+  "slug": "agricultural",
+  "hero": {
+    "tagline": "Robots for fields, orchards, and dairies - autonomy outdoors at scale",
+    "intro": "Agricultural robotics is the largest and least-glamorous robotics market: a single John Deere 9RX autonomous tractor sells for ~$800K and farms run fleets. The defining engineering challenges are: GPS-RTK localization at cm-precision across 100s of acres, perception in dust / sun glare / variable foliage, ROS 2 stacks on tractor SCUs (Switch Control Units) talking ISOBUS to implements, and 24/7 uptime through harvest windows. The big production deployments in 2026: John Deere See & Spray (in-row weed killing on cotton + soy), Naïo Technologies (vegetable-row weeding), Bear Flag Robotics (autonomous tractors, acquired by Deere), Carbon Robotics (laser weeding), and a wave of dairy-parlor robots from DeLaval / Lely. Every problem you'll work on is harder than indoor robotics because nature is harder than a warehouse."
+  },
+  "sections": [
+    {
+      "id": "what-it-is",
+      "heading": "Where ag-robots actually run today",
+      "body": "Five active deployment categories in 2026: (1) **autonomous tractors** for tillage / planting / spraying - Deere 9RX, CNH AutoCart, Bear Flag retrofits. (2) **In-row weeders** - Naïo Oz, FarmWise Vulcan, Carbon Robotics LaserWeeder. (3) **Targeted sprayers** that recognize crop vs weed and only spray weeds, cutting herbicide 60-90% - Deere See & Spray is the headline. (4) **Harvest robots** for high-value crops - Soft Robotics for fruit, Agrobot for strawberries. (5) **Dairy parlors** - DeLaval VMS, Lely Astronaut milk cows on demand without humans. Field robots and dairy parlors require completely different engineering disciplines, even though both fall under 'agricultural'.",
+      "bullets": [
+        "Autonomous tractors - Deere 9RX, CNH, Bear Flag, Monarch (electric)",
+        "In-row weeders - Naïo, FarmWise, Carbon Robotics (laser), Ecorobotix",
+        "Targeted sprayers - Deere See & Spray (Blue River acquisition), CNH SmartSpray",
+        "Harvest robots - Agrobot strawberries, Tortuga grape, Advanced Farm apples",
+        "Dairy parlors - DeLaval VMS, Lely Astronaut. Cows enter voluntarily, robots milk them",
+        "UAV crop-monitoring - DJI Agras, XAG, Yamaha; multispectral imagery to NDVI maps"
+      ],
+      "links": [
+        {
+          "label": "John Deere See & Spray",
+          "url": "https://www.deere.com/en/sprayers/see-spray-ultimate/"
+        },
+        {
+          "label": "Naïo Technologies",
+          "url": "https://www.naio-technologies.com/"
+        }
+      ]
+    },
+    {
+      "id": "rtk-gnss",
+      "heading": "RTK-GNSS - the localization workhorse outdoors",
+      "body": "Indoor robots get to use SLAM. Field robots have no walls, no static landmarks, and no Wi-Fi. The dominant solution is RTK-GNSS: a fixed base station receives the same satellites as the rover and computes carrier-phase corrections in real time, broadcasting them over radio or cellular. Done right, RTK gives 1-2 cm horizontal accuracy across 10-20 km of base radius. Caveat: RTK breaks under canopy, so orchard / forestry robots need vision + IMU dead-reckoning during signal dropouts.",
+      "bullets": [
+        "RTK base + rover: fixed base broadcasts carrier corrections over radio (LoRa / 900 MHz) or NTRIP (4G)",
+        "Accuracy: 1-2 cm horizontal under good sky view. Degrades under trees / buildings",
+        "Multi-constellation: GPS + GLONASS + Galileo + BeiDou for redundancy",
+        "Receivers: u-blox ZED-F9P (~$400) is the workhorse OEM module in 2026",
+        "Loss-of-fix recovery: fall back to dead-reckoning (IMU + wheel odom + visual) for canopy passes",
+        "Heading: dual-antenna RTK gives true heading without depending on magnetometers (which farm metal kills)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "ROS 2 GNSS bringup with u-blox + RTK corrections via NTRIP",
+          "code": "# Install ublox + ntrip packages\nsudo apt install ros-jazzy-ublox-gps ros-jazzy-ntrip-client\n\n# Launch GNSS receiver + NTRIP client (publishes /rtcm corrections)\nros2 launch ublox_gps ublox.launch.py\nros2 launch ntrip_client ntrip_client.launch.py \\\n    host:=rtk2go.com mountpoint:=YOUR_MOUNT \\\n    username:=email password:=none"
+        }
+      ]
+    },
+    {
+      "id": "isobus",
+      "heading": "ISOBUS / ISO 11783 - the tractor-implement protocol",
+      "body": "Every tractor implement (planter, sprayer, baler) speaks ISOBUS - the agricultural CAN-bus standard, ISO 11783. It defines messages for VT (Virtual Terminal - the in-cab UI for any implement), TC (Task Controller - prescription maps, application-rate control), AUX-N (auxiliary controls), and TIM (Tractor-Implement Management - the tractor follows commands from the implement, e.g. for headland turns). If you're integrating ag-robotics software into farm equipment, you'll spend a lot of time on ISOBUS conformance.",
+      "bullets": [
+        "ISO 11783 family: 7 layers, 250 kbit/s CAN bus, 29-bit identifiers",
+        "VT - Virtual Terminal. Implement renders its UI on the tractor's screen",
+        "TC - Task Controller. Section control, variable-rate from prescription maps",
+        "AUX-N - Auxiliary controls. Joystick / buttons to drive an implement function",
+        "TIM - Tractor-Implement Management. Implement controls tractor for sequenced ops",
+        "AEF certification - real-world conformance is enforced by the Agricultural Industry Electronics Foundation"
+      ],
+      "links": [
+        {
+          "label": "AEF (ISOBUS conformance)",
+          "url": "https://www.aef-online.org/"
+        }
+      ]
+    },
+    {
+      "id": "perception",
+      "heading": "Outdoor perception - dust, sun, plants",
+      "body": "Field perception is harder than indoor / AV in different ways. Dust at full sun saturates RGB sensors but barely affects radar. Crop foliage is self-similar - tomato plants can look identical for kilometers, defeating loop closure for visual SLAM. Weather changes scene appearance hour to hour. Modern stacks fuse RTK pose, multispectral cameras (red-edge, NIR for crop health), and stereo / LiDAR for obstacle detection. The 2026 frontier is using foundation models (DINOv2, SAM 2) to do open-vocabulary detection of weed species, with fine-tuning on as few as 100 labeled images per crop.",
+      "bullets": [
+        "Multispectral cameras (RGB + NIR + RedEdge) to compute NDVI vegetation indices",
+        "Stereo + LiDAR for obstacle detection. Mono camera for sky-aware exposure",
+        "Sun angle compensation: image acquisition logged with solar zenith for normalisation",
+        "Weed-vs-crop classification: closed-vocab CNN (per-crop fine-tune) or open-vocab via Grounding DINO",
+        "Row-following: classical Hough on chlorophyll-isolated images still beats most learned methods",
+        "Yield estimation: count berries / pods per plant from RGB; project to per-acre yield"
+      ]
+    }
+  ]
+}

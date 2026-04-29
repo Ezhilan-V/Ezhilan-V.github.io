@@ -1,0 +1,227 @@
+{
+  "intro": {
+    "title": "Learning Paths",
+    "tagline": "From your first day to a working robot - the order to learn things in",
+    "body": "Robotics is wide. The catalog has every branch and every section, but a newcomer needs an order. Each path below sequences the sections you'd actually read in real life, level by level, with checkpoints. Pick the one that matches your goal."
+  },
+  "paths": [
+    {
+      "id": "ground-up",
+      "title": "Ground-up generalist",
+      "tagline": "Zero → useful in 8 weeks",
+      "icon": "fa-seedling",
+      "accent": "#34d399",
+      "audience": "Brand new to robotics. Comfortable with Python and a little linear algebra.",
+      "duration": "≈ 8 weeks (10 hr / week)",
+      "modules": [
+        {
+          "level": "beginner",
+          "label": "Week 1–2  ·  Setup + foundations",
+          "summary": "Get your machine working, pick up the prerequisites you'll need.",
+          "stops": [
+            { "branch": "setup",        "section": "ros2-jazzy",         "label": "Install ROS 2 Jazzy" },
+            { "branch": "setup",        "section": "colcon-ws",          "label": "Make a colcon workspace" },
+            { "branch": "setup",        "section": "gazebo",             "label": "Bring up Gazebo" },
+            { "branch": "foundations",  "section": "linear-algebra",     "label": "Linear algebra refresh" },
+            { "branch": "foundations",  "section": "probability-stats",  "label": "Probability + stats refresh" }
+          ]
+        },
+        {
+          "level": "beginner",
+          "label": "Week 3–4  ·  The body + math of motion",
+          "summary": "Frames, kinematics, and the URDF that lets ROS see your robot.",
+          "stops": [
+            { "branch": "mechanical-design", "section": "rigid-body-basics",    "label": "Rigid bodies + DoF" },
+            { "branch": "mechanical-design", "section": "frames-rotations",     "label": "Frames + rotations" },
+            { "branch": "mechanical-design", "section": "forward-kinematics",   "label": "Forward kinematics" },
+            { "branch": "mechanical-design", "section": "urdf-modelling",       "label": "URDF / xacro" }
+          ]
+        },
+        {
+          "level": "intermediate",
+          "label": "Week 5–6  ·  Sense + perceive",
+          "summary": "Get pixels and depth into ROS, and turn them into beliefs.",
+          "stops": [
+            { "branch": "sensors",          "section": "cameras",              "label": "Camera taxonomy" },
+            { "branch": "sensors",          "section": "imu",                  "label": "IMU basics" },
+            { "branch": "computer-vision",  "section": "camera-fundamentals",  "label": "Pinhole camera model" },
+            { "branch": "computer-vision",  "section": "image-processing",     "label": "OpenCV image processing" },
+            { "branch": "computer-vision",  "section": "object-detection",     "label": "Deep object detection" }
+          ]
+        },
+        {
+          "level": "intermediate",
+          "label": "Week 7–8  ·  Drive a robot",
+          "summary": "Localize, plan, and drive with Nav2.",
+          "stops": [
+            { "branch": "navigation", "section": "the-loop",                 "label": "The nav loop" },
+            { "branch": "navigation", "section": "robot-kinematics",         "label": "Mobile robot kinematics" },
+            { "branch": "navigation", "section": "bayes-filter-intuition",   "label": "Bayes filter intuition" },
+            { "branch": "navigation", "section": "slam",                     "label": "Build a map with slam_toolbox" },
+            { "branch": "navigation", "section": "nav2-bringup",             "label": "Bring up Nav2" }
+          ]
+        },
+        {
+          "level": "advanced",
+          "label": "Stretch  ·  Ship a project",
+          "summary": "Pick one of these starter projects, finish it, demo it.",
+          "stops": [
+            { "branch": "setup", "section": "learning-paths", "label": "Pick a starter project" },
+            { "branch": "setup", "section": "first-week",     "label": "First-week plan" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "manipulation",
+      "title": "Arms specialist",
+      "tagline": "Pick-and-place to dexterous manipulation",
+      "icon": "fa-hand-paper",
+      "accent": "#38bdf8",
+      "audience": "Comfortable with ROS basics. Wants to focus on robot arms.",
+      "duration": "≈ 6 weeks",
+      "modules": [
+        {
+          "level": "beginner",
+          "label": "Foundations of arms",
+          "summary": "Joints, actuators, and the math of a kinematic chain.",
+          "stops": [
+            { "branch": "mechanical-design", "section": "joints-actuators",    "label": "Joints + actuators" },
+            { "branch": "mechanical-design", "section": "forward-kinematics",  "label": "Forward kinematics" },
+            { "branch": "mechanical-design", "section": "inverse-kinematics",  "label": "Inverse kinematics" },
+            { "branch": "manipulation",      "section": "fk-playground",       "label": "Try it: 3-DOF leg" }
+          ]
+        },
+        {
+          "level": "intermediate",
+          "label": "MoveIt + planning",
+          "summary": "Production-grade planning for arms.",
+          "stops": [
+            { "branch": "manipulation", "section": "moveit-setup",      "label": "Plan with MoveIt 2" },
+            { "branch": "manipulation", "section": "motion-planning",   "label": "Motion planning algorithms" },
+            { "branch": "manipulation", "section": "pick-place",        "label": "Pick-and-place skeleton" }
+          ]
+        },
+        {
+          "level": "intermediate",
+          "label": "Control + grasping",
+          "summary": "Closing the loop on real contact.",
+          "stops": [
+            { "branch": "manipulation",     "section": "control-basics",   "label": "Control basics" },
+            { "branch": "control-systems",  "section": "force-impedance",  "label": "Impedance control" },
+            { "branch": "manipulation",     "section": "grasping",         "label": "Grasping fundamentals" },
+            { "branch": "manipulation",     "section": "ros2-control",     "label": "ros2_control" }
+          ]
+        },
+        {
+          "level": "advanced",
+          "label": "Modern dexterity",
+          "summary": "Where research is in 2026.",
+          "stops": [
+            { "branch": "ai-ml",       "section": "imitation-learning", "label": "Imitation learning" },
+            { "branch": "ai-ml",       "section": "diffusion-policies", "label": "Diffusion policies" },
+            { "branch": "ai-ml",       "section": "vla-models",         "label": "VLA models" },
+            { "branch": "manipulation","section": "bimanual",           "label": "Bimanual manipulation" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "navigation",
+      "title": "Mobile-robot navigator",
+      "tagline": "Build a robot that drives anywhere safely",
+      "icon": "fa-compass",
+      "accent": "#34d399",
+      "audience": "Wants to deliver mobile robots - AMRs, delivery, hospital, warehouse.",
+      "duration": "≈ 6 weeks",
+      "modules": [
+        {
+          "level": "beginner",
+          "label": "Drives + sensors",
+          "summary": "The body of a mobile robot and what it needs to see.",
+          "stops": [
+            { "branch": "navigation", "section": "robot-kinematics", "label": "Mobile robot kinematics" },
+            { "branch": "amr",        "section": "drive-systems",    "label": "Drive systems compared" },
+            { "branch": "sensors",    "section": "lidar",            "label": "LiDAR fundamentals" },
+            { "branch": "sensors",    "section": "imu",              "label": "IMU + odometry" }
+          ]
+        },
+        {
+          "level": "intermediate",
+          "label": "Where am I?",
+          "summary": "Localization and mapping.",
+          "stops": [
+            { "branch": "navigation", "section": "bayes-filter-intuition", "label": "Bayes filter intuition" },
+            { "branch": "navigation", "section": "localization",           "label": "AMCL + particle filters" },
+            { "branch": "navigation", "section": "slam",                   "label": "SLAM with slam_toolbox" }
+          ]
+        },
+        {
+          "level": "intermediate",
+          "label": "Where am I going?",
+          "summary": "Planners, costmaps, behavior trees.",
+          "stops": [
+            { "branch": "navigation", "section": "costmaps",                "label": "Costmaps + inflation" },
+            { "branch": "navigation", "section": "planners-and-controllers","label": "Planners + controllers" },
+            { "branch": "navigation", "section": "astar-playground",        "label": "Try it: A* pathfinding" },
+            { "branch": "navigation", "section": "behavior-trees",          "label": "Behavior trees" }
+          ]
+        },
+        {
+          "level": "advanced",
+          "label": "Fleets + production",
+          "summary": "When one robot becomes ten.",
+          "stops": [
+            { "branch": "amr",         "section": "fleet-architecture", "label": "Fleet architecture" },
+            { "branch": "amr",         "section": "vda-5050",           "label": "VDA 5050" },
+            { "branch": "multi-robot", "section": "mapf",               "label": "MAPF" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ai-robotics",
+      "title": "Learning-based roboticist",
+      "tagline": "From RL fundamentals to VLAs",
+      "icon": "fa-brain",
+      "accent": "#fb7185",
+      "audience": "Coming from ML / DL. Wants to apply learned policies on robots.",
+      "duration": "≈ 6 weeks",
+      "modules": [
+        {
+          "level": "beginner",
+          "label": "Robot prereqs",
+          "summary": "The non-ML bits you need before plugging in a policy.",
+          "stops": [
+            { "branch": "foundations",       "section": "linear-algebra",    "label": "Linear algebra refresh" },
+            { "branch": "mechanical-design", "section": "rigid-body-basics", "label": "Bodies + DoF" },
+            { "branch": "mechanical-design", "section": "frames-rotations",  "label": "Frames + rotations" },
+            { "branch": "control-systems",   "section": "feedback-fundamentals", "label": "Feedback fundamentals" }
+          ]
+        },
+        {
+          "level": "intermediate",
+          "label": "Reinforcement + imitation",
+          "summary": "The core of modern learned policies.",
+          "stops": [
+            { "branch": "ai-ml", "section": "rl-fundamentals",   "label": "RL fundamentals" },
+            { "branch": "ai-ml", "section": "ppo-sac",           "label": "PPO + SAC" },
+            { "branch": "ai-ml", "section": "imitation-learning","label": "Imitation learning" },
+            { "branch": "ai-ml", "section": "sim-to-real",       "label": "Sim-to-real" }
+          ]
+        },
+        {
+          "level": "advanced",
+          "label": "Frontier",
+          "summary": "Where the field is moving.",
+          "stops": [
+            { "branch": "ai-ml", "section": "diffusion-policies",     "label": "Diffusion policies" },
+            { "branch": "ai-ml", "section": "vlms",                   "label": "VLMs" },
+            { "branch": "ai-ml", "section": "vla-models",             "label": "VLAs" },
+            { "branch": "ai-ml", "section": "world-models",           "label": "World models" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+<header class="page-hero" [style.--accent]="accent">
+  <span class="page-hero__eyebrow">
+    <i class="fas" [class]="icon"></i>{{ eyebrow }}
+  </span>
+  <h1 class="page-hero__title">{{ title }}</h1>
+  <p *ngIf="tagline" class="page-hero__tagline">{{ tagline }}</p>
+  <p *ngIf="body" class="page-hero__body">{{ body }}</p>
+  <ng-content></ng-content>
+</header>

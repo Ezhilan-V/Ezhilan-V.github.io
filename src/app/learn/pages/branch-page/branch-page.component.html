@@ -1,0 +1,112 @@
+<ng-container *ngIf="branch as b; else fallback">
+
+  <article class="branch-page" [style.--accent]="b.accent">
+
+    <!-- Hero -->
+    <header class="branch-page__hero">
+      <div class="branch-page__icon">
+        <i class="fas" [class]="b.icon"></i>
+      </div>
+      <span class="branch-page__eyebrow">{{ b.shortName }} · Robotics Branch</span>
+      <h1 class="branch-page__title">{{ b.title }}</h1>
+      <p class="branch-page__tagline">{{ b.hero.tagline }}</p>
+      <p class="branch-page__intro">{{ b.hero.intro }}</p>
+
+      <nav class="branch-page__toc" *ngIf="b.sections.length">
+        <span class="branch-page__toc-label">In this guide</span>
+        <ul>
+          <li *ngFor="let s of b.sections; let i = index">
+            <button type="button" (click)="scrollTo(s.id)">
+              <span class="num">{{ (i + 1).toString().padStart(2, '0') }}</span>
+              {{ s.heading }}
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Sections -->
+    <section *ngFor="let s of b.sections; let i = index"
+             class="branch-section"
+             [id]="'section-' + s.id">
+      <div class="branch-section__head">
+        <span class="branch-section__num">{{ (i + 1).toString().padStart(2, '0') }}</span>
+        <h2>{{ s.heading }}</h2>
+      </div>
+
+      <p *ngIf="s.body" class="branch-section__body">{{ s.body }}</p>
+
+      <ul *ngIf="s.bullets?.length" class="branch-section__bullets">
+        <li *ngFor="let item of s.bullets">{{ item }}</li>
+      </ul>
+
+      <div *ngFor="let cb of s.codeBlocks ?? []" class="branch-section__code">
+        <learn-code-block
+          [code]="cb.code"
+          [language]="cb.language"
+          [title]="cb.title || ''"
+          [note]="cb.note || ''">
+        </learn-code-block>
+      </div>
+
+      <ng-container [ngSwitch]="s.widget">
+        <learn-kinematics-viewer    *ngSwitchCase="'kinematics'"></learn-kinematics-viewer>
+        <learn-pinhole-camera       *ngSwitchCase="'pinhole'"></learn-pinhole-camera>
+        <learn-diff-drive           *ngSwitchCase="'diffdrive'"></learn-diff-drive>
+        <learn-astar                *ngSwitchCase="'astar'"></learn-astar>
+        <learn-pid-controller       *ngSwitchCase="'pid'"></learn-pid-controller>
+        <learn-kalman-1d            *ngSwitchCase="'kalman'"></learn-kalman-1d>
+        <learn-particle-filter      *ngSwitchCase="'particle'"></learn-particle-filter>
+        <learn-occupancy-slam       *ngSwitchCase="'occupancy'"></learn-occupancy-slam>
+        <learn-rrt                  *ngSwitchCase="'rrt'"></learn-rrt>
+        <learn-quadruped-gait       *ngSwitchCase="'gait'"></learn-quadruped-gait>
+        <learn-boids                *ngSwitchCase="'boids'"></learn-boids>
+        <learn-inverse-kinematics   *ngSwitchCase="'ik'"></learn-inverse-kinematics>
+        <learn-costmap-inflation    *ngSwitchCase="'costmap'"></learn-costmap-inflation>
+        <learn-convolution          *ngSwitchCase="'convolution'"></learn-convolution>
+        <learn-qlearning            *ngSwitchCase="'qlearning'"></learn-qlearning>
+        <learn-rotation3d           *ngSwitchCase="'rotation3d'"></learn-rotation3d>
+        <learn-frenet-sampler       *ngSwitchCase="'frenet'"></learn-frenet-sampler>
+        <learn-motor-mixer          *ngSwitchCase="'mixer'"></learn-motor-mixer>
+        <learn-bayes-filter         *ngSwitchCase="'bayes'"></learn-bayes-filter>
+        <learn-linear-algebra       *ngSwitchCase="'linalg'"></learn-linear-algebra>
+        <learn-mpc-horizon          *ngSwitchCase="'mpc-horizon'"></learn-mpc-horizon>
+        <learn-workspace-cloud      *ngSwitchCase="'workspace-cloud'"></learn-workspace-cloud>
+        <learn-rt-jitter            *ngSwitchCase="'rt-jitter'"></learn-rt-jitter>
+        <learn-optical-flow         *ngSwitchCase="'optical-flow'"></learn-optical-flow>
+        <learn-rl-curve             *ngSwitchCase="'rl-curve'"></learn-rl-curve>
+        <learn-pure-pursuit         *ngSwitchCase="'pure-pursuit'"></learn-pure-pursuit>
+        <learn-icp                  *ngSwitchCase="'icp'"></learn-icp>
+        <learn-manipulability       *ngSwitchCase="'manipulability'"></learn-manipulability>
+        <learn-force-closure        *ngSwitchCase="'force-closure'"></learn-force-closure>
+        <learn-cascade-pid          *ngSwitchCase="'cascade-pid'"></learn-cascade-pid>
+        <learn-stereo-disparity     *ngSwitchCase="'stereo-disparity'"></learn-stereo-disparity>
+        <learn-loop-closure         *ngSwitchCase="'loop-closure'"></learn-loop-closure>
+        <learn-ros-pubsub           *ngSwitchCase="'ros-pubsub'"></learn-ros-pubsub>
+        <learn-behavior-tree        *ngSwitchCase="'behavior-tree'"></learn-behavior-tree>
+        <learn-tf-tree              *ngSwitchCase="'tf-tree'"></learn-tf-tree>
+      </ng-container>
+
+      <div *ngIf="s.links?.length" class="branch-section__links">
+        <span class="branch-section__links-label">References</span>
+        <ul>
+          <li *ngFor="let link of s.links">
+            <a [href]="link.url" target="_blank" rel="noopener noreferrer">
+              <i class="fas fa-external-link-alt"></i> {{ link.label }}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+  </article>
+</ng-container>
+
+<ng-template #fallback>
+  <div class="branch-page__missing" *ngIf="!loading">
+    <i class="fas fa-question-circle"></i>
+    <h2>That branch isn't here yet</h2>
+    <p>Head back to the overview to pick another field.</p>
+    <a routerLink="/learn">← Back to overview</a>
+  </div>
+</ng-template>

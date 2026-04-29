@@ -1,0 +1,90 @@
+{
+  "slug": "industrial",
+  "hero": {
+    "tagline": "The factory floor - KUKA, Fanuc, ABB, and the cell-programming reality",
+    "intro": "Most working roboticists in 2026 will spend at least part of their career on industrial robots in factories - and that world is shockingly different from the cobots / mobile / VLA frontier you see in research papers. Industrial robots are big, heavy, fenced-off, controlled by vendor-specific languages (KRL for KUKA, RAPID for ABB, KAREL for Fanuc), and integrated into PLCs / SCADA over PROFINET / EtherCAT / EtherNet/IP. The market is dominated by four vendors - Fanuc (~25% share), ABB, KUKA, Yaskawa - plus the rising Chinese players (Estun, Inovance, Effort). This branch covers what you actually do as an industrial-robot integrator: cell programming, fieldbus integration, safety design, and the production-engineering culture that runs 24/7 lights-out shifts."
+  },
+  "sections": [
+    {
+      "id": "what-it-is",
+      "heading": "Industrial robotics in 2026 - the actual jobs",
+      "body": "Roughly four buckets of work. (1) **Cell programming** - writing the robot's job in vendor-specific languages, lining it up with PLC sequences and conveyor encoders. The day-job of most integrator engineers. (2) **System integration** - PROFINET / EtherCAT / EtherNet/IP between the robot, PLC, vision system, conveyors, and safety scanners. (3) **Application engineering** - selecting a robot + end-effector + cell layout for a specific process (welding, palletizing, machining, painting, assembly). (4) **OEM software** - working at Fanuc / ABB / KUKA themselves on the controller firmware, motion algorithms, kinematics calibration. The first three categories are where 95% of jobs sit; the fourth is small but technically deep.",
+      "bullets": [
+        "Cell programming - KRL (KUKA), RAPID (ABB), KAREL (Fanuc), INFORM (Yaskawa)",
+        "Application areas - welding (40% of installs), assembly, palletizing, machine tending, painting",
+        "Robot brands by share (2026) - Fanuc ~25%, ABB / KUKA / Yaskawa each ~12-15%, Chinese ~25% combined",
+        "Software stacks beyond the controller - Siemens TIA Portal (PLC), KUKA.WorkVisual, ABB RobotStudio (simulation + offline programming)",
+        "OPC UA - the modern way controllers expose data to MES; replacing legacy serial protocols",
+        "Digital twin - vendors push offline programming + simulation as a value-add"
+      ],
+      "links": [
+        {
+          "label": "ABB RobotStudio",
+          "url": "https://new.abb.com/products/robotics/robotstudio"
+        },
+        {
+          "label": "ROS-Industrial consortium",
+          "url": "https://rosindustrial.org/"
+        }
+      ]
+    },
+    {
+      "id": "languages",
+      "heading": "Vendor languages and ROS-Industrial",
+      "body": "Each robot brand has its own teach-pendant language. They look superficially similar (BASIC-meets-Pascal flavor) but mean different things. The major attempt to unify them is **ROS-Industrial** - a foundation that publishes drivers exposing major industrial robots over standard ROS 2 interfaces. ROS-Industrial does not (yet) replace native programming for production - too many controller features go unexposed - but it's the right starting point for research projects, dual-arm coordination, and integrating ML perception.\n\nAs an aside: vendor languages compile to controller-specific bytecode and run on the controller. ROS-Industrial drivers send joint trajectories from a Linux box over Ethernet; the controller still does the real-time motion. Two different worlds for very different purposes.",
+      "bullets": [
+        "KRL (KUKA Robot Language) - clean syntax, used on KR / iiwa families",
+        "RAPID (ABB) - structured, modular, MOVEL / MOVEJ primitives",
+        "KAREL (Fanuc) - lower level than TP, used for advanced motion / I/O",
+        "INFORM (Yaskawa) - similar feel to RAPID; often programmed via DX200 / YRC1000 pendants",
+        "Universal Robots - URScript: the most readable of the bunch; URCaps for plugins",
+        "ROS-Industrial - ROS 2 drivers for Fanuc, ABB, UR, Motoman, Staubli; bridges JointTrajectory → controller"
+      ],
+      "codeBlocks": [
+        {
+          "language": "rapid",
+          "title": "RAPID example - palletize 4 boxes from a pickup pose",
+          "code": "MODULE Palletize\n  CONST robtarget pPick:=[[300,0,500],[1,0,0,0],[0,0,0,0],[9E9,9E9,9E9,9E9,9E9,9E9]];\n  PERS num idx:=0;\n\n  PROC main()\n    FOR i FROM 1 TO 4 DO\n      MoveJ pPick, v1000, fine, tool0;\n      Set DO_Vacuum;\n      WaitTime 0.2;\n      MoveL Offs(pPick, (i-1)*200, 0, 200), v1000, z50, tool0;\n      MoveL Offs(pPick, (i-1)*200, 0, 0),   v500,  fine, tool0;\n      Reset DO_Vacuum;\n    ENDFOR\n  ENDPROC\nENDMODULE"
+        },
+        {
+          "language": "bash",
+          "title": "ROS-Industrial bringup for a Fanuc M-10iA",
+          "code": "# Install the Fanuc driver\nsudo apt install ros-jazzy-fanuc-driver\n\n# Bring up the controller bridge + MoveIt\nros2 launch fanuc_m10ia_moveit_config moveit_planning_execution.launch.py \\\n    sim:=false robot_ip:=192.168.1.20"
+        }
+      ]
+    },
+    {
+      "id": "safety",
+      "heading": "Cell safety - ISO 10218, light curtains, and the rest",
+      "body": "Industrial robots have killed people. The standards exist for a reason. ISO 10218-1 covers the robot itself; -2 covers the integrated cell; ISO/TS 15066 extends both for collaborative robots. A typical cell has: physical fencing (or laser scanners replacing fences for cobots), safety-rated PLC handling estops + door interlocks, light curtains across openings, and a safety distance calculation that ties robot speed to clearance. Modern cells use safety-PLCs (Siemens F-CPU, Allen-Bradley GuardLogix) and dual-channel I/O so a single fault can't bypass safety. The risk-assessment process before a cell ships is non-negotiable; ROS-Industrial does NOT make this go away.",
+      "bullets": [
+        "ISO 10218-1 / -2 - industrial robot safety, plus ISO/TS 15066 for cobots",
+        "ISO 13855 - safety distance from approach speed, used to size light curtains",
+        "Safety PLCs - Siemens F-CPU, Allen-Bradley GuardLogix; SIL 3 / PLe rated",
+        "Estop categories: Cat 0 (immediate power-off), Cat 1 (controlled stop then power-off), Cat 2 (controlled stop, power on)",
+        "Speed-and-separation monitoring (SSM) - the cobot model. Robot slows as humans approach",
+        "Power-and-force-limited (PFL) - the other cobot model. Joints are torque-limited",
+        "Functional safety hierarchy: identify hazard → mitigate via design → guard → warn → train"
+      ],
+      "links": [
+        {
+          "label": "ISO 10218-1:2025 (latest)",
+          "url": "https://www.iso.org/standard/85309.html"
+        }
+      ]
+    },
+    {
+      "id": "fieldbus",
+      "heading": "Fieldbus - PROFINET, EtherCAT, EtherNet/IP",
+      "body": "Industrial control runs on fieldbus, not Ethernet IP traffic the way ROS does. Three dominant protocols: PROFINET (Siemens-led, Europe-strong), EtherCAT (Beckhoff, deterministic to single-digit-µs), EtherNet/IP (Rockwell, US-dominant). The robot controller is a fieldbus device just like a sensor or VFD; the PLC is the master. If you're integrating a ROS 2 stack into a factory, you'll bridge between PROFINET (or EtherCAT) and ROS via gateways like Anybus, HMS, or vendor-specific bridges. Real-time matters: motion control loops want < 1 ms cycle time with bounded jitter, which standard ROS 2 + DDS cannot deliver out of the box.",
+      "bullets": [
+        "PROFINET - Industrial Ethernet, IRT mode for motion (~250 µs cycle), Siemens-strong",
+        "EtherCAT - distributed clocks, single-digit-µs jitter, popular with motion + servo drives",
+        "EtherNet/IP - Rockwell's CIP-over-Ethernet, US factory standard",
+        "Bridges: Anybus, HMS, Hilscher netX modules turn fieldbus into Ethernet / ROS / OPC UA",
+        "Real-time concerns: standard Linux is not deterministic. Use TwinCAT (Beckhoff), CODESYS, Xenomai, or Etherlab",
+        "OPC UA over TSN: emerging unified model bridging IT (factory analytics) with OT (real-time motion)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "slug": "surgical",
+  "hero": {
+    "tagline": "Robots inside the human body - precision, latency, and zero margin for error",
+    "intro": "Surgical robotics is the most safety-critical branch of the field. A motion planner crashing in a warehouse loses you a pallet; the same crash inside a chest cavity loses a life. The market leader is Intuitive Surgical's da Vinci (over 10,000 units installed worldwide as of 2026); the challengers are Stryker Mako for orthopaedics, Medtronic Hugo, CMR Versius (UK), and a wave of soft-robotic catheters from Vicarious / Auris. This branch covers what makes surgical robotics unique: tele-operation latency budgets, RCM (Remote Center of Motion) constraints, FDA / CE regulatory paths, ISO 13485 quality systems, and the safety-engineering culture that ships software people will literally trust with their lives."
+  },
+  "sections": [
+    {
+      "id": "what-it-is",
+      "heading": "Surgical robotics - the design space",
+      "body": "Surgical robots fall into three buckets. (1) Master-slave teleop systems where a surgeon at a console drives slave arms through small incisions - this is the da Vinci pattern. (2) Cooperative robots where the surgeon holds a tool and the robot constrains motion to safe regions - Stryker Mako pre-plans a bone cavity then enforces the boundary. (3) Autonomous / semi-autonomous - still mostly research (RAVEN, STAR), with regulatory acceptance years away. The discriminating engineering concerns are: instrument design at sub-cm scale, end-effector wristing for tight workspaces, force feedback (still an unsolved problem at scale), sterilization, and the regulatory paperwork that dwarfs the code.",
+      "bullets": [
+        "Master-slave (teleop): da Vinci, Hugo, Versius - surgeon at console, slave arms in patient",
+        "Cooperative / haptic: Mako (orthopaedics), Mazor X (spine) - robot constrains tool motion",
+        "Autonomous research: STAR (anastomosis), RAVEN, Vicarious - not yet FDA-cleared for autonomous use",
+        "Soft robotics + steerable catheters: cardiac ablation, neurovascular - very active R&D",
+        "Single-port systems (da Vinci SP) - all instruments through one 25 mm incision",
+        "Sterilization: drape vs autoclavable; drives mechanical design decisions"
+      ],
+      "links": [
+        {
+          "label": "Intuitive Surgical (da Vinci)",
+          "url": "https://www.intuitive.com/"
+        },
+        {
+          "label": "Stryker Mako",
+          "url": "https://www.stryker.com/us/en/joint-replacement/systems/mako-robotic-arm-assisted-technology.html"
+        }
+      ]
+    },
+    {
+      "id": "rcm",
+      "heading": "Remote Center of Motion (RCM)",
+      "body": "Most laparoscopic robots have a hard mechanical or software-enforced constraint: the instrument shaft pivots around a fixed point - the trocar incision. Push the tool tip in any direction and the rest of the shaft must move so the pivot point stays exactly where the patient was punctured. This is the RCM (Remote Center of Motion) constraint. It cuts the effective DoF (a 6-DoF arm becomes 4-DoF + insertion + tool roll) and is the defining geometric problem of surgical kinematics.",
+      "bullets": [
+        "Mechanical RCM: parallelogram linkage (da Vinci) physically enforces the pivot - safer",
+        "Software RCM: any 6-DoF arm + control law that constrains the trocar point - cheaper, demands trust",
+        "DoF accounting: 4 RCM-respecting (yaw, pitch, insertion, roll) + 2-3 wrist + 1 jaw = 6-7 effective DoF",
+        "Wristing: EndoWrist (da Vinci) gives 7 DoF beyond the trocar - the killer feature",
+        "Force feedback: hard because the trocar friction varies; modern systems infer force from motor current"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Project a desired end-effector velocity onto the RCM-respecting null space",
+          "code": "import numpy as np\n# Given: J = 6xN manipulator Jacobian, p_rcm = pivot point, p_tip = current tip\n# Constraint: pivot point may not move ⇒ J_rcm * q_dot = 0\n#\n# J_rcm relates joint velocities to motion at the pivot. Project away components\n# of q_dot that violate the constraint.\n\ndef rcm_project(J, J_rcm, q_dot_desired):\n    # Null-space projector: I - J_rcm^+ J_rcm\n    Jp = np.linalg.pinv(J_rcm)\n    P  = np.eye(J.shape[1]) - Jp @ J_rcm\n    return P @ q_dot_desired"
+        }
+      ]
+    },
+    {
+      "id": "regulatory",
+      "heading": "The regulatory path - why surgical software is different",
+      "body": "Shipping a surgical robot is 80% paperwork by hours. ISO 13485 is the quality-management standard you must operate under (every code review, every test, every change request is traceable for the device's lifetime). IEC 62304 governs medical-device software lifecycle: classify each module as Safety Class A/B/C based on harm potential, then satisfy increasing process rigor. ISO 14971 is the risk-management process - list every conceivable failure, mitigate it, document why residual risk is acceptable. FDA 510(k) is the most common US clearance path (predicate-device equivalence); de novo and PMA are the harder routes for novel devices. A typical surgical-robot software release is years of testing for what would be a 2-week sprint in consumer software.",
+      "bullets": [
+        "ISO 13485 - Quality Management System. Underlies everything else",
+        "IEC 62304 - Medical-device software lifecycle. Class A/B/C based on injury risk",
+        "ISO 14971 - Risk management process. Hazard analysis, FMEA, FTA",
+        "IEC 60601-1 - General electrical-medical safety; 60601-2-77 specific to robotics",
+        "FDA 510(k) - 'substantially equivalent to a predicate' - 90% of surgical robot software",
+        "FDA De Novo / PMA - novel devices; year+ submission, pre-market clinical trials",
+        "EU MDR - Europe's equivalent; tougher than the FDA in 2026, especially for AI / SaMD"
+      ],
+      "links": [
+        {
+          "label": "ISO 13485 overview",
+          "url": "https://www.iso.org/iso-13485-medical-devices.html"
+        },
+        {
+          "label": "FDA 510(k) submissions",
+          "url": "https://www.fda.gov/medical-devices/premarket-submissions-selecting-and-preparing-correct-submission/premarket-notification-510k"
+        }
+      ]
+    },
+    {
+      "id": "teleop",
+      "heading": "Teleoperation - latency, scaling, and tremor filtering",
+      "body": "The surgeon sits at a console, the patient sits 2 meters away (or 2,000 km for telesurgery research). The teleop pipeline must compress motion in three ways: (1) **scaling** the surgeon's hand motion 3-5x down to instrument scale so a 1 mm hand tremor becomes a 0.2 mm tip tremor, (2) **latency budget** below 100 ms total (sense → encoder → sim → motor → response) for natural feel, (3) **tremor filtering** via low-pass on the hand input. The classic teleop bilateral controller couples force back to the surgeon's hand - hard problem, partial solutions in modern systems.",
+      "bullets": [
+        "Motion scaling: typical 3:1 to 5:1 surgeon motion → tip motion",
+        "Latency budget: <100 ms for natural feel; >250 ms causes motion overshooting",
+        "Tremor filtering: 6-12 Hz low-pass on master input. Cuts physiological tremor without surgeon notice",
+        "Force feedback: motor-current estimation is the practical approach. Direct force sensors at the tip are still fragile",
+        "Bilateral control: position-position, force-position, or wave-variable schemes for stability under variable delay",
+        "Camera control: surgeon foot pedal toggles 'master = camera' so they can re-aim the endoscope"
+      ]
+    }
+  ]
+}

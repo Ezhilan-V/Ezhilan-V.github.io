@@ -1,0 +1,53 @@
+<div class="occ">
+  <div class="occ__stage">
+    <canvas #canvas></canvas>
+    <div class="occ__hud">
+      <span class="occ__hud-tag">log-odds occupancy grid · 7 cm cells</span>
+    </div>
+  </div>
+
+  <div class="occ__panel">
+    <div class="occ__panel-head">
+      <span class="occ__panel-title">Synthetic SLAM</span>
+      <div class="occ__actions">
+        <button type="button" class="occ__btn" (click)="togglePause()">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button type="button" class="occ__btn" (click)="resetMap()">
+          <i class="fas fa-eraser"></i> reset map
+        </button>
+        <button type="button" class="occ__btn" (click)="toggleTruth()">
+          <i class="fas" [class.fa-eye]="!showTruth" [class.fa-eye-slash]="showTruth"></i>
+          {{ showTruth ? 'hide truth' : 'show truth' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Lidar beams</span><span class="slider-row__val">{{ beamCount }}</span></div>
+      <input type="range" min="20" max="180" step="5" [value]="beamCount"
+             (input)="onSlider('beamCount', $any($event.target).value)" aria-label="Lidar beams" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Lidar range</span><span class="slider-row__val">{{ lidarRange | number:'1.1-1' }} m</span></div>
+      <input type="range" min="1.5" max="8" step="0.1" [value]="lidarRange"
+             (input)="onSlider('lidarRange', $any($event.target).value)" aria-label="Lidar range" />
+    </div>
+
+    <div class="occ__legend">
+      <span><i class="dot" style="background:#fbbf24"></i> robot</span>
+      <span><i class="line" style="background:rgba(251,191,36,0.4)"></i> beams</span>
+      <span><i class="cell" style="background:#f87171"></i> occupied (log-odds &gt; 0)</span>
+      <span><i class="cell" style="background:rgba(56,189,248,0.5)"></i> free (log-odds &lt; 0)</span>
+    </div>
+
+    <p class="occ__note">
+      Each beam updates a row of cells via Bresenham - every cell along the ray gets
+      a small <code>L_FREE</code> nudge in its log-odds, the endpoint cell gets a bigger
+      <code>L_OCC</code> bump if the beam actually hit a wall. Probability = sigmoid(log-odds).
+      Crank beams up for a sharper map; drop range to see how far the robot must drive to fill the world.
+    </p>
+  </div>
+</div>

@@ -1,0 +1,212 @@
+{
+  "slug": "control-systems",
+  "hero": {
+    "tagline": "The nervous system - turning plans into actual motion",
+    "intro": "A planner says 'go to (x, y) heading north'. A controller is what makes that actually happen, fighting friction, gravity, motor delays, and noisy sensors 1000 times a second. Get controllers right and the robot looks elegant; get them wrong and it shakes, overshoots, or crashes. This branch starts at the most useful three-letter algorithm in the world (PID), then moves up to state-space methods, model predictive control, force / impedance control for contact, real-time scheduling, and the ros2_control framework that wraps it all up. If you only learn one branch, learn this one."
+  },
+  "sections": [
+    {
+      "id": "feedback-fundamentals",
+      "heading": "Feedback loops - the core idea",
+      "body": "A controller closes the loop: measure the system's current state, subtract from the desired state to get error, compute a corrective command, apply it through actuators, and measure again. This loop runs at the controller's rate - typically 100 Hz for arms / mobile robots, 500-1000 Hz for inner attitude loops on drones, 10-50 Hz for path-following on cars. The hardest concept: stability - the loop must dampen errors over time, not amplify them. Bode plots, root locus, and Lyapunov analysis are the classical tools.",
+      "bullets": [
+        "Open-loop = command without measurement; brittle, non-robust to disturbances",
+        "Closed-loop = command computed from error; robust, can be unstable if mistuned",
+        "Stability - necessary precondition; controller must dampen any disturbance over time",
+        "Bandwidth = how fast the loop can respond; limited by sensor noise, actuator delay, sample rate",
+        "Disturbance rejection - how well the loop cancels external pushes (wind, friction, payload)",
+        "Steady-state error - what error remains after the loop has settled (integral term kills it)"
+      ]
+    },
+    {
+      "id": "pid-control",
+      "widget": "pid",
+      "heading": "PID - the universal starting point",
+      "body": "PID - Proportional + Integral + Derivative - is the most widely deployed feedback controller on the planet. The math: u = Kp·e + Ki·∫e dt + Kd·de/dt, where e is the error. Tune the widget below: high Kp gives fast but oscillatory response; high Kd damps but introduces noise sensitivity; Ki kills steady-state error but can wind up if the actuator saturates. PID is the baseline against which every fancier controller is judged - and surprisingly often, the fancier controller doesn't win.",
+      "bullets": [
+        "P term - pulls toward setpoint; too high causes oscillation",
+        "I term - eliminates steady-state error; needs anti-windup when actuator saturates",
+        "D term - damps the rate of change; amplifies sensor noise (often add a filter)",
+        "Tuning: Ziegler-Nichols (oscillation method), manual loop-shaping, Bayesian optimization",
+        "Anti-windup: clamp integrator when output saturates (back-calculation, conditional integration)",
+        "Cascaded PIDs: outer position loop → inner velocity loop → innermost current loop. Each loop ~10× faster than its outer"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Discrete PID with anti-windup (Python)",
+          "code": "class PID:\n    def __init__(self, Kp, Ki, Kd, u_max=float('inf')):\n        self.Kp, self.Ki, self.Kd = Kp, Ki, Kd\n        self.u_max = u_max\n        self.e_int = 0.0\n        self.e_prev = 0.0\n\n    def step(self, setpoint, measurement, dt):\n        e = setpoint - measurement\n        self.e_int += e * dt\n        if self.Ki:\n            lim = self.u_max / abs(self.Ki)\n            self.e_int = max(-lim, min(lim, self.e_int))\n        e_dot = (e - self.e_prev) / dt if dt > 0 else 0.0\n        self.e_prev = e\n        u = self.Kp*e + self.Ki*self.e_int + self.Kd*e_dot\n        return max(-self.u_max, min(self.u_max, u))"
+        },
+        {
+          "language": "cpp",
+          "title": "Same PID in real-time C++ (no allocations)",
+          "code": "// Drop-in for a 1 kHz controller. No heap, no exceptions, no GIL.\nclass Pid {\npublic:\n  Pid(double kp, double ki, double kd, double u_max = 1e30)\n      : kp_(kp), ki_(ki), kd_(kd), u_max_(u_max) {}\n\n  double step(double setpoint, double measurement, double dt) {\n    const double e = setpoint - measurement;\n    e_int_ += e * dt;\n    if (ki_ != 0.0) {\n      const double lim = u_max_ / std::abs(ki_);\n      if (e_int_ >  lim) e_int_ =  lim;\n      if (e_int_ < -lim) e_int_ = -lim;\n    }\n    const double e_dot = (dt > 0.0) ? (e - e_prev_) / dt : 0.0;\n    e_prev_ = e;\n    double u = kp_*e + ki_*e_int_ + kd_*e_dot;\n    if (u >  u_max_) u =  u_max_;\n    if (u < -u_max_) u = -u_max_;\n    return u;\n  }\n\nprivate:\n  double kp_, ki_, kd_, u_max_;\n  double e_int_  = 0.0;\n  double e_prev_ = 0.0;\n};"
+        }
+      ]
+    },
+    {
+      "id": "state-space",
+      "heading": "State-space + LQR - when PID isn't enough",
+      "body": "Above PID sits state-space control. The system is described as ẋ = Ax + Bu (state derivative as a linear function of current state and control input). The controller is u = -Kx, where K is computed to minimize a quadratic cost J = ∫(xᵀQx + uᵀRu) dt - this is the Linear Quadratic Regulator (LQR). Q penalizes state error, R penalizes control effort - tune the trade-off and the optimal K falls out of an algebraic Riccati equation. Powerful for multi-input multi-output (MIMO) systems where PID's single-loop assumption breaks.",
+      "bullets": [
+        "State-space form: ẋ = Ax + Bu, y = Cx + Du. Captures any linear system",
+        "Controllability: can you steer from any state to any other? (Kalman rank test)",
+        "LQR: optimal full-state feedback gain K minimizing ∫(xᵀQx + uᵀRu)",
+        "Observer / Kalman filter: estimate x from noisy y when full state isn't measured",
+        "Pole placement: alternative to LQR - pick desired closed-loop poles, solve for K",
+        "Robust control (H∞) - design for the worst-case model uncertainty"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Solve LQR with python-control",
+          "code": "import numpy as np\nimport control as ct\n\n# Example: cart-pole linearised about upright\nA = np.array([[0, 1, 0,    0],\n              [0, 0, -2.45, 0],\n              [0, 0, 0,    1],\n              [0, 0, 31.5, 0]])\nB = np.array([[0], [0.95], [0], [-1.43]])\nQ = np.diag([10, 1, 100, 1])\nR = np.array([[0.1]])\n\nK, S, E = ct.lqr(A, B, Q, R)\nprint('LQR gain K =', K)"
+        }
+      ]
+    },
+    {
+      "id": "mpc",
+      "heading": "Model Predictive Control (MPC)",
+      "body": "MPC is the most widely deployed advanced controller. At each timestep: predict the system's behavior over a horizon (e.g. 1-2 seconds at 50 Hz = 50-100 steps), formulate a quadratic program that finds the input sequence minimizing tracking error subject to constraints (joint limits, force limits, obstacle avoidance), apply the first input, then re-plan next step. Handles constraints natively - that's why it dominates wherever physical limits matter (drone aggressive flight, autonomous-vehicle planning, manipulation in clutter).",
+      "bullets": [
+        "Horizon - number of steps the controller predicts ahead. 10-100 typical",
+        "Cost function: tracking + control effort + soft constraint penalties",
+        "Hard constraints: joint limits, actuator limits, obstacle clearance",
+        "Solvers: acados (the production default in 2026, generates C code, runs on micro), HPIPM (the QP underneath acados), OSQP (sparse QP, Python-friendly), ProxQP (modern QP, easy Python API), CVXGEN, IPOPT (large NLPs)",
+        "Update rate: must solve in less than 1 / horizon-resolution seconds - hard constraint",
+        "Variants: linear MPC (fast), nonlinear MPC (slower, exact), iLQR (sequential linearization)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Tiny MPC sketch with cvxpy",
+          "code": "import cvxpy as cp\nimport numpy as np\n\nN = 20                  # horizon\nA = np.array([[1, 1], [0, 1]])\nB = np.array([[0], [1]])\nQ = np.eye(2); R = np.array([[0.1]])\n\nx0 = np.array([5.0, 0.0])   # initial state\n\nx = cp.Variable((2, N + 1))\nu = cp.Variable((1, N))\ncost = 0; constraints = [x[:, 0] == x0]\nfor k in range(N):\n    cost += cp.quad_form(x[:, k], Q) + cp.quad_form(u[:, k], R)\n    constraints += [x[:, k + 1] == A @ x[:, k] + B @ u[:, k]]\n    constraints += [cp.abs(u[:, k]) <= 2.0]\nprob = cp.Problem(cp.Minimize(cost), constraints)\nprob.solve()\n# Apply only u[:, 0], then re-plan next step (receding horizon)"
+        }
+      ],
+      "links": [
+        {
+          "label": "ACADOS (real-time MPC)",
+          "url": "https://docs.acados.org/"
+        },
+        {
+          "label": "OSQP solver",
+          "url": "https://osqp.org/"
+        }
+      ],
+      "widget": "mpc-horizon"
+    },
+    {
+      "id": "force-impedance",
+      "heading": "Force, impedance, admittance control",
+      "body": "Position control says 'go to this joint angle.' Force control says 'apply this much force.' Impedance control is the bridge: behave like a virtual spring-damper around a setpoint - the robot becomes mechanically compliant. Used everywhere humans and robots share workspace (cobots, surgical robots) and in any task involving contact (assembly, polishing, sanding). Admittance control is the dual: measure force, command position correction; works on stiff position-controlled robots with a wrist FT sensor.",
+      "bullets": [
+        "Pure position control + stiff joints → robot punches the table when 1mm off",
+        "Impedance control: command torque to mimic K(x_des − x) − D ẋ; needs torque-controlled motors",
+        "Admittance control: measure force, command position correction; works on stiff robots + FT sensor",
+        "Hybrid force / position: split DOFs (x/y position-controlled, z force-controlled). Useful for wiping, polishing",
+        "Cartesian impedance - set stiffness in task space; rotational + translational stiffness diagonal",
+        "Practical tuning: low stiffness for safety, increase when tracking accuracy matters more"
+      ]
+    },
+    {
+      "id": "motion-planning",
+      "widget": "rrt",
+      "heading": "Motion planning algorithms",
+      "body": "Planning algorithms split into two families. Sampling-based planners (RRT, RRT*, PRM) randomly sample configurations and connect them; complete in the limit but produce jerky paths. Optimization-based planners (CHOMP, STOMP, TrajOpt) take a seed trajectory and refine it for smoothness and clearance; faster + smoother but can stick in local minima. The widget below shows RRT growing a tree toward the goal - drag the goal-bias slider to see how the tree shape changes.",
+      "bullets": [
+        "RRT-Connect - fast default in MoveIt; bidirectional tree from start + goal",
+        "RRT* - asymptotically optimal; slower; great when you can wait a few seconds",
+        "PRM - pre-computed roadmap; query-time fast; needs a roadmap-build phase",
+        "CHOMP - gradient-based smoothing; differentiable; can stick in local minima",
+        "STOMP - stochastic gradient; robust to non-differentiable costs",
+        "TrajOpt - sequential convex programming; handles obstacles + dynamics jointly",
+        "Hybrid: RRT to find a feasible path, then optimization to smooth it"
+      ]
+    },
+    {
+      "id": "trajectory-generation",
+      "heading": "Trajectory generation + time parameterization",
+      "body": "A motion planner produces a path (sequence of configurations). To execute it on hardware you need a trajectory: a path with timestamps that respects velocity, acceleration, and torque limits. Polynomial parameterization (cubic, quintic spline through the waypoints) is fastest. TOPP-RA (Time-Optimal Path Parameterization based on Reachability Analysis) computes the fastest valid timing in polynomial time and is the modern default - MoveIt 2 ships it as a plugin.",
+      "bullets": [
+        "Path = where to go. Trajectory = where to go + when",
+        "Polynomial parameterization - quintic splines through waypoints; smooth jerk",
+        "TOPP-RA - convex, fast, optimal under linear constraints (vmax, amax, torques)",
+        "Iterative parabolic time parameterization - MoveIt's older default; less optimal than TOPP-RA",
+        "Cartesian-space vs joint-space parameterization - pick by task (linear move = Cartesian)",
+        "ros2_control's joint_trajectory_controller takes a parameterized trajectory and runs it"
+      ],
+      "links": [
+        {
+          "label": "TOPP-RA (Hung Pham)",
+          "url": "https://github.com/hungpham2511/toppra"
+        }
+      ]
+    },
+    {
+      "id": "ros2-control",
+      "heading": "ros2_control - the controller framework",
+      "body": "ros2_control is the standard layer between hardware drivers and high-level planners (MoveIt, Nav2). It provides a real-time deterministic control loop, a plugin system for hardware interfaces (CAN, EtherCAT, USB), and a controller manager that loads / unloads controllers (joint_trajectory, diff_drive, force_torque, admittance). If you build your own arm, mobile platform, or AMR, you almost certainly want ros2_control under the hood.",
+      "bullets": [
+        "Hardware interface plugin - talks to the actual motor drivers",
+        "Resource manager - tracks state interfaces (position, velocity, effort) per joint",
+        "Controllers: joint_trajectory_controller, joint_position_controller, joint_effort_controller, diff_drive_controller, ackermann_steering_controller, admittance_controller",
+        "Real-time - runs in a SCHED_FIFO thread. No Python in the hot loop, only C++",
+        "Controller spawner - load/unload controllers at runtime without restarting the robot stack",
+        "Test on a fake hardware before real bring-up - mock_components is your friend"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "List + spawn a controller at runtime",
+          "code": "ros2 control list_hardware_interfaces\nros2 control list_controllers\nros2 control load_controller --set-state active joint_trajectory_controller"
+        },
+        {
+          "language": "yaml",
+          "title": "Position controller with PID gains",
+          "code": "joint_position_controller:\n  ros__parameters:\n    joints: [shoulder, elbow, wrist]\n    command_interfaces: [position]\n    state_interfaces:   [position, velocity]\n    gains:\n      shoulder: { p: 60.0, i: 0.5, d: 4.0, i_clamp: 5.0 }\n      elbow:    { p: 50.0, i: 0.5, d: 3.0, i_clamp: 5.0 }\n      wrist:    { p: 30.0, i: 0.0, d: 1.5, i_clamp: 0.0 }"
+        }
+      ],
+      "links": [
+        {
+          "label": "ros2_control docs",
+          "url": "https://control.ros.org/"
+        }
+      ]
+    },
+    {
+      "id": "real-time-control",
+      "heading": "Real-time control - when timing actually matters",
+      "body": "Generic Linux gives you ~1 ms of scheduling jitter - fine for perception (10 Hz), terrible for an attitude controller (1000 Hz). Hard real-time means a deadline that MUST be met, not should. The standard fix on Linux is the PREEMPT_RT patchset, which makes most kernel threads preemptable and gives you ~50 µs jitter. For very tight loops (motor commutation, FOC), put the loop on a microcontroller (STM32, RP2040) and bridge to ROS via micro-ROS or a custom protocol.",
+      "bullets": [
+        "Stock Linux: ~1 ms scheduling jitter, occasional 10s of ms outliers",
+        "PREEMPT_RT: ~50 µs jitter, p99 in the 100-200 µs range",
+        "Loop pinning: chrt -f 80 + isolcpus + cpu affinity = exclusive CPU core for the controller",
+        "Avoid in the hot loop: malloc / new, exceptions, syscalls (besides timer / read), virtual calls",
+        "Pre-allocate everything. Use std::array, fixed-size containers, object pools",
+        "Microcontroller: STM32 / RP2040 for kHz+ loops; STM32 timer-encoder mode for free encoder decoding",
+        "micro-ROS bridges your MCU to a ROS 2 host over serial / Ethernet / CAN"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Confirm a real-time kernel is loaded",
+          "code": "uname -a       # → ...PREEMPT_RT...\nuname -v       # → SMP PREEMPT_RT ...\n# Check thread is running with SCHED_FIFO\nchrt -p $(pidof my_control_node)"
+        }
+      ],
+      "links": [
+        {
+          "label": "PREEMPT_RT wiki",
+          "url": "https://wiki.linuxfoundation.org/realtime/start"
+        },
+        {
+          "label": "Ubuntu real-time kernel",
+          "url": "https://ubuntu.com/real-time"
+        },
+        {
+          "label": "micro-ROS",
+          "url": "https://micro.ros.org/"
+        }
+      ]
+    }
+  ]
+}

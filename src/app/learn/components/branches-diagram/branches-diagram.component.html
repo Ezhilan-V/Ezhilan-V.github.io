@@ -1,0 +1,220 @@
+<div class="branches-diagram"
+     [class.is-drilled]="selectedSlug !== null"
+     (mouseleave)="hover(null); hoverSub(null)">
+
+  <svg viewBox="0 0 500 460" xmlns="http://www.w3.org/2000/svg"
+       preserveAspectRatio="xMidYMid meet" role="img"
+       aria-label="Robotics branches diagram">
+    <defs>
+      <radialGradient id="hubGrad" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#1e293b" stop-opacity="1" />
+        <stop offset="100%" stop-color="#0b1220" stop-opacity="1" />
+      </radialGradient>
+      <radialGradient id="centreGrad" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#1e293b" stop-opacity="1" />
+        <stop offset="100%" stop-color="#0b1220" stop-opacity="1" />
+      </radialGradient>
+      <filter id="hubGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="6" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+
+    <!-- ════════════════ TOP-LEVEL VIEW ════════════════ -->
+    <g *ngIf="selectedSlug === null" class="top-level">
+
+      <!-- Spokes -->
+      <g class="spokes" stroke-linecap="round">
+        <line *ngFor="let n of nodes; let i = index"
+              class="spoke"
+              [class.is-hovered]="isHovered(n.slug)"
+              [class.is-dimmed]="isDimmed(n.slug)"
+              [attr.x1]="cx" [attr.y1]="cy"
+              [attr.x2]="pos(n.angleDeg).x" [attr.y2]="pos(n.angleDeg).y"
+              [attr.stroke]="n.hue"
+              stroke-width="1.4"
+              stroke-dasharray="4 5"
+              [style.--enter-delay.s]="i * 0.05" />
+      </g>
+
+      <!-- Hub -->
+      <g [attr.transform]="'translate(' + cx + ',' + cy + ')'"
+         class="hub" filter="url(#hubGlow)">
+        <circle [attr.r]="hubR" fill="url(#hubGrad)" stroke="rgba(56,189,248,0.35)" stroke-width="1.5"/>
+        <text y="-2" text-anchor="middle" class="hub-label">Robotics</text>
+        <text y="14" text-anchor="middle" class="hub-sub">6 technical branches</text>
+      </g>
+
+      <!-- Branch nodes -->
+      <g class="nodes">
+        <g *ngFor="let n of nodes; let i = index"
+           class="node-pos"
+           [class.is-active]="n.active"
+           [class.is-hovered]="isHovered(n.slug)"
+           [class.is-dimmed]="isDimmed(n.slug)"
+           [attr.transform]="'translate(' + pos(n.angleDeg).x + ',' + pos(n.angleDeg).y + ')'"
+           (mouseenter)="hover(n.slug)"
+           (focus)="hover(n.slug)"
+           (blur)="hover(null)"
+           (click)="drillIn(n, $event)"
+           (keydown.enter)="drillIn(n, $event)"
+           (keydown.space)="$event.preventDefault(); drillIn(n, $event)"
+           [attr.role]="n.active ? 'button' : null"
+           [attr.tabindex]="n.active ? 0 : null"
+           [attr.aria-label]="n.label + ': ' + n.description + '. Click to view sub-branches.'"
+           [style.--accent]="n.hue"
+           [style.--enter-delay.s]="0.35 + i * 0.05">
+          <g class="node-scale">
+            <circle class="node-bg"   [attr.r]="nodeR" [attr.stroke]="n.hue"/>
+            <circle class="node-pulse" [attr.r]="nodeR" [attr.stroke]="n.hue"/>
+            <foreignObject x="-18" y="-18" width="36" height="36">
+              <div xmlns="http://www.w3.org/1999/xhtml" class="node-icon"
+                   [style.color]="n.hue">
+                <i class="fas" [class]="n.icon"></i>
+              </div>
+            </foreignObject>
+          </g>
+        </g>
+      </g>
+
+      <!-- Labels (top-level) -->
+      <g class="labels">
+        <text *ngFor="let n of nodes; let i = index"
+              class="node-label"
+              [class.is-hovered]="isHovered(n.slug)"
+              [class.is-dimmed]="isDimmed(n.slug)"
+              [attr.x]="labelPos(n).x"
+              [attr.y]="labelPos(n).y"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              [attr.fill]="n.hue"
+              [style.--enter-delay.s]="0.5 + i * 0.05">{{ n.label }}</text>
+      </g>
+    </g>
+
+    <!-- ════════════════ DRILL-DOWN VIEW ════════════════ -->
+    <g *ngIf="selected as s" class="drill-down" [style.--accent]="s.hue">
+
+      <!-- Sub-branch spokes -->
+      <g class="sub-spokes" stroke-linecap="round">
+        <line *ngFor="let _ of s.subBranches; let i = index"
+              class="sub-spoke"
+              [class.is-hovered]="hoveredSubIdx === i"
+              [attr.x1]="cx" [attr.y1]="cy"
+              [attr.x2]="subPos(i, s.subBranches.length).x"
+              [attr.y2]="subPos(i, s.subBranches.length).y"
+              [attr.stroke]="s.hue"
+              stroke-width="1.2"
+              stroke-dasharray="3 4"
+              [style.--enter-delay.s]="0.05 + i * 0.03" />
+      </g>
+
+      <!-- Sub-branch nodes -->
+      <g class="sub-nodes">
+        <g *ngFor="let sb of s.subBranches; let i = index"
+           class="sub-node-pos"
+           [class.is-hovered]="hoveredSubIdx === i"
+           [attr.transform]="'translate(' + subPos(i, s.subBranches.length).x + ',' + subPos(i, s.subBranches.length).y + ')'"
+           (mouseenter)="hoverSub(i)"
+           (mouseleave)="hoverSub(null)"
+           [style.--enter-delay.s]="0.1 + i * 0.03"
+           role="presentation">
+          <circle class="sub-node-bg"   [attr.r]="subNodeR" [attr.stroke]="s.hue"/>
+          <circle class="sub-node-dot"
+                  r="4"
+                  [attr.fill]="s.hue"/>
+        </g>
+      </g>
+
+      <!-- Sub-branch labels -->
+      <g class="sub-labels">
+        <text *ngFor="let sb of s.subBranches; let i = index"
+              class="sub-label"
+              [class.is-hovered]="hoveredSubIdx === i"
+              [attr.x]="subLabelPos(i, s.subBranches.length).x"
+              [attr.y]="subLabelPos(i, s.subBranches.length).y"
+              text-anchor="middle"
+              dominant-baseline="middle"
+              [attr.fill]="s.hue"
+              [style.--enter-delay.s]="0.2 + i * 0.03">{{ sb }}</text>
+      </g>
+
+      <!-- Centre - selected branch -->
+      <g class="centre"
+         [attr.transform]="'translate(' + cx + ',' + cy + ')'"
+         filter="url(#hubGlow)"
+         (click)="openSelected()"
+         (keydown.enter)="openSelected()"
+         (keydown.space)="$event.preventDefault(); openSelected()"
+         role="button"
+         tabindex="0"
+         [attr.aria-label]="'Open ' + s.label + ' guide'">
+        <circle class="centre-bg"
+                [attr.r]="centreR"
+                fill="url(#centreGrad)"
+                [attr.stroke]="s.hue"
+                stroke-width="2"/>
+        <foreignObject [attr.x]="-22" [attr.y]="-32" width="44" height="44">
+          <div xmlns="http://www.w3.org/1999/xhtml" class="centre-icon"
+               [style.color]="s.hue">
+            <i class="fas" [class]="s.icon"></i>
+          </div>
+        </foreignObject>
+        <text y="14" text-anchor="middle" class="centre-label" [attr.fill]="s.hue">{{ s.label }}</text>
+        <text y="30" text-anchor="middle" class="centre-cta">open guide →</text>
+      </g>
+    </g>
+  </svg>
+
+  <!-- ════════════════ HTML overlay tooltip ════════════════ -->
+  <div class="branches-diagram__tooltip"
+       [class.is-visible]="selectedSlug === null && hovered !== null"
+       [style.--accent]="hovered?.hue || '#38bdf8'">
+    <ng-container *ngIf="hovered as h">
+      <i class="fas" [class]="h.icon"></i>
+      <div class="branches-diagram__tooltip-text">
+        <span class="branches-diagram__tooltip-label">{{ h.label }}</span>
+        <span class="branches-diagram__tooltip-desc">{{ h.description }}</span>
+      </div>
+      <span class="branches-diagram__tooltip-cta">click to drill in →</span>
+    </ng-container>
+  </div>
+
+  <!-- ════════════════ Drill-down controls ════════════════ -->
+  <button *ngIf="selectedSlug !== null" type="button"
+          class="branches-diagram__back"
+          [style.--accent]="selected?.hue || '#38bdf8'"
+          (click)="drillOut($event)"
+          aria-label="Back to all branches">
+    <i class="fas fa-arrow-left"></i> all branches
+  </button>
+
+  <button *ngIf="selectedSlug !== null" type="button"
+          class="branches-diagram__open"
+          [style.--accent]="selected?.hue || '#38bdf8'"
+          (click)="openSelected()">
+    open {{ selected?.label }} guide
+    <i class="fas fa-arrow-right"></i>
+  </button>
+
+  <!-- Applied branches pill row (the 9 fields not in the central diagram) -->
+  <div class="branches-diagram__applied" *ngIf="selectedSlug === null">
+    <div class="branches-diagram__applied-head">
+      <span class="branches-diagram__applied-label">Applied platforms</span>
+      <span class="branches-diagram__applied-hint">where the technical branches combine into real systems</span>
+    </div>
+    <div class="branches-diagram__applied-row">
+      <button *ngFor="let p of appliedPills"
+              type="button"
+              class="branches-diagram__applied-pill"
+              [style.--accent]="p.hue"
+              (click)="selectApplied(p.slug)">
+        <i class="fas" [class]="p.icon"></i>
+        <span>{{ p.label }}</span>
+      </button>
+    </div>
+  </div>
+</div>

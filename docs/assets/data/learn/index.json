@@ -1,0 +1,989 @@
+{
+  "intro": {
+    "title": "Robotics, broken down",
+    "tagline": "Start anywhere. Get unstuck. Build something that moves.",
+    "body": "A robot is a sense-think-act loop running forever: it measures the world with sensors, decides what to do with code, and acts on motors. This site takes that loop apart, branch by branch, and shows you what each piece does and why. New to the field? Open the Learning Paths for a sequenced 'do this, then this' plan. Hit a word you don't know? The Vocabulary defines 125+ robotics terms in one paragraph each. Want to find what you actually don't know? Take the Quiz - every wrong answer points you straight at the section that teaches it. Type your workspace name once at the top, and every code snippet across every page is pre-filled with it."
+  },
+  "branches": [
+    {
+      "slug": "setup",
+      "kind": "setup",
+      "title": "Setup Guides",
+      "shortName": "Setup",
+      "icon": "fa-rocket",
+      "color": "from-amber-700 to-amber-500",
+      "accent": "#fbbf24",
+      "description": "Install ROS 2, the simulators, MoveIt, Nav2, and the dev tools - the same steps I run on every fresh machine.",
+      "hero": {
+        "tagline": "Get a working robot dev environment in an afternoon",
+        "intro": "Before you can do anything else, your laptop has to be able to talk to a robot - real or simulated. This branch is the install + first-bring-up checklist: ROS 2 (the operating system most robots run), Gazebo (a 3D simulator so you don't need hardware to start), MoveIt and Nav2 (the toolkits for arms and mobile robots), and the dev tools that keep you sane. Don't skim - the time you spend here is the time you don't waste later debugging a broken setup."
+      },
+      "sectionTitles": [
+        {
+          "id": "ros2-jazzy",
+          "heading": "ROS 2 Jazzy on Ubuntu 24.04"
+        },
+        {
+          "id": "colcon-ws",
+          "heading": "Set up your colcon workspace"
+        },
+        {
+          "id": "gazebo",
+          "heading": "Gazebo simulator + ROS 2 bridge"
+        },
+        {
+          "id": "isaac-sim",
+          "heading": "NVIDIA Isaac Sim (for ML / GPU sim)"
+        },
+        {
+          "id": "moveit2",
+          "heading": "MoveIt 2 (manipulation stack)"
+        },
+        {
+          "id": "nav2",
+          "heading": "Nav2 (navigation stack)"
+        },
+        {
+          "id": "foxglove-rviz",
+          "heading": "Visualization: RViz2 + Foxglove Studio"
+        },
+        {
+          "id": "docker",
+          "heading": "Docker dev environment"
+        },
+        {
+          "id": "vcs-rosdep",
+          "heading": "vcs + rosdep - multi-repo workflow"
+        },
+        {
+          "id": "dev-workflow",
+          "heading": "Dev workflow - VS Code, Cursor, Dev Containers"
+        },
+        {
+          "id": "rt-linux",
+          "heading": "Real-time Linux (PREEMPT_RT) for control"
+        },
+        {
+          "id": "distro-choice",
+          "heading": "Which ROS 2 distro should I pick?"
+        },
+        {
+          "id": "launch-system",
+          "heading": "ROS 2 launch system, parameters, lifecycle"
+        },
+        {
+          "id": "cross-compile",
+          "heading": "Cross-compile for ARM (Jetson, Pi)"
+        },
+        {
+          "id": "learning-paths",
+          "heading": "Learning paths - pick a starter project"
+        },
+        {
+          "id": "ros1-to-ros2",
+          "heading": "ROS 1 → ROS 2 migration cheat sheet"
+        },
+        {
+          "id": "first-week",
+          "heading": "Your first week - what to actually do"
+        }
+      ]
+    },
+    {
+      "slug": "foundations",
+      "kind": "setup",
+      "title": "Foundations",
+      "shortName": "Foundations",
+      "icon": "fa-book-open",
+      "color": "from-yellow-700 to-yellow-500",
+      "accent": "#facc15",
+      "description": "Math + programming + meta you need before the field branches: linear algebra, probability, debugging, books, careers.",
+      "hero": {
+        "tagline": "The math and code every robotics book assumes you already know",
+        "intro": "Most robotics tutorials drop you into matrix transforms and Bayesian filters without warning. This branch is the prereq pack so that doesn't happen to you. Linear algebra (poses + frames are just matrices), calculus and optimization (planners minimize cost), probability (sensors are noisy), Python and C++ idioms (numpy and Eigen show up everywhere), debugging patterns, and curated books. None of it is robotics-specific yet - that's the point. Skip what you already know."
+      },
+      "sectionTitles": [
+        {
+          "id": "why-foundations",
+          "heading": "Why these foundations actually matter"
+        },
+        {
+          "id": "linear-algebra",
+          "heading": "Linear algebra - the language of poses"
+        },
+        {
+          "id": "calculus-optimization",
+          "heading": "Calculus + optimization"
+        },
+        {
+          "id": "probability-stats",
+          "heading": "Probability + statistics"
+        },
+        {
+          "id": "python-robotics",
+          "heading": "Python for robotics - the patterns you'll use daily"
+        },
+        {
+          "id": "cpp-robotics",
+          "heading": "C++ for robotics - modern idioms"
+        },
+        {
+          "id": "debug-patterns",
+          "heading": "Debugging robots - patterns that save your weekend"
+        },
+        {
+          "id": "math-cookbook",
+          "heading": "Robotics math cookbook - the formulas you'll use"
+        },
+        {
+          "id": "books-courses",
+          "heading": "Books, courses, papers - what to read"
+        },
+        {
+          "id": "communities",
+          "heading": "Communities - where to ask, where to share"
+        },
+        {
+          "id": "careers-interviews",
+          "heading": "Careers & interview prep"
+        }
+      ]
+    },
+    {
+      "slug": "mechanical-design",
+      "kind": "technical",
+      "title": "Mechanical Design & Kinematics",
+      "shortName": "Mechanical",
+      "icon": "fa-gears",
+      "color": "from-slate-700 to-slate-500",
+      "accent": "#94a3b8",
+      "description": "The physical body - joints, actuators, kinematics, dynamics, URDF, end-effectors, mechanical design process.",
+      "hero": {
+        "tagline": "The physical body - links, joints, and the math that moves them",
+        "intro": "Robots are made of bodies. Before perception, planning, or control mean anything, you need to know what the robot is shaped like and how it can move. This branch covers the basics: rigid bodies, joints, actuators, the difference between forward kinematics (joints to position) and inverse kinematics (position to joints), the URDF file that describes a robot to ROS, and the design process that takes a use case and turns it into hardware. If you've never picked up a textbook on robot mechanics, start here."
+      },
+      "sectionTitles": [
+        {
+          "id": "rigid-body-basics",
+          "heading": "Rigid-body mechanics - the assumptions everything builds on"
+        },
+        {
+          "id": "joints-actuators",
+          "heading": "Joints & actuators - the moving parts"
+        },
+        {
+          "id": "forward-kinematics",
+          "heading": "Forward kinematics - joint angles → end-effector pose"
+        },
+        {
+          "id": "inverse-kinematics",
+          "heading": "Inverse kinematics - pose → joint angles"
+        },
+        {
+          "id": "dynamics",
+          "heading": "Robot dynamics - torques and accelerations"
+        },
+        {
+          "id": "frames-rotations",
+          "heading": "Coordinate frames & rotations"
+        },
+        {
+          "id": "urdf-modelling",
+          "heading": "URDF / xacro - describing the robot to ROS"
+        },
+        {
+          "id": "end-effectors",
+          "heading": "End-effectors - the working business end"
+        },
+        {
+          "id": "design-process",
+          "heading": "The mechanical design process - use case → CAD → prototype"
+        }
+      ]
+    },
+    {
+      "slug": "computer-vision",
+      "title": "Perception & Computer Vision",
+      "shortName": "Perception",
+      "icon": "fa-eye",
+      "color": "from-violet-700 to-violet-500",
+      "accent": "#a78bfa",
+      "description": "Turn raw pixels and depth points into a description of the world the robot can act on.",
+      "hero": {
+        "tagline": "Turning pixels and depth into something the robot can act on",
+        "intro": "Computer vision is the part of the robot that watches and understands. Given an image (or a depth map, or a point cloud), it decides 'there is a cup here, oriented like this, the door is open, the path is clear'. Everything downstream - planning, manipulation, navigation - depends on it being right. This branch walks the pipeline: how a camera projects 3D into 2D, classical image processing, deep object detection on a ROS topic, point clouds, sensor fusion, SLAM, and 6-DoF pose estimation. By the end you can build the perception layer of a real robot."
+      },
+      "sectionTitles": [
+        {
+          "id": "the-perception-stack",
+          "heading": "The perception stack"
+        },
+        {
+          "id": "camera-fundamentals",
+          "heading": "Camera fundamentals: pinhole model + intrinsics"
+        },
+        {
+          "id": "ros2-camera-setup",
+          "heading": "Bring up an Intel RealSense camera"
+        },
+        {
+          "id": "image-processing",
+          "heading": "Classical image processing with OpenCV"
+        },
+        {
+          "id": "object-detection",
+          "heading": "Deep object detection on a ROS 2 topic"
+        },
+        {
+          "id": "point-clouds",
+          "heading": "Point clouds - PCL + Open3D"
+        },
+        {
+          "id": "visual-slam",
+          "heading": "Visual SLAM - building maps from cameras"
+        },
+        {
+          "id": "state-estimation",
+          "heading": "Sensor fusion & state estimation"
+        },
+        {
+          "id": "object-tracking",
+          "heading": "Object tracking - keep an ID across frames"
+        },
+        {
+          "id": "depth-from-mono",
+          "heading": "Monocular depth estimation"
+        },
+        {
+          "id": "6d-pose",
+          "heading": "6-DoF object pose estimation"
+        }
+      ],
+      "kind": "technical"
+    },
+    {
+      "slug": "manipulation",
+      "title": "Manipulation",
+      "shortName": "Manipulation",
+      "icon": "fa-hand-paper",
+      "color": "from-sky-700 to-sky-500",
+      "accent": "#38bdf8",
+      "description": "Move arms, hands, and legs through space - kinematics, planning, control, and grasping.",
+      "hero": {
+        "tagline": "Arms, hands, fingers - moving things in the real world",
+        "intro": "Manipulation is everything that turns a desired pose ('put the gripper here, oriented like this') into the joint commands the motors will follow. It bundles kinematics (where is the hand right now?), motion planning (a safe path through clutter), control (faithfully executing that path), and grasping (closing the fingers without crushing the cup). This branch starts with a 3-DOF leg you can drag in your browser, then moves to MoveIt 2 (the production manipulation stack for ROS), classical motion planners, force-aware control, and the modern learning-based approaches that have taken over dexterous tasks."
+      },
+      "sectionTitles": [
+        {
+          "id": "what-is-kinematics",
+          "heading": "Forward kinematics, in two paragraphs"
+        },
+        {
+          "id": "fk-playground",
+          "heading": "Try it: 3-DOF hexapod leg"
+        },
+        {
+          "id": "inverse-kinematics",
+          "heading": "Inverse kinematics - the other direction"
+        },
+        {
+          "id": "urdf",
+          "heading": "URDF - describe your robot to ROS"
+        },
+        {
+          "id": "frames-rotations",
+          "heading": "Coordinate frames & rotations"
+        },
+        {
+          "id": "moveit-setup",
+          "heading": "Plan with MoveIt 2"
+        },
+        {
+          "id": "motion-planning",
+          "heading": "Motion planning algorithms"
+        },
+        {
+          "id": "control-basics",
+          "heading": "Control basics - PID and impedance"
+        },
+        {
+          "id": "pick-place",
+          "heading": "Pick-and-place skeleton"
+        },
+        {
+          "id": "grasping",
+          "heading": "Grasping - antipodal, force closure, learned"
+        },
+        {
+          "id": "force-control",
+          "heading": "Force / impedance control"
+        },
+        {
+          "id": "trajectory-toppra",
+          "heading": "Time-optimal trajectory parameterization (TOPP-RA)"
+        },
+        {
+          "id": "ros2-control",
+          "heading": "ros2_control - the controller framework"
+        },
+        {
+          "id": "bimanual",
+          "heading": "Bimanual & dual-arm manipulation"
+        }
+      ],
+      "kind": "applied"
+    },
+    {
+      "slug": "navigation",
+      "title": "Navigation",
+      "shortName": "Navigation",
+      "icon": "fa-compass",
+      "color": "from-emerald-700 to-emerald-500",
+      "accent": "#34d399",
+      "description": "Build maps, find yourself on them, and drive from A to B without hitting anything.",
+      "hero": {
+        "tagline": "Where am I? Where am I going? What's the next safe move?",
+        "intro": "Navigation is the loop a mobile robot runs forever: localize itself, plan a path to a goal, and drive without hitting anything. In ROS 2 that loop is Nav2 - a planner stack that takes a map, a goal, and a steady stream of sensor data, and emits velocity commands. This branch walks the loop end to end: how a differential-drive base actually works, how Bayes filters make sense of noisy sensors, how SLAM builds a map while you drive, how costmaps tell the planner where not to go, and how behavior trees turn it all into a mission. Newcomers should start here right after Setup."
+      },
+      "sectionTitles": [
+        {
+          "id": "the-loop",
+          "heading": "The nav loop"
+        },
+        {
+          "id": "robot-kinematics",
+          "heading": "Mobile robot kinematics"
+        },
+        {
+          "id": "localization",
+          "heading": "Localization - knowing where you are"
+        },
+        {
+          "id": "bayes-filter-intuition",
+          "heading": "Bayes filter - predict, then update"
+        },
+        {
+          "id": "slam",
+          "heading": "Make a map with slam_toolbox"
+        },
+        {
+          "id": "costmaps",
+          "heading": "Costmaps - turning the map into 'don't go there'"
+        },
+        {
+          "id": "nav2-bringup",
+          "heading": "Bring up Nav2 with a simulated robot"
+        },
+        {
+          "id": "planners-and-controllers",
+          "heading": "Planners and controllers in Nav2"
+        },
+        {
+          "id": "astar-playground",
+          "heading": "Try it: A* pathfinding"
+        },
+        {
+          "id": "send-a-goal",
+          "heading": "Send a goal from code"
+        },
+        {
+          "id": "behavior-trees",
+          "heading": "Behavior trees - customize the Nav2 mission"
+        },
+        {
+          "id": "outdoor-nav",
+          "heading": "Outdoor & off-road navigation"
+        },
+        {
+          "id": "social-nav",
+          "heading": "Social navigation - sharing space with humans"
+        }
+      ],
+      "kind": "applied"
+    },
+    {
+      "slug": "control-systems",
+      "kind": "technical",
+      "title": "Control Systems",
+      "shortName": "Control",
+      "icon": "fa-sliders",
+      "color": "from-rose-700 to-rose-500",
+      "accent": "#f43f5e",
+      "description": "Feedback loops + controllers: PID, state-space, MPC, motion planning, trajectory generation, ros2_control.",
+      "hero": {
+        "tagline": "The nervous system - turning plans into actual motion",
+        "intro": "A planner says 'go to (x, y) heading north'. A controller is what makes that actually happen, fighting friction, gravity, motor delays, and noisy sensors 1000 times a second. Get controllers right and the robot looks elegant; get them wrong and it shakes, overshoots, or crashes. This branch starts at the most useful three-letter algorithm in the world (PID), then moves up to state-space methods, model predictive control, force / impedance control for contact, real-time scheduling, and the ros2_control framework that wraps it all up. If you only learn one branch, learn this one."
+      },
+      "sectionTitles": [
+        {
+          "id": "feedback-fundamentals",
+          "heading": "Feedback loops - the core idea"
+        },
+        {
+          "id": "pid-control",
+          "heading": "PID - the universal starting point"
+        },
+        {
+          "id": "state-space",
+          "heading": "State-space + LQR - when PID isn't enough"
+        },
+        {
+          "id": "mpc",
+          "heading": "Model Predictive Control (MPC)"
+        },
+        {
+          "id": "force-impedance",
+          "heading": "Force, impedance, admittance control"
+        },
+        {
+          "id": "motion-planning",
+          "heading": "Motion planning algorithms"
+        },
+        {
+          "id": "trajectory-generation",
+          "heading": "Trajectory generation + time parameterization"
+        },
+        {
+          "id": "ros2-control",
+          "heading": "ros2_control - the controller framework"
+        },
+        {
+          "id": "real-time-control",
+          "heading": "Real-time control - when timing actually matters"
+        }
+      ]
+    },
+    {
+      "slug": "ai-ml",
+      "title": "AI & ML for Robotics",
+      "shortName": "AI / ML",
+      "icon": "fa-brain",
+      "color": "from-rose-700 to-rose-500",
+      "accent": "#fb7185",
+      "description": "RL, imitation learning, VLMs, VLAs, LLM planners - the modern learning stack for robots.",
+      "hero": {
+        "tagline": "Robots that learn - the modern stack from RL to VLAs",
+        "intro": "Everything traditional in robotics is hand-engineered: someone wrote the perception code, someone tuned the controller, someone designed the planner. The modern shift is that robots can learn these layers end to end - from reinforcement learning that figures out how to walk in simulation, to imitation learning that copies a human demo, to vision-language-action models like π0 and GR00T that take 'put the dish in the sink' as input and output joint commands. This branch is a tour of that stack with what each technique does, when to reach for it, and code to start with."
+      },
+      "sectionTitles": [
+        {
+          "id": "when-to-learn",
+          "heading": "When learning beats classical (and when it doesn't)"
+        },
+        {
+          "id": "rl-fundamentals",
+          "heading": "Reinforcement Learning - the core idea"
+        },
+        {
+          "id": "sim-to-real",
+          "heading": "Simulators + sim-to-real"
+        },
+        {
+          "id": "ppo-sac",
+          "heading": "PPO + SAC - the workhorse algorithms"
+        },
+        {
+          "id": "imitation-learning",
+          "heading": "Imitation Learning - learn from demonstrations"
+        },
+        {
+          "id": "vlms",
+          "heading": "Vision-Language Models (VLMs) for robots"
+        },
+        {
+          "id": "vla-models",
+          "heading": "Vision-Language-Action models (VLAs)"
+        },
+        {
+          "id": "llm-planners",
+          "heading": "LLMs as task planners"
+        },
+        {
+          "id": "diffusion-policies",
+          "heading": "Diffusion policies - generative behavior cloning"
+        },
+        {
+          "id": "world-models",
+          "heading": "World models & model-based RL"
+        },
+        {
+          "id": "where-to-start",
+          "heading": "A practical order to learn"
+        },
+        {
+          "id": "datasets-benchmarks",
+          "heading": "Datasets, benchmarks & evaluation"
+        },
+        {
+          "id": "vision-foundation-models",
+          "heading": "Vision foundation models"
+        },
+        {
+          "id": "real-world-rl",
+          "heading": "Real-world RL - beyond sim-to-real"
+        }
+      ],
+      "kind": "technical"
+    },
+    {
+      "slug": "sensors",
+      "title": "Sensing & Perception",
+      "shortName": "Sensors",
+      "icon": "fa-broadcast-tower",
+      "color": "from-cyan-700 to-cyan-500",
+      "accent": "#22d3ee",
+      "description": "The taxonomy of robot senses - cameras, LiDAR, IMU, encoders, force, GPS - and how to pick them.",
+      "hero": {
+        "tagline": "How a robot perceives the world - and how to pick the right sensor",
+        "intro": "A robot is only as smart as what it can sense. Cameras give pixels, LiDAR gives ranges, IMUs give acceleration, encoders give joint angles - each sensor has a job and a failure mode. This branch is the field guide: how each sensor actually works, what its noise looks like, when to pick one over another, how to calibrate it, and how to wire it up to ROS. Pick the right sensor and the rest of your stack gets easier; pick the wrong one and no algorithm will save you."
+      },
+      "sectionTitles": [
+        {
+          "id": "taxonomy",
+          "heading": "Sensor taxonomy"
+        },
+        {
+          "id": "cameras",
+          "heading": "Cameras - RGB, RGB-D, stereo, event"
+        },
+        {
+          "id": "lidar",
+          "heading": "LiDAR - 2D and 3D"
+        },
+        {
+          "id": "imu",
+          "heading": "IMU - accelerometer + gyroscope + (sometimes) magnetometer"
+        },
+        {
+          "id": "encoders",
+          "heading": "Joint encoders"
+        },
+        {
+          "id": "force-touch",
+          "heading": "Force / torque & tactile sensors"
+        },
+        {
+          "id": "gps",
+          "heading": "GPS / GNSS / RTK for outdoor robots"
+        },
+        {
+          "id": "calibration",
+          "heading": "Calibration - intrinsic, extrinsic, hand-eye"
+        },
+        {
+          "id": "time-sync",
+          "heading": "Time synchronization - chrony, PTP, ROS time"
+        },
+        {
+          "id": "bus-protocols",
+          "heading": "Bus protocols - CAN, EtherCAT, RS-485, SPI, I²C"
+        },
+        {
+          "id": "mmwave-radar",
+          "heading": "mmWave radar - the all-weather sensor"
+        }
+      ],
+      "kind": "technical"
+    },
+    {
+      "slug": "compute",
+      "title": "Compute & Hardware",
+      "shortName": "Compute",
+      "icon": "fa-microchip",
+      "color": "from-orange-700 to-orange-500",
+      "accent": "#fb923c",
+      "description": "Onboard computers, GPUs, real-time OS, networking, power - the hardware foundation a robot runs on.",
+      "hero": {
+        "tagline": "What runs the code - GPUs, real-time Linux, and the hardware foundation",
+        "intro": "Choosing your robot's compute is choosing your ceiling for everything else - perception throughput, control loop rate, ML model size, battery life. This branch covers the major options (NVIDIA Jetson, x86 NUCs, Raspberry Pi, Coral), when each makes sense, and the boring-but-critical concerns: real-time scheduling so a 1 kHz controller doesn't jitter, network latency, power and thermal budgets, ROS 2 QoS profiles, and observability for production deployments. The 'where do I run my code' chapter most courses skip."
+      },
+      "sectionTitles": [
+        {
+          "id": "the-stack",
+          "heading": "The compute stack"
+        },
+        {
+          "id": "embedded-compute",
+          "heading": "Embedded compute - Jetson, Pi, Coral"
+        },
+        {
+          "id": "x86-compute",
+          "heading": "x86 mini-PCs and NUCs"
+        },
+        {
+          "id": "gpus",
+          "heading": "GPUs - when you need them, what to buy"
+        },
+        {
+          "id": "rtos",
+          "heading": "Real-time control + microcontrollers"
+        },
+        {
+          "id": "networking",
+          "heading": "Networking, DDS, and latency"
+        },
+        {
+          "id": "power-thermal",
+          "heading": "Power and thermal budgets"
+        },
+        {
+          "id": "logging-observability",
+          "heading": "Logging, telemetry & observability"
+        },
+        {
+          "id": "qos-deep",
+          "heading": "QoS - getting the right delivery guarantees"
+        },
+        {
+          "id": "composition-lifecycle",
+          "heading": "Composition + lifecycle for production stacks"
+        }
+      ],
+      "kind": "applied"
+    },
+    {
+      "slug": "amr",
+      "title": "AMR - Mobile Robots",
+      "shortName": "AMR",
+      "icon": "fa-truck-fast",
+      "color": "from-indigo-700 to-indigo-500",
+      "accent": "#818cf8",
+      "description": "Autonomous mobile robots: drive systems, fleet protocols (VDA 5050), charging, safety, WMS integration.",
+      "hero": {
+        "tagline": "Autonomous mobile robots - the warehouse and hospital workhorse",
+        "intro": "An AMR (Autonomous Mobile Robot) is a navigation stack on wheels - it senses obstacles, plans around them, talks to a fleet manager, charges itself, and integrates with the warehouse software that tells it what to move where. AMRs are the most-deployed mobile robot in the world today, in fulfillment centers, hospitals, factories, and last-mile delivery. This branch covers the full stack: drive systems, indoor localization, fleet protocols (VDA 5050), charging and docking, safety certification (ANSI R15.08), and how it all plugs into a WMS. If your job involves a robot that has to live in a real building, read this."
+      },
+      "sectionTitles": [
+        {
+          "id": "amr-fundamentals",
+          "heading": "AMR vs AGV vs autonomous vehicle"
+        },
+        {
+          "id": "drive-systems",
+          "heading": "Drive systems - diff drive, mecanum, ackermann, swerve"
+        },
+        {
+          "id": "amr-localization",
+          "heading": "Indoor localization - beyond AMCL"
+        },
+        {
+          "id": "fleet-architecture",
+          "heading": "Fleet architecture - Open-RMF and friends"
+        },
+        {
+          "id": "vda-5050",
+          "heading": "VDA 5050 - vendor-neutral fleet protocol"
+        },
+        {
+          "id": "charging-docking",
+          "heading": "Charging & docking"
+        },
+        {
+          "id": "amr-safety",
+          "heading": "Safety certification - ANSI R15.08 & ISO 13482"
+        },
+        {
+          "id": "wms-integration",
+          "heading": "WMS / MES / ERP integration"
+        },
+        {
+          "id": "amr-traffic",
+          "heading": "Traffic management & conflict resolution"
+        },
+        {
+          "id": "legged-amrs",
+          "heading": "Legged AMRs - gaits and quadrupeds"
+        },
+        {
+          "id": "build-an-amr",
+          "heading": "Building an AMR - TurtleBot 4 to custom"
+        }
+      ],
+      "kind": "applied"
+    },
+    {
+      "slug": "multi-robot",
+      "title": "Multi-Robot Systems",
+      "shortName": "Swarm",
+      "icon": "fa-network-wired",
+      "color": "from-pink-700 to-pink-500",
+      "accent": "#ec4899",
+      "description": "Coordinating fleets: architectures, MAPF, multi-SLAM, task allocation, swarm + Open-RMF.",
+      "hero": {
+        "tagline": "Many robots, one outcome - architectures, MAPF, and swarms",
+        "intro": "Multi-robot systems are not just one robot times N. You inherit new problems: who decides who does what, how robots avoid each other, how they share a map, how they survive a comms blackout, and how the system degrades when one robot fails. This branch covers the canonical patterns: centralized vs decentralized architectures, multi-agent path finding (MAPF), multi-robot SLAM, market-based task allocation, formation control, and the swarm-style algorithms that scale to hundreds of agents. If your fleet is bigger than two, you need this."
+      },
+      "sectionTitles": [
+        {
+          "id": "why-multi-robot",
+          "heading": "Why multi-robot? When the cost is worth it"
+        },
+        {
+          "id": "mr-architectures",
+          "heading": "Architectures - centralized, decentralized, hierarchical"
+        },
+        {
+          "id": "mr-communication",
+          "heading": "Communication - DDS, MQTT, namespacing, dropouts"
+        },
+        {
+          "id": "mapf",
+          "heading": "Multi-agent path finding (MAPF)"
+        },
+        {
+          "id": "task-allocation",
+          "heading": "Task allocation - auctions, market-based, optimal"
+        },
+        {
+          "id": "multi-slam",
+          "heading": "Multi-robot SLAM - building the map together"
+        },
+        {
+          "id": "formation-control",
+          "heading": "Formation control - moving as a team"
+        },
+        {
+          "id": "swarm",
+          "heading": "Swarm robotics - local rules, emergent behavior"
+        },
+        {
+          "id": "mr-consensus",
+          "heading": "Consensus & distributed coordination"
+        },
+        {
+          "id": "mr-deployments",
+          "heading": "Real deployments - what production looks like"
+        }
+      ],
+      "kind": "applied"
+    },
+    {
+      "slug": "hri",
+      "title": "Human-Robot Interaction",
+      "shortName": "HRI",
+      "icon": "fa-handshake",
+      "color": "from-fuchsia-700 to-fuchsia-500",
+      "accent": "#d946ef",
+      "description": "Where the robot meets the human: shared autonomy, NL/gesture, social robots, ISO 10218 / TS 15066, teleop, haptics, trust.",
+      "hero": {
+        "tagline": "Where robots and humans share space, intent, and trust",
+        "intro": "A robot in a lab is an engineering problem. A robot near a person is a different problem - now you have to think about safety, predictability, communication, and trust. Human-Robot Interaction (HRI) is the design discipline behind shared autonomy, natural-language commanding (now LLM-powered), gesture recognition, the safety standards that let cobots work next to humans without fences, teleoperation rigs (which double as training-data factories), haptic feedback, and the social robots people see most. If you're building something that touches a human - directly or indirectly - read this."
+      },
+      "sectionTitles": [
+        {
+          "id": "what-hri-is",
+          "heading": "What HRI is - and isn't"
+        },
+        {
+          "id": "shared-autonomy",
+          "heading": "Shared autonomy - splitting decisions human ↔ robot"
+        },
+        {
+          "id": "language-interfaces",
+          "heading": "Natural-language interfaces - LLMs as the HRI layer"
+        },
+        {
+          "id": "gesture-pose",
+          "heading": "Gesture, gaze, and body-pose interfaces"
+        },
+        {
+          "id": "cobot-safety",
+          "heading": "Safety standards - ISO 10218 + ISO/TS 15066 (collaborative robots)"
+        },
+        {
+          "id": "teleoperation",
+          "heading": "Teleoperation - VR rigs, leader-follower, latency budgets"
+        },
+        {
+          "id": "haptics-tactile",
+          "heading": "Haptic feedback - closing the loop"
+        },
+        {
+          "id": "social-robots",
+          "heading": "Social robots - what works, what doesn't"
+        },
+        {
+          "id": "trust-calibration",
+          "heading": "Trust calibration - measuring + designing for trust"
+        },
+        {
+          "id": "hri-research-methods",
+          "heading": "HRI research methods - how to actually study a human ↔ robot loop"
+        }
+      ],
+      "kind": "technical"
+    },
+    {
+      "slug": "autonomous-vehicles",
+      "title": "Autonomous Vehicles",
+      "shortName": "AV",
+      "icon": "fa-car-side",
+      "color": "from-teal-700 to-teal-500",
+      "accent": "#2dd4bf",
+      "description": "Self-driving cars: SAE levels, DBW, sensor fusion (BEV), behavior + trajectory, V2X, Autoware/Apollo, ISO 26262.",
+      "hero": {
+        "tagline": "Self-driving cars, trucks, and shuttles - the robotics stack at 30 m/s",
+        "intro": "Autonomous vehicles are mobile robots running at highway speeds in unstructured shared environments, with safety budgets in milliseconds. The stack overlaps heavily with AMRs but adds road-specific perception (lane lines, traffic signals, pedestrians), HD maps, V2X, drive-by-wire interfaces, and the ISO 26262 / SOTIF safety regimes. This branch covers the canonical AV stack from sensor fusion through behavior and motion planning, plus the open platforms (Autoware, Apollo, OpenPilot) and what production deployments actually look like in 2026. If you've ever wondered how a Waymo car decides to merge, this is for you."
+      },
+      "sectionTitles": [
+        {
+          "id": "autonomy-levels",
+          "heading": "SAE J3016 levels of autonomy"
+        },
+        {
+          "id": "drive-by-wire",
+          "heading": "Drive-by-wire (DBW) - actuating the car"
+        },
+        {
+          "id": "av-perception",
+          "heading": "AV perception - sensor fusion at speed"
+        },
+        {
+          "id": "lane-keep-acc",
+          "heading": "L2 ADAS - lane keep + adaptive cruise"
+        },
+        {
+          "id": "behavior-planning",
+          "heading": "Behavior planning - what to do, not how to do it"
+        },
+        {
+          "id": "trajectory-gen-av",
+          "heading": "Trajectory generation for cars"
+        },
+        {
+          "id": "v2x",
+          "heading": "V2X - talking to infrastructure and other vehicles"
+        },
+        {
+          "id": "av-simulation",
+          "heading": "Simulation - where AVs actually log most of their miles"
+        },
+        {
+          "id": "av-stacks",
+          "heading": "Open-source AV stacks - Autoware, Apollo, OpenPilot"
+        },
+        {
+          "id": "av-functional-safety",
+          "heading": "Functional safety - ISO 26262 + SOTIF (ISO 21448)"
+        }
+      ],
+      "kind": "applied"
+    },
+    {
+      "slug": "drones",
+      "title": "Drones / Aerial",
+      "shortName": "Drones",
+      "icon": "fa-helicopter",
+      "color": "from-lime-700 to-lime-500",
+      "accent": "#a3e635",
+      "description": "Aerial robots: multirotor dynamics, attitude/position control, PX4/Ardupilot, MAVLink, autonomous flight, swarms.",
+      "hero": {
+        "tagline": "Robots that fly - multirotor, fixed-wing, and the autopilots that fly them",
+        "intro": "Aerial robots add a third spatial dimension and a constant fight against gravity. The hardest parts of grounded robotics - balance, stability, fail-safes - are foreground concerns from the first power-up. This branch covers the modern drone stack: how a multirotor stays in the air (motor mixing, cascade attitude + position control), the production autopilots (PX4, Ardupilot, Betaflight), the MAVLink protocol every drone speaks, autonomous mission planning, swarms, and real-world applications from agriculture to inspection to defense."
+      },
+      "sectionTitles": [
+        {
+          "id": "drone-types",
+          "heading": "Drone types - multirotor, fixed-wing, VTOL"
+        },
+        {
+          "id": "multirotor-dynamics",
+          "heading": "Multirotor dynamics + motor mixing"
+        },
+        {
+          "id": "attitude-control",
+          "heading": "Attitude control - the inner loop"
+        },
+        {
+          "id": "position-control",
+          "heading": "Position control - the outer loop"
+        },
+        {
+          "id": "autopilots",
+          "heading": "Autopilots - PX4, Ardupilot, Betaflight, Crazyflie"
+        },
+        {
+          "id": "mavlink",
+          "heading": "MAVLink - the drone protocol"
+        },
+        {
+          "id": "autonomous-flight",
+          "heading": "Autonomous flight - missions, geofence, fail-safes"
+        },
+        {
+          "id": "aerial-perception",
+          "heading": "Aerial perception - what cameras + sensors to fly"
+        },
+        {
+          "id": "swarm-drones",
+          "heading": "Drone swarms - light shows + autonomous swarms"
+        },
+        {
+          "id": "drone-applications",
+          "heading": "Real applications - agriculture, inspection, delivery"
+        }
+      ],
+      "kind": "applied"
+    },
+    {
+      "slug": "surgical",
+      "kind": "applied",
+      "title": "Surgical Robotics",
+      "shortName": "Surgical",
+      "icon": "fa-stethoscope",
+      "color": "from-pink-700 to-pink-500",
+      "accent": "#f472b6",
+      "description": "Robots inside the human body - da Vinci, Mako, RCM, IEC 62304, ISO 13485, FDA 510(k).",
+      "hero": {
+        "tagline": "Robots inside the human body - precision, latency, and zero margin for error",
+        "intro": "Surgical robotics is the most safety-critical branch of the field. Master-slave teleop systems (da Vinci), cooperative robots (Stryker Mako), regulatory paths (FDA 510(k), IEC 62304, ISO 13485), RCM constraints, motion-scaling, tremor filtering."
+      },
+      "sectionTitles": [
+        { "id": "what-it-is",  "heading": "Surgical robotics - the design space" },
+        { "id": "rcm",         "heading": "Remote Center of Motion (RCM)" },
+        { "id": "regulatory",  "heading": "The regulatory path - 510(k), 62304, 13485" },
+        { "id": "teleop",      "heading": "Teleoperation - latency, scaling, tremor" }
+      ]
+    },
+    {
+      "slug": "agricultural",
+      "kind": "applied",
+      "title": "Agricultural Robotics",
+      "shortName": "Ag",
+      "icon": "fa-tractor",
+      "color": "from-lime-700 to-lime-500",
+      "accent": "#84cc16",
+      "description": "Robots for fields, orchards, and dairies. RTK-GNSS, ISOBUS, See & Spray, Naïo, Bear Flag, dairy parlors.",
+      "hero": {
+        "tagline": "Robots for fields, orchards, and dairies - autonomy outdoors at scale",
+        "intro": "The largest and least-glamorous robotics market. RTK-GNSS at cm precision, ISOBUS / ISO 11783, perception in dust + sun glare, autonomous tractors, in-row weeders, targeted sprayers, harvest robots, dairy parlors."
+      },
+      "sectionTitles": [
+        { "id": "what-it-is", "heading": "Where ag-robots actually run today" },
+        { "id": "rtk-gnss",   "heading": "RTK-GNSS - the localization workhorse" },
+        { "id": "isobus",     "heading": "ISOBUS / ISO 11783 - tractor-implement protocol" },
+        { "id": "perception", "heading": "Outdoor perception - dust, sun, plants" }
+      ]
+    },
+    {
+      "slug": "industrial",
+      "kind": "applied",
+      "title": "Industrial Robotics",
+      "shortName": "Industrial",
+      "icon": "fa-industry",
+      "color": "from-orange-700 to-orange-500",
+      "accent": "#fb923c",
+      "description": "The factory floor - KUKA, Fanuc, ABB, Yaskawa, KRL / RAPID / KAREL, ISO 10218, PROFINET / EtherCAT.",
+      "hero": {
+        "tagline": "The factory floor - cell programming, fieldbus, safety, and 24/7 production",
+        "intro": "Where most working roboticists actually spend their careers. Vendor languages (KRL, RAPID, KAREL), ROS-Industrial, ISO 10218 cell safety, PROFINET / EtherCAT / EtherNet/IP fieldbuses, OPC UA over TSN."
+      },
+      "sectionTitles": [
+        { "id": "what-it-is", "heading": "Industrial robotics in 2026 - the actual jobs" },
+        { "id": "languages",  "heading": "Vendor languages and ROS-Industrial" },
+        { "id": "safety",     "heading": "Cell safety - ISO 10218, light curtains" },
+        { "id": "fieldbus",   "heading": "Fieldbus - PROFINET, EtherCAT, EtherNet/IP" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,275 @@
+{
+  "slug": "sensors",
+  "hero": {
+    "tagline": "How a robot perceives the world - and how to pick the right sensor",
+    "intro": "A robot is only as smart as what it can sense. Cameras give pixels, LiDAR gives ranges, IMUs give acceleration, encoders give joint angles - each sensor has a job and a failure mode. This branch is the field guide: how each sensor actually works, what its noise looks like, when to pick one over another, how to calibrate it, and how to wire it up to ROS. Pick the right sensor and the rest of your stack gets easier; pick the wrong one and no algorithm will save you."
+  },
+  "sections": [
+    {
+      "id": "taxonomy",
+      "heading": "Sensor taxonomy",
+      "body": "Robot sensors split along two axes. Proprioceptive sensors measure the robot itself (encoders, IMU, joint torques); exteroceptive sensors measure the world (cameras, LiDAR, GPS). Within those, sensors range from passive (cameras, mics - sample ambient signals) to active (LiDAR, sonar, structured-light depth - emit and measure return).",
+      "bullets": [
+        "Proprioceptive: encoders, IMU, current sensors, FT sensors",
+        "Exteroceptive: cameras, LiDAR, sonar, GPS, microphones",
+        "Active vs passive: active sensors burn power but work in the dark and outdoors better",
+        "Sample rate matters - control loops need fast updates, perception can be slower"
+      ]
+    },
+    {
+      "id": "cameras",
+      "heading": "Cameras - RGB, RGB-D, stereo, event",
+      "body": "Cameras are the cheapest, densest sensor. Your choice depends on what you need to measure.",
+      "bullets": [
+        "Mono RGB - 2D images. Fine for classification, marker tracking, learned policies",
+        "Stereo (ZED, OAK-D) - depth from disparity, works outdoors, no IR contamination",
+        "RGB-D structured light (RealSense D4xx, Azure Kinect) - accurate up close indoors",
+        "Time-of-flight (Kinect v2, some L5xx) - cleaner depth at range, breaks in sunlight",
+        "Event / neuromorphic (Prophesee, iniVation) - microsecond latency, no motion blur, radically different SDK",
+        "Thermal (FLIR Lepton, Boson) - sees humans, leaks, fires; not for geometry"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "OpenCV - read frames from any V4L2 camera",
+          "code": "import cv2\ncap = cv2.VideoCapture(0)\ncap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)\ncap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)\ncap.set(cv2.CAP_PROP_FPS, 30)\nwhile cap.isOpened():\n    ok, frame = cap.read()\n    if not ok: break\n    cv2.imshow('cam', frame)\n    if cv2.waitKey(1) == 27: break"
+        }
+      ],
+      "links": [
+        {
+          "label": "Intel RealSense",
+          "url": "https://www.intelrealsense.com/"
+        },
+        {
+          "label": "Stereolabs ZED",
+          "url": "https://www.stereolabs.com/"
+        },
+        {
+          "label": "Luxonis OAK",
+          "url": "https://www.luxonis.com/"
+        }
+      ]
+    },
+    {
+      "id": "lidar",
+      "heading": "LiDAR - 2D and 3D",
+      "body": "LiDARs emit laser pulses and measure return time. 2D LiDARs (one rotating beam, sweeping a horizontal plane) are cheap and standard for indoor mobile robots. 3D LiDARs (multiple beams or solid-state arrays) capture full 3D point clouds for outdoor / autonomous-vehicle use.",
+      "bullets": [
+        "2D mechanical (RPLiDAR, Hokuyo URG, SICK TIM) - $100–2000, ~10 Hz, 1 plane",
+        "3D mechanical spinning (Velodyne VLP-16/32, Ouster OS1/2, Robosense) - $5K-50K, 360°",
+        "3D solid-state (Livox Mid-360, Innovusion, Hesai) - no moving parts, FOV-limited",
+        "Range vs accuracy vs cost - there is no free lunch; pick for your indoor / outdoor / dynamic use case",
+        "Eye safety: Class 1 is safe; Class 3R / 3B exists in some industrial units, do not stare at"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Velodyne VLP-16 - 16-beam spinning LiDAR",
+          "code": "sudo apt install -y ros-jazzy-velodyne\nros2 launch velodyne velodyne-all-nodes-VLP16-launch.py"
+        },
+        {
+          "language": "bash",
+          "title": "Ouster OS1 - modern 32/64-beam, native ROS 2 driver",
+          "code": "cd ~/{{ws}}/src\ngit clone -b ros2 https://github.com/ouster-lidar/ouster-ros.git\ncd ~/{{ws}}\nrosdep install --from-paths src --ignore-src -r -y\ncolcon build --packages-select ouster_ros\nsource install/setup.bash\nros2 launch ouster_ros driver.launch.py \\\n    sensor_hostname:=os-122xxxx.local"
+        },
+        {
+          "language": "bash",
+          "title": "RPLiDAR A2 - cheap 2D for indoor robots",
+          "code": "sudo apt install -y ros-jazzy-rplidar-ros\nros2 launch rplidar_ros rplidar_a2_launch.py \\\n    serial_port:=/dev/ttyUSB0"
+        }
+      ],
+      "links": [
+        {
+          "label": "Velodyne ROS 2 driver",
+          "url": "https://github.com/ros-drivers/velodyne"
+        },
+        {
+          "label": "Ouster ROS 2 driver",
+          "url": "https://github.com/ouster-lidar/ouster-ros"
+        }
+      ]
+    },
+    {
+      "id": "imu",
+      "heading": "IMU - accelerometer + gyroscope + (sometimes) magnetometer",
+      "body": "An IMU measures linear acceleration and angular velocity. Cheap MEMS IMUs (BNO055, ICM-20948, MPU-6050) are everywhere; tactical-grade fiber-optic IMUs cost thousands. Raw integration drifts fast - IMUs are almost always fused with another sensor (camera for VIO, GPS, encoders, LiDAR) before they're useful.",
+      "bullets": [
+        "Accelerometer - measures specific force, including gravity. Read tilt at rest, motion in flight",
+        "Gyroscope - angular velocity. Drifts in orientation over seconds-minutes",
+        "Magnetometer - yaw reference, sensitive to nearby motors and metal",
+        "9-DoF IMU = accel + gyro + mag. 6-DoF = no mag",
+        "Allan variance characterizes noise + bias instability - read the datasheet's plot"
+      ],
+      "codeBlocks": [
+        {
+          "language": "yaml",
+          "title": "imu_filter_madgwick - fuse 9-DoF into orientation",
+          "code": "imu_filter:\n  ros__parameters:\n    use_mag: true\n    publish_tf: false\n    world_frame: enu\n    fixed_frame: imu_link\n    gain: 0.1"
+        }
+      ],
+      "links": [
+        {
+          "label": "imu_filter_madgwick",
+          "url": "https://github.com/CCNYRoboticsLab/imu_tools"
+        }
+      ]
+    },
+    {
+      "id": "encoders",
+      "heading": "Joint encoders",
+      "body": "Encoders measure rotational position of a motor or joint. Three families: incremental optical (counts pulses, needs homing, the cheapest), absolute (knows position at power-on, more expensive), and magnetic (Hall + magnet, robust but lower resolution). Resolution is reported as counts per revolution (CPR) - typical robot servos are 4096 to 17-bit (131072) per turn.",
+      "bullets": [
+        "Incremental - count A/B quadrature pulses, plus an index pulse for homing",
+        "Absolute - read position directly via SSI, BiSS, EnDat, or analog",
+        "Magnetic (AS5048, AS5600) - cheap, contactless, works on motor shafts",
+        "Resolver - analog, rugged, common in industrial servos",
+        "Quadrature decoding done in hardware (STM32 timer, Pi Pico PIO) saves CPU"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Pi Pico - quadrature encoder via PIO (MicroPython)",
+          "code": "from machine import Pin\nfrom rp2 import PIO, StateMachine, asm_pio\n\n@asm_pio()\ndef quadrature():\n    wrap_target()\n    in_(pins, 2)            # read 2 pins (A, B)\n    push(noblock)\n    wrap()\n\nsm = StateMachine(0, quadrature, freq=2_000_000,\n                  in_base=Pin(2))   # A on GP2, B on GP3\nsm.active(1)\n\ncount = 0\nlast = 0\nwhile True:\n    if sm.rx_fifo():\n        v = sm.get() & 0x3\n        # transition table for quadrature\n        delta = ((v - last) & 0x3)\n        if delta == 1: count += 1\n        elif delta == 3: count -= 1\n        last = v"
+        },
+        {
+          "language": "cpp",
+          "title": "STM32 - TIM2 in encoder mode (HAL)",
+          "code": "// Configure TIM2 as encoder with A on PA0, B on PA1\nTIM_Encoder_InitTypeDef sConfig = {0};\nsConfig.EncoderMode = TIM_ENCODERMODE_TI12;  // both edges\nsConfig.IC1Polarity = TIM_ICPOLARITY_RISING;\nsConfig.IC2Polarity = TIM_ICPOLARITY_RISING;\nHAL_TIM_Encoder_Init(&htim2, &sConfig);\nHAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);\n\nint32_t count = (int32_t)__HAL_TIM_GET_COUNTER(&htim2);"
+        }
+      ]
+    },
+    {
+      "id": "force-touch",
+      "heading": "Force / torque & tactile sensors",
+      "body": "Once a robot makes contact, you need to measure the contact. Wrist FT sensors (ATI Mini-40, Robotiq FT300) give 6-axis force/torque at the end-effector; great for impedance control and assembly. Tactile sensors (GelSight, DIGIT, Xela) give per-pixel pressure or full vision-based imaging of the contact patch - used in dexterous manipulation research.",
+      "bullets": [
+        "6-axis FT sensor - strain gauges in a Maltese cross. ~$2K-15K. Bias drifts with temperature",
+        "GelSight / DIGIT - camera looks at a deformable gel. Visual, slow (~30 Hz), incredibly rich",
+        "Capacitive arrays (Xela, RoboSkin) - coverage over robot 'skin', moderate resolution",
+        "Current sensing on the motors - cheapest 'force' proxy if you have the dynamics model"
+      ]
+    },
+    {
+      "id": "gps",
+      "heading": "GPS / GNSS / RTK for outdoor robots",
+      "body": "Standard GPS is ~3 m accurate - fine for cars, useless for centimeter-precise navigation. RTK GPS uses a fixed base station broadcasting corrections to a rover; the rover then resolves carrier-phase ambiguities and gets ~2 cm accuracy. Standard-issue for outdoor agricultural / aerial / autonomous-driving robots.",
+      "bullets": [
+        "u-blox F9P, Septentrio Mosaic, Trimble - common RTK receivers",
+        "NTRIP - internet protocol for streaming RTK corrections from public networks",
+        "Dual-antenna GPS gives heading without a magnetometer (great for cars, useless under trees)",
+        "GPS-denied = inside, under bridges, urban canyons - fall back to LiDAR / VIO"
+      ]
+    },
+    {
+      "id": "calibration",
+      "heading": "Calibration - intrinsic, extrinsic, hand-eye",
+      "body": "Every sensor has parameters that need calibration before its data is usable. Intrinsic calibration is camera-internal (focal length, distortion). Extrinsic calibration is sensor-to-sensor or sensor-to-robot (the rigid transform). Hand-eye calibration is the special case of camera-to-robot-mount, solved by moving the robot through known poses while viewing a target.",
+      "bullets": [
+        "Camera intrinsics - checkerboard or charuco target, ROS camera_calibration tool",
+        "Camera-to-LiDAR - Autoware calibration toolkit, or hand-pick correspondences",
+        "Hand-eye (camera on wrist) - easy_handeye package, solves AX=XB",
+        "IMU + camera (VIO) - Kalibr is the research standard"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Hand-eye calibration with easy_handeye",
+          "code": "cd ~/{{ws}}/src\ngit clone https://github.com/marcoesposito1988/easy_handeye2.git\ncd ~/{{ws}}\ncolcon build --packages-select easy_handeye2\nros2 launch easy_handeye2 calibrate.launch.py \\\n    eye_in_hand:=true tracking_base_frame:=camera_link \\\n    tracking_marker_frame:=marker robot_base_frame:=base_link \\\n    robot_effector_frame:=tool0"
+        }
+      ],
+      "links": [
+        {
+          "label": "Kalibr (camera + IMU)",
+          "url": "https://github.com/ethz-asl/kalibr"
+        }
+      ]
+    },
+    {
+      "id": "time-sync",
+      "heading": "Time synchronization - chrony, PTP, ROS time",
+      "body": "When two sensors disagree on what time it is, fusion breaks. A camera image timestamped 50 ms earlier than the IMU sample taken at the same instant produces wrong VIO. The fix is rigorous time sync - software (NTP / chrony) for ~10 ms, hardware-assisted (PTP) for sub-microsecond, hardware trigger lines for genuine simultaneity.",
+      "bullets": [
+        "NTP / chrony - software time sync over network, ~1-50 ms accuracy, the default",
+        "PTP (IEEE 1588) - hardware-timestamped, sub-microsecond on a switched network with PTP-aware NICs",
+        "Hardware trigger - one wire fires the camera + IMU at the same instant; gold standard for VIO/SLAM",
+        "ROS 2 sim time - when use_sim_time:=true every node uses /clock; mismatched values cause weird bugs",
+        "TF tolerates timestamp mismatch up to its buffer length (default 10 s) - but throws warnings"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "chrony - robot synced to a master computer",
+          "code": "# On the master\nsudo apt install -y chrony\nsudo sed -i 's/^#allow.*/allow 192.168.1.0\\/24/' /etc/chrony/chrony.conf\nsudo systemctl restart chrony\n\n# On each robot (set the master IP)\nsudo apt install -y chrony\necho 'server 192.168.1.10 iburst' | sudo tee -a /etc/chrony/chrony.conf\nsudo systemctl restart chrony\nchronyc tracking   # offset should be sub-millisecond"
+        },
+        {
+          "language": "bash",
+          "title": "PTP with linuxptp",
+          "code": "sudo apt install -y linuxptp\n# Server (grandmaster clock)\nsudo ptp4l -i eth0 -m -S\n# Client\nsudo ptp4l -i eth0 -m -s\n# Sync the system clock to the PHC\nsudo phc2sys -s eth0 -w -m"
+        }
+      ],
+      "links": [
+        {
+          "label": "chrony docs",
+          "url": "https://chrony-project.org/documentation.html"
+        },
+        {
+          "label": "linuxptp",
+          "url": "https://linuxptp.sourceforge.net/"
+        }
+      ]
+    },
+    {
+      "id": "bus-protocols",
+      "heading": "Bus protocols - CAN, EtherCAT, RS-485, SPI, I²C",
+      "body": "Inside a robot, sensors and motor drivers don't speak ROS - they speak fieldbus protocols. CAN bus (250 kbps – 1 Mbps) dominates automotive and most industrial AMRs. EtherCAT (100 Mbps) runs synchronized motion control across many drives. RS-485 / Modbus shows up in cheaper sensors and PLCs. SPI / I²C are MCU-level for IMUs, ADCs, OLED displays.",
+      "bullets": [
+        "CAN - 2-wire differential, robust to noise, broadcast, prioritized arbitration",
+        "CAN-FD - flexible data-rate; up to 8 Mbps payload; modern robots use this",
+        "EtherCAT - distributed clocks, sub-µs sync across many slaves; required for high-end servos",
+        "RS-485 - multi-drop; cheap; used by most lidar drivers and industrial sensors",
+        "SPI - fast (10+ Mbps), short distance (PCB), 4-wire; perfect for IMUs",
+        "I²C - slow (100 kHz – 1 MHz), 2-wire, addressed; used for sensors, EEPROMs, OLEDs"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Read a CAN-bus message via python-can",
+          "code": "import can\n\nbus = can.Bus(channel='can0', interface='socketcan')\nfor msg in bus:\n    if msg.arbitration_id == 0x123:\n        # Decode 8-byte payload\n        rpm = int.from_bytes(msg.data[0:2], 'little', signed=True)\n        cur = int.from_bytes(msg.data[2:4], 'little', signed=True) * 0.01\n        print(f'rpm={rpm} cur={cur:.2f} A')"
+        }
+      ],
+      "links": [
+        {
+          "label": "EtherCAT primer",
+          "url": "https://www.ethercat.org/en/technology.html"
+        },
+        {
+          "label": "python-can",
+          "url": "https://python-can.readthedocs.io/"
+        }
+      ]
+    },
+    {
+      "id": "mmwave-radar",
+      "heading": "mmWave radar - the all-weather sensor",
+      "body": "mmWave radar (60-77 GHz) sees through rain, dust, and darkness - where camera and lidar struggle. Modern automotive radars (Continental ARS, Bosch LRR4, Texas Instruments AWRxxxx evaluation modules) deliver 4D point clouds (range, angle, elevation, doppler velocity) at 20+ Hz. Used in self-driving cars, outdoor AMRs, drones, and increasingly in factories for human safety zones.",
+      "bullets": [
+        "Frequencies: 24 GHz (legacy, banned in some regions), 77 GHz (automotive), 60 GHz (industrial)",
+        "Doppler velocity per point - instantly tells you what's moving",
+        "Sparse vs dense - TI AWR1843 gives ~256 points/frame, Arbe Phoenix gives 30K",
+        "Pros: weather-immune, long range, velocity built-in",
+        "Cons: poor lateral resolution, multipath ghosts, expensive (~$1K-5K for usable units)",
+        "Sensor fusion: radar tells you THERE IS something at velocity v, camera tells you WHAT"
+      ],
+      "links": [
+        {
+          "label": "TI mmWave SDK",
+          "url": "https://www.ti.com/tool/MMWAVE-SDK"
+        },
+        {
+          "label": "Arbe Robotics",
+          "url": "https://arberobotics.com/"
+        }
+      ]
+    }
+  ]
+}

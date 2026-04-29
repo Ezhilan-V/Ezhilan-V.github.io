@@ -1,0 +1,58 @@
+<div class="kviewer">
+  <div class="kviewer__stage">
+    <div class="kviewer__canvas" #canvasHost></div>
+
+    <div class="kviewer__hud">
+      <div class="kviewer__legend">
+        <span><i class="dot" style="background:#a78bfa"></i> q₁ base</span>
+        <span><i class="dot" style="background:#38bdf8"></i> q₂ shoulder</span>
+        <span><i class="dot" style="background:#34d399"></i> q₃ elbow</span>
+        <span><i class="dot" style="background:#fbbf24"></i> q₄ wrist1</span>
+        <span><i class="dot" style="background:#fb7185"></i> q₅ wrist2</span>
+        <span><i class="dot" style="background:#ec4899"></i> q₆ wrist3</span>
+      </div>
+      <div class="kviewer__ee">
+        <span class="kviewer__ee-label">TCP position (m)</span>
+        <span class="kviewer__ee-val">[{{ endEffector.x }}, {{ endEffector.y }}, {{ endEffector.z }}]</span>
+      </div>
+      <div class="kviewer__ee">
+        <span class="kviewer__ee-label">RPY (°)</span>
+        <span class="kviewer__ee-val">[{{ endEffector.roll }}, {{ endEffector.pitch }}, {{ endEffector.yaw }}]</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="kviewer__panel">
+    <div class="kviewer__panel-head">
+      <span class="kviewer__panel-title">Joint angles (q₁…q₆)</span>
+      <div class="kviewer__panel-actions">
+        <button type="button" class="kviewer__reset" (click)="homePose()">
+          <i class="fas fa-house"></i> home
+        </button>
+        <button type="button" class="kviewer__reset" (click)="reset()">
+          <i class="fas fa-undo"></i> ready
+        </button>
+      </div>
+    </div>
+
+    <div *ngFor="let j of joints" class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">{{ j.label }}</span>
+        <span class="slider-row__val">{{ j.symbol }} = {{ j.value }}°</span>
+      </div>
+      <input type="range"
+             [min]="j.min" [max]="j.max" step="1"
+             [value]="j.value"
+             (input)="onSlider(j, $any($event.target).value)"
+             [attr.aria-label]="j.label" />
+      <div class="slider-row__bounds">
+        <span>{{ j.min }}°</span><span>{{ j.max }}°</span>
+      </div>
+    </div>
+
+    <p class="kviewer__hint">
+      <i class="fas fa-hand-pointer"></i>
+      Drag to orbit · scroll / pinch to zoom · drag sliders to articulate joints
+    </p>
+  </div>
+</div>

@@ -1,0 +1,264 @@
+{
+  "slug": "autonomous-vehicles",
+  "hero": {
+    "tagline": "Self-driving cars, trucks, and shuttles - the robotics stack at 30 m/s",
+    "intro": "Autonomous vehicles are mobile robots running at highway speeds in unstructured shared environments, with safety budgets in milliseconds. The stack overlaps heavily with AMRs but adds road-specific perception (lane lines, traffic signals, pedestrians), HD maps, V2X, drive-by-wire interfaces, and the ISO 26262 / SOTIF safety regimes. This branch covers the canonical AV stack from sensor fusion through behavior and motion planning, plus the open platforms (Autoware, Apollo, OpenPilot) and what production deployments actually look like in 2026. If you've ever wondered how a Waymo car decides to merge, this is for you."
+  },
+  "sections": [
+    {
+      "id": "autonomy-levels",
+      "heading": "SAE J3016 levels of autonomy",
+      "body": "The SAE J3016 standard defines six levels of driving automation. Levels 0-2 keep the human in the loop continuously; levels 3+ remove the human's responsibility for the dynamic driving task. The jump from L2 to L3 is enormous in regulatory and engineering terms - at L3 the manufacturer is liable when the system is engaged. As of 2026, L3 is shipping in limited markets (Mercedes Drive Pilot, Honda SENSING Elite); L4 robotaxis are operating in geofenced areas (Waymo, Cruise, Zoox, WeRide); L5 is still research.",
+      "bullets": [
+        "L0 - no automation. Driver does everything",
+        "L1 - single feature: adaptive cruise OR lane keep, never both",
+        "L2 - both lateral + longitudinal automation; driver supervises (Tesla AP, GM Super Cruise)",
+        "L3 - system handles everything in defined ODD; driver hands-off but takeover-ready (Mercedes)",
+        "L4 - full autonomy in geofenced ODD; no driver needed (Waymo One, Cruise)",
+        "L5 - full autonomy everywhere; driverless cars going anywhere a human would. Doesn't exist yet"
+      ],
+      "links": [
+        {
+          "label": "SAE J3016 explainer",
+          "url": "https://www.sae.org/blog/sae-j3016-update"
+        }
+      ]
+    },
+    {
+      "id": "drive-by-wire",
+      "heading": "Drive-by-wire (DBW) - actuating the car",
+      "body": "Modern cars expose throttle, brake, steering, and gear over CAN - collectively 'drive-by-wire' (DBW). To control a stock car you bridge to its CAN bus via a DBW kit (Dataspeed, AStuff PACMod, Comma.ai red-panda, OEM developer programs). For the AV stack, this becomes a low-level controller publishing target speed / steering at 50-100 Hz; the DBW translates to per-actuator CAN messages. Safety-rated implementations include independent watchdog timers, redundant sensing, and graceful-degradation modes.",
+      "bullets": [
+        "Lateral: steer-by-wire - angular position or torque, ~50 Hz update rate typical",
+        "Longitudinal: throttle (0-1) + brake (0-1) OR target acceleration in m/s²",
+        "Watchdog: command must be refreshed every ~100 ms or the car defaults to safe state",
+        "Liability: aftermarket DBW voids most factory warranties; OEM kits are the production path",
+        "ROS bridges: dataspeed_dbw_msgs, autoware_dbw, NVIDIA DriveWorks vehicle_node"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Send a target speed + steering through a Dataspeed DBW",
+          "code": "import rclpy\nfrom rclpy.node import Node\nfrom dbw_polaris_msgs.msg import ThrottleCmd, BrakeCmd, SteeringCmd\n\nclass DbwBridge(Node):\n    def __init__(self):\n        super().__init__('dbw_bridge')\n        self.thr = self.create_publisher(ThrottleCmd, '/vehicle/throttle_cmd', 1)\n        self.brk = self.create_publisher(BrakeCmd,    '/vehicle/brake_cmd',    1)\n        self.str = self.create_publisher(SteeringCmd, '/vehicle/steering_cmd', 1)\n        self.create_timer(0.02, self.tick)            # 50 Hz\n        self.target_speed = 5.0                         # m/s\n        self.target_steer = 0.0                         # rad\n\n    def tick(self):\n        t = ThrottleCmd();    t.pedal_cmd_type = ThrottleCmd.CMD_PERCENT;  t.pedal_cmd = 0.20; t.enable = True\n        self.thr.publish(t)\n        b = BrakeCmd();       b.pedal_cmd_type = BrakeCmd.CMD_PERCENT;     b.pedal_cmd = 0.0;  b.enable = True\n        self.brk.publish(b)\n        s = SteeringCmd();    s.steering_wheel_angle_cmd = self.target_steer * 16.0;          s.enable = True\n        self.str.publish(s)\n\nrclpy.init(); rclpy.spin(DbwBridge())"
+        }
+      ],
+      "links": [
+        {
+          "label": "Dataspeed DBW",
+          "url": "https://bitbucket.org/DataspeedInc/"
+        },
+        {
+          "label": "Autonomoustuff PACMod",
+          "url": "https://autonomoustuff.com/products/pacmod"
+        }
+      ]
+    },
+    {
+      "id": "av-perception",
+      "heading": "AV perception - sensor fusion at speed",
+      "body": "An AV uses every sensor it can carry: 360° lidar (Waymo's Honeycomb, Velodyne, Ouster), 4–8 cameras (front/side/rear), front + corner radars (Continental ARS, Bosch LRR), short-range ultrasonics for parking, GNSS+IMU for pose. Modern fusion is BEV-centric (bird's-eye view) - every sensor is projected into a top-down grid where downstream networks predict obstacles, free space, traffic-sign locations. BEVFusion, FUTR3D, and Tesla's Occupancy Networks are the public references.",
+      "bullets": [
+        "Cameras catch traffic lights / signs that lidar can't see",
+        "Lidar gives metric depth and works at night; degrades in heavy rain",
+        "Radar punches through fog / spray and gives instant Doppler velocity",
+        "BEV fusion: project each sensor into a top-down 200×200 m grid and run one transformer over it",
+        "Occupancy networks (Tesla) - predict per-voxel occupancy + flow without explicit object boxes",
+        "HD maps prime localization + behavior priors (lane geometry, speed limits, signal positions)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "BEVFusion (open-source 3D detection / segmentation)",
+          "code": "cd ~/{{ws}}/src\ngit clone https://github.com/mit-han-lab/bevfusion.git\ncd bevfusion\npip install -r requirements.txt\n# Train on nuScenes / Waymo Open Dataset\npython tools/train.py configs/nuscenes/det/transfusion/secfpn/camera+lidar/swint_v0p075/convfuser.yaml"
+        }
+      ],
+      "links": [
+        {
+          "label": "BEVFusion (MIT)",
+          "url": "https://github.com/mit-han-lab/bevfusion"
+        },
+        {
+          "label": "nuScenes dataset",
+          "url": "https://www.nuscenes.org/"
+        },
+        {
+          "label": "Waymo Open Dataset",
+          "url": "https://waymo.com/open/"
+        }
+      ]
+    },
+    {
+      "id": "lane-keep-acc",
+      "heading": "L2 ADAS - lane keep + adaptive cruise",
+      "body": "Most production AV experience comes from L2 ADAS: Lane Keep Assist (LKA), Adaptive Cruise Control (ACC), and the integrated combo (Tesla Autopilot, GM Super Cruise, Comma OpenPilot). The recipe: a forward camera + radar feeds a perception stack that outputs lane lines + lead-vehicle distance/speed. A planner emits a target lateral offset + target speed; controllers (PID for speed, pure-pursuit or MPC for steering) drive the car. The hard problems are mostly perception (poor lane markings, sun glare, construction zones) and graceful handover when the system can't cope.",
+      "bullets": [
+        "Lane perception: classical (Hough + RANSAC) or learned (LaneNet, CLRNet, BEVLaneDet)",
+        "Lead vehicle: radar gives instant range + velocity; camera classifies + supplements",
+        "Steering control: pure pursuit at low speed, MPC (kinematic bicycle) at highway speeds",
+        "Speed control: simple PID on (set_speed − measured_speed) - but with deadband + jerk limits",
+        "Driver monitoring: capacitive wheel sensor, IR camera (eye gaze) for L2 hands-on enforcement",
+        "Operational design domain (ODD): highway only, daylight, no construction - be explicit"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Pure-pursuit lateral controller",
+          "code": "import math\n\ndef pure_pursuit(path, current_pose, lookahead):\n    # path: list of (x, y) points, current_pose: (x, y, heading)\n    cx, cy, ch = current_pose\n    # find lookahead point\n    target = next(((x, y) for x, y in path\n                   if math.hypot(x - cx, y - cy) > lookahead), path[-1])\n    dx = target[0] - cx\n    dy = target[1] - cy\n    alpha = math.atan2(dy, dx) - ch\n    # bicycle model curvature\n    return math.atan2(2 * 1.5 * math.sin(alpha), lookahead)   # 1.5 = wheelbase"
+        }
+      ],
+      "links": [
+        {
+          "label": "Comma OpenPilot",
+          "url": "https://github.com/commaai/openpilot"
+        }
+      ]
+    },
+    {
+      "id": "behavior-planning",
+      "heading": "Behavior planning - what to do, not how to do it",
+      "body": "Below the perception stack and above the trajectory planner sits the behavior layer. It answers: 'Should I stop at this yellow light? Should I yield to that merging car? Should I overtake the slow truck?'. Implementations span from finite state machines (Stanford's DARPA Urban Challenge entry) to behavior trees (modern Apollo) to learned planners (Waymo's MotionLM, Wayve's GAIA). The unifying insight: the behavior layer must reason about other agents' intent, not just their current state.",
+      "bullets": [
+        "FSMs - explicit states (cruise, follow, change_lane, yield); cleanest to debug, hardest to extend",
+        "Behavior trees - composable; Apollo and Autoware ship default trees you can edit",
+        "Learned planners - transformer over scene + history; outputs a trajectory or action distribution",
+        "Intent prediction - classify other agents' plans (going straight, turning, parked)",
+        "Game-theoretic - model interactions as a Markov game (other drivers respond to your motion)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Minimal FSM-style behavior planner",
+          "code": "from enum import Enum\n\nclass Behavior(Enum):\n    CRUISE = 1; FOLLOW = 2; CHANGE_LEFT = 3; YIELD = 4; STOP = 5\n\ndef decide(scene):\n    if scene.traffic_light == 'red':           return Behavior.STOP\n    if scene.lead_vehicle is None:             return Behavior.CRUISE\n    gap = scene.lead_vehicle.distance\n    if gap < 8.0:                              return Behavior.STOP\n    if gap < 25.0 and scene.left_lane_clear:   return Behavior.CHANGE_LEFT\n    if scene.merging_agent_yielding_to_us():   return Behavior.CRUISE\n    return Behavior.FOLLOW"
+        }
+      ]
+    },
+    {
+      "id": "trajectory-gen-av",
+      "widget": "frenet",
+      "heading": "Trajectory generation for cars",
+      "body": "Once behavior decides 'stay in this lane and follow the leader at 25 m/s', the trajectory layer produces a smooth (x(t), y(t)) curve respecting kinematic limits, comfort (jerk caps), and obstacle clearance. Frenet-frame planners (Werling) sample lateral + longitudinal polynomials in road coordinates; lattice planners (Apollo) discretize the action space. MPC-based planners (CasADi, ACADO) optimize a horizon online - slower but explicitly handles constraints.",
+      "bullets": [
+        "Frenet frame - decompose into along-road (s) and lateral (d) coordinates; sample polynomials",
+        "Lattice - discrete primitives stitched into a graph; Apollo's default",
+        "Sampling MPPI - sample many candidate trajectories, weight by cost, take weighted mean",
+        "Solver MPC - cast as nonlinear program, solve at 10-20 Hz with CasADi / ACADOS",
+        "Comfort: jerk < 1 m/s³, lateral accel < 2 m/s² for passenger comfort"
+      ],
+      "links": [
+        {
+          "label": "Frenet planner (Werling)",
+          "url": "https://www.researchgate.net/publication/224156269_Optimal_trajectory_generation_for_dynamic_street_scenarios_in_a_Frenet_Frame"
+        },
+        {
+          "label": "ACADOS MPC",
+          "url": "https://docs.acados.org/"
+        }
+      ]
+    },
+    {
+      "id": "v2x",
+      "heading": "V2X - talking to infrastructure and other vehicles",
+      "body": "V2X (Vehicle-to-Everything) lets cars talk to other cars (V2V), infrastructure (V2I), pedestrians (V2P), and the network (V2N). It augments perception - a car can be told 'the light is about to turn red' or 'a pedestrian is in your blind spot' before its own sensors see it. Two main physical layers: DSRC (802.11p, US legacy) and C-V2X (cellular, 4G/5G). C-V2X has won - China and Europe mandate it for new vehicles, the US migrated in 2024.",
+      "bullets": [
+        "C-V2X PC5 - direct cellular sidelink, no base station required, ~300 m range",
+        "C-V2X Uu - through the cellular network; latency varies, range unbounded",
+        "Standard messages: SAE J2735 (BSM, SPaT, MAP, RTCM), ETSI ITS-G5 (CAM, DENM, SPATEM)",
+        "Latency budget: < 100 ms end-to-end for safety-critical messages",
+        "Edge cases: spoofed messages, lost messages, partial penetration of vehicles equipped"
+      ],
+      "links": [
+        {
+          "label": "5GAA (5G Automotive Association)",
+          "url": "https://5gaa.org/"
+        }
+      ]
+    },
+    {
+      "id": "av-simulation",
+      "heading": "Simulation - where AVs actually log most of their miles",
+      "body": "Real-world AV testing is expensive and rare. Most validation happens in simulation: CARLA (open-source, Unreal-based), AWSIM (Tier IV, Unity-based, optimized for Autoware), dSPACE (closed, automotive-grade), Applied Intuition (closed, scenario-driven). Tesla's shadow mode runs the autonomy stack on real customer vehicles in passive mode, comparing predicted actions to driver actions. Waymo Carcraft (internal) replays petabytes of disengagement scenarios with permutations.",
+      "bullets": [
+        "CARLA - open-source, Unreal Engine, great for academic + early-stage research",
+        "AWSIM - Unity, made for Autoware integration, photoreal, free",
+        "Applied Intuition / dSPACE - production-grade, scenario libraries, expensive",
+        "Shadow mode - passive policy evaluation on real driving without intervening",
+        "Replay testing - record disengagement, perturb (other-agent positions, weather), re-run",
+        "Sim-to-real gap is real but smaller than for manipulation - driving distributions are narrower"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Run CARLA + a Python client",
+          "code": "# Server\n./CarlaUE4.sh -RenderOffScreen -nosound\n\n# Client\npip install carla\npython -c \"import carla; client = carla.Client('localhost', 2000); world = client.get_world(); print(world.get_map().name)\""
+        }
+      ],
+      "links": [
+        {
+          "label": "CARLA",
+          "url": "https://carla.org/"
+        },
+        {
+          "label": "AWSIM",
+          "url": "https://github.com/tier4/AWSIM"
+        }
+      ]
+    },
+    {
+      "id": "av-stacks",
+      "heading": "Open-source AV stacks - Autoware, Apollo, OpenPilot",
+      "body": "Three production-quality open AV stacks dominate. Autoware (Tier IV, Autoware Foundation) is the most ROS 2-native - drop-in for any ROS 2 vehicle, and from 2026 ships an end-to-end diffusion-based perception + planning architecture being piloted at 50 sites in Japan. Apollo (Baidu) is Cyber RT-based with deep-learning perception and planning - Apollo Go robotaxis run 1,000+ fully driverless vehicles across 15 cities (including Dubai and Abu Dhabi) with 11M+ public rides as of mid-2025. Comma OpenPilot is L2 ADAS, runs on a Comma 3X box bolted to the windshield of 300+ supported cars with 100M+ real-world miles driven. Pick Autoware for research / one-off, Apollo for L4 fleet ops, OpenPilot for L2 retrofit.",
+      "bullets": [
+        "Autoware Universe - modular, ROS 2 Jazzy native, full stack from perception to control; 2026 end-to-end diffusion architecture for L4+ in Japan",
+        "Apollo - Cyber RT middleware, Apollo Go robotaxis at 1,000+ vehicles in 15 cities, 11M+ rides logged",
+        "OpenPilot - L2 only; runs on a $1k aftermarket box; 300+ car models supported, 100M+ miles",
+        "Picking: Autoware for research / PoC, Apollo for production at scale, OpenPilot for cheap L2",
+        "All three publish datasets and pre-trained models - bootstrap your own stack from any of them",
+        "Wayve GAIA-2 (8.4B world model) is the model-of-models for synthetic AV scenario data"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Bring up Autoware in Docker",
+          "code": "docker run --rm -it --net=host --privileged \\\n    -v $HOME/{{ws}}:/workspace \\\n    ghcr.io/autowarefoundation/autoware:latest-jazzy-runtime \\\n    bash -c \"source /opt/autoware/setup.bash && \\\n             ros2 launch autoware_launch planning_simulator.launch.xml\""
+        }
+      ],
+      "links": [
+        {
+          "label": "Autoware",
+          "url": "https://github.com/autowarefoundation/autoware"
+        },
+        {
+          "label": "Apollo",
+          "url": "https://github.com/ApolloAuto/apollo"
+        },
+        {
+          "label": "OpenPilot",
+          "url": "https://github.com/commaai/openpilot"
+        }
+      ]
+    },
+    {
+      "id": "av-functional-safety",
+      "heading": "Functional safety - ISO 26262 + SOTIF (ISO 21448)",
+      "body": "An AV is regulated machinery. ISO 26262 (functional safety) requires a hazard analysis, ASIL ratings (A through D, D being the most stringent), redundant safety architectures, and rigorous V&V. SOTIF (Safety Of The Intended Functionality, ISO 21448) covers what 26262 doesn't: misuse cases, foreseeable but unintended behaviors, edge cases the system was never designed for. AV teams ship a 'safety case' - a documented argument that the system is safe, reviewed by regulators (CA DMV, NHTSA, KBA, TRL).",
+      "bullets": [
+        "ASIL A-D - risk classification per hazard; D requires the highest rigor",
+        "Redundant compute - two compute boards running the same stack, voting on output (NVIDIA DRIVE, Mobileye EyeQ)",
+        "Failure-mode + criticality analysis (FMECA) - what fails, what's the impact",
+        "SOTIF tackles 'unknown unsafe' - perception failures in new conditions",
+        "MRC (Minimal Risk Condition) - graceful pull-over when the system can't cope",
+        "Safety case - documented argument, verified by independent review, submitted to regulators"
+      ],
+      "links": [
+        {
+          "label": "ISO 26262 overview",
+          "url": "https://www.iso.org/standard/68383.html"
+        },
+        {
+          "label": "SOTIF / ISO 21448",
+          "url": "https://www.iso.org/standard/77490.html"
+        }
+      ]
+    }
+  ]
+}

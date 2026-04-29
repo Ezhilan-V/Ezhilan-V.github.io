@@ -1,0 +1,138 @@
+<div class="contact-form" [class.is-sent]="submitState === 'sent'">
+
+  <header class="contact-form__head">
+    <span class="contact-form__eyebrow">
+      <i class="fas fa-paper-plane"></i> Get in touch
+    </span>
+    <h3>Send a message</h3>
+    <p>Fill this in and your email client opens with everything pre-filled.
+       Or use the direct links if that's easier.</p>
+  </header>
+
+  <form *ngIf="submitState !== 'sent'" (submit)="send(); $event.preventDefault()" class="contact-form__form" novalidate>
+
+    <!-- Honeypot: invisible to humans, irresistible to bots -->
+    <label class="contact-form__honey" aria-hidden="true">
+      Website <input type="text" name="website" tabindex="-1" autocomplete="off" [(ngModel)]="honey" />
+    </label>
+
+    <label class="contact-form__field">
+      <span>Your name <em>*</em></span>
+      <input
+        type="text"
+        name="name"
+        autocomplete="name"
+        maxlength="80"
+        [(ngModel)]="name"
+        (blur)="touchedName = true"
+        placeholder="Jane Roboticist"
+        [class.is-error]="touchedName && name.trim().length < 2" />
+      <small class="contact-form__error" *ngIf="touchedName && name.trim().length < 2">Please enter at least 2 characters.</small>
+    </label>
+
+    <label class="contact-form__field">
+      <span>Your email <em>(optional)</em></span>
+      <input
+        type="email"
+        name="email"
+        autocomplete="email"
+        maxlength="120"
+        [(ngModel)]="fromEmail"
+        placeholder="you@company.com" />
+    </label>
+
+    <label class="contact-form__field">
+      <span>Subject</span>
+      <input
+        type="text"
+        name="subject"
+        maxlength="120"
+        [(ngModel)]="subject" />
+    </label>
+
+    <label class="contact-form__field">
+      <span>Message <em>*</em></span>
+      <textarea
+        name="message"
+        rows="5"
+        maxlength="2000"
+        [(ngModel)]="message"
+        (blur)="touchedMessage = true"
+        placeholder="Tell me about the role, the project, or just say hi."
+        [class.is-error]="touchedMessage && message.trim().length < 8"></textarea>
+      <small class="contact-form__error" *ngIf="touchedMessage && message.trim().length < 8">Please write a few sentences.</small>
+    </label>
+
+    <div class="contact-form__actions">
+      <button type="submit" class="contact-form__submit" [disabled]="!isValid() || submitState !== 'idle'">
+        <span *ngIf="submitState === 'idle'">
+          <i class="fas fa-paper-plane"></i> Send message
+        </span>
+        <span *ngIf="submitState === 'saving'">
+          <i class="fas fa-circle-notch fa-spin"></i> Saving…
+        </span>
+        <span *ngIf="submitState === 'composing'">
+          <i class="fas fa-circle-notch fa-spin"></i> Opening email…
+        </span>
+      </button>
+      <p class="contact-form__hint">
+        <i class="fas fa-shield-halved"></i>
+        Your message is saved straight to my inbox and the form opens your email client so you can send the same note. Either gets it to me.
+      </p>
+    </div>
+  </form>
+
+  <div *ngIf="submitState === 'sent'" class="contact-form__sent">
+    <div class="contact-form__sent-icon">
+      <i class="fas fa-circle-check"></i>
+    </div>
+    <h4 *ngIf="savedToInbox">Got it — message saved</h4>
+    <h4 *ngIf="!savedToInbox">Email composed</h4>
+    <p *ngIf="savedToInbox">
+      Your message is in my inbox. Your email client should also be open
+      with the same message pre-filled in case you'd rather hit <strong>Send</strong> from there.
+    </p>
+    <p *ngIf="!savedToInbox">
+      Your email client should be open with the message pre-filled.
+      Hit <strong>Send</strong> there to deliver it. If nothing opened, use one of the direct links below.
+    </p>
+    <button type="button" class="contact-form__reset" (click)="reset()">
+      <i class="fas fa-rotate-left"></i> Write another
+    </button>
+  </div>
+
+  <div class="contact-form__direct">
+    <span class="contact-form__direct-label">Or reach me directly</span>
+    <div class="contact-form__direct-grid">
+      <a [href]="'mailto:' + email" class="contact-form__direct-btn contact-form__direct-btn--email">
+        <i class="fas fa-envelope"></i>
+        <div>
+          <strong>Email</strong>
+          <span>{{ email }}</span>
+        </div>
+      </a>
+      <button type="button" class="contact-form__direct-btn" (click)="copyEmail($event)">
+        <i class="fas" [class.fa-copy]="!copiedEmail" [class.fa-circle-check]="copiedEmail"></i>
+        <div>
+          <strong>{{ copiedEmail ? 'Copied!' : 'Copy email' }}</strong>
+          <span>{{ copiedEmail ? 'Address is on your clipboard' : 'Send a message later' }}</span>
+        </div>
+      </button>
+      <a *ngIf="linkedin" [href]="linkedin" target="_blank" rel="noopener" class="contact-form__direct-btn contact-form__direct-btn--linkedin">
+        <i class="fab fa-linkedin"></i>
+        <div>
+          <strong>LinkedIn</strong>
+          <span>Best for recruiters</span>
+        </div>
+      </a>
+      <a *ngIf="github" [href]="github" target="_blank" rel="noopener" class="contact-form__direct-btn contact-form__direct-btn--github">
+        <i class="fab fa-github"></i>
+        <div>
+          <strong>GitHub</strong>
+          <span>Open issues, PRs, follow</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>

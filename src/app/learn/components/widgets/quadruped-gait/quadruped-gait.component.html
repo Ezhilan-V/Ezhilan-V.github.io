@@ -1,0 +1,61 @@
+<div class="gait">
+  <div class="gait__stage">
+    <div class="gait__canvas" #canvasHost></div>
+
+    <div class="gait__hud">
+      <div class="gait__legend">
+        <span *ngFor="let n of legNames; let i = index">
+          <i class="dot" [style.background]="legColors[i]"></i>
+          {{ n }}
+          <em [class.is-stance]="legStance[i]">{{ legStance[i] ? 'stance' : 'swing' }}</em>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="gait__panel">
+    <div class="gait__panel-head">
+      <span class="gait__panel-title">{{ currentDef.label }} · duty {{ currentDef.duty | number:'1.2-2' }}</span>
+      <button type="button" class="gait__btn" (click)="togglePause()">
+        <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+        {{ paused ? 'play' : 'pause' }}
+      </button>
+    </div>
+
+    <p class="gait__desc">{{ currentDef.description }}</p>
+
+    <div class="gait__gaits">
+      <button *ngFor="let g of gaitNames"
+              type="button"
+              class="gait__gait-btn"
+              [class.is-active]="current === g"
+              (click)="setGait(g)">
+        {{ g }}
+      </button>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Step frequency</span>
+        <span class="slider-row__val">{{ freq | number:'1.2-2' }} Hz</span>
+      </div>
+      <input type="range" min="0.4" max="3.5" step="0.05" [value]="freq"
+             (input)="onSlider('freq', $any($event.target).value)" aria-label="Step frequency" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Stride length</span>
+        <span class="slider-row__val">{{ stride | number:'1.2-2' }} m</span>
+      </div>
+      <input type="range" min="0.10" max="0.60" step="0.01" [value]="stride"
+             (input)="onSlider('stride', $any($event.target).value)" aria-label="Stride length" />
+    </div>
+
+    <p class="gait__note">
+      Each leg has a <b>phase</b> offset and a <b>duty factor</b>. While phase &lt; duty, the foot
+      is in stance (visible by the leg color in the legend above). Switch between gaits to see how
+      Spot, a horse, a cheetah, and a squirrel use very different patterns to move forward.
+    </p>
+  </div>
+</div>

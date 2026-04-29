@@ -1,0 +1,20 @@
+<div class="code-block group">
+  <div class="code-block__header">
+    <div class="code-block__meta">
+      <span class="code-block__lang">{{ language }}</span>
+      <span *ngIf="title" class="code-block__title">{{ title }}</span>
+    </div>
+    <button type="button"
+            class="code-block__copy"
+            [class.is-copied]="copied"
+            (click)="copy()"
+            [attr.aria-label]="copied ? 'Copied' : 'Copy code'">
+      <i class="fas" [class.fa-copy]="!copied" [class.fa-check]="copied"></i>
+      <span>{{ copied ? 'Copied' : 'Copy' }}</span>
+    </button>
+  </div>
+
+  <pre class="code-block__pre"><code>{{ rendered }}</code></pre>
+
+  <p *ngIf="note" class="code-block__note">{{ note }}</p>
+</div>

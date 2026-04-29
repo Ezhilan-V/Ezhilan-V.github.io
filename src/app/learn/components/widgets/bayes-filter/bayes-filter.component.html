@@ -1,0 +1,46 @@
+<learn-widget-shell
+  title="Discrete Bayes filter"
+  subtitle="Hallway with 3 doors - predict + sense to recover pose"
+  accent="#34d399"
+  [showPause]="false"
+  [ratio]="0.55"
+  [minHeight]="260"
+  [maxHeight]="380"
+  (canvasReady)="onCanvasReady($event)"
+  (canvasResize)="onCanvasResize($event)"
+  (resetClick)="resetBelief()">
+
+  <learn-presets
+    label="Step the filter"
+    [presets]="presets"
+    [active]="lastUpdate === 'reset' ? 'lost' : lastUpdate === 'predict' ? 'predict' : 'sense'"
+    (select)="applyAction($event)">
+  </learn-presets>
+
+  <learn-slider
+    label="Motion noise (σ)"
+    unit=""
+    [min]="0.05" [max]="0.6" [step]="0.01"
+    [value]="motionNoise"
+    (valueChange)="setMotionNoise($event)">
+  </learn-slider>
+
+  <learn-slider
+    label="Sensor miss rate"
+    unit=""
+    [min]="0.02" [max]="0.45" [step]="0.01"
+    [value]="senseNoise"
+    (valueChange)="setSenseNoise($event)">
+  </learn-slider>
+
+  <learn-callout legend kind="try" label="Try this">
+    Hit <strong>predict</strong> a few times - see belief blur and shift right.
+    Then hit <strong>sense door</strong> - peaks lock onto door cells. After 2–3 senses,
+    one door wins and entropy drops. That's localization in one widget.
+  </learn-callout>
+
+  <learn-callout legend kind="eq" label="Update rule">
+    <code>bel⁻(x) = Σ p(x | u, x') · bel(x')</code>
+    <code>bel(x)  = η · p(z | x) · bel⁻(x)</code>
+  </learn-callout>
+</learn-widget-shell>

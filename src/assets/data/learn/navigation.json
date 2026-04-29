@@ -1,0 +1,300 @@
+{
+  "slug": "navigation",
+  "hero": {
+    "tagline": "Where am I? Where am I going? What's the next safe move?",
+    "intro": "Navigation is the loop a mobile robot runs forever: localize itself, plan a path to a goal, and drive without hitting anything. In ROS 2 that loop is Nav2 - a planner stack that takes a map, a goal, and a steady stream of sensor data, and emits velocity commands. This branch walks the loop end to end: how a differential-drive base actually works, how Bayes filters make sense of noisy sensors, how SLAM builds a map while you drive, how costmaps tell the planner where not to go, and how behavior trees turn it all into a mission. Newcomers should start here right after Setup."
+  },
+  "sections": [
+    {
+      "id": "the-loop",
+      "heading": "The nav loop",
+      "body": "Mobile navigation is three concurrent loops feeding each other: a fast local controller (10–20 Hz) that follows a path while dodging dynamic obstacles, a slower global planner (1–5 Hz) that recomputes the route, and a localization filter (continuous) that keeps the robot's pose consistent with sensor data.",
+      "bullets": [
+        "Map - a 2D occupancy grid (or 3D voxel map) of the static world",
+        "Localization - AMCL (particle filter) or SLAM running in localization mode",
+        "Global planner - A* / Theta* / Hybrid-A* over the costmap",
+        "Local controller - DWB, MPPI, or pure-pursuit",
+        "Behavior tree - recovery behaviors when the robot is stuck"
+      ]
+    },
+    {
+      "id": "robot-kinematics",
+      "widget": "diffdrive",
+      "heading": "Mobile robot kinematics",
+      "body": "Different robots move differently. The kinematic model - how (vx, vy, vθ) relates to wheel velocities - drives every planner and controller you'll write.",
+      "bullets": [
+        "Differential drive (TurtleBot, Roomba) - two driven wheels, can rotate in place, no sideways motion",
+        "Ackermann (cars) - front wheels steer, can't rotate in place, has a turning radius",
+        "Omnidirectional (Mecanum, omni wheels) - translates in any direction independently of orientation",
+        "Holonomic vs non-holonomic - does the robot have constraints on its instantaneous velocity?"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Differential drive - body twist → wheel speeds",
+          "code": "def diff_drive_ik(vx, wz, wheel_base, wheel_radius):\n    # Ignores vy (diff drive can't sidestep)\n    v_left  = (vx - wz * wheel_base / 2) / wheel_radius\n    v_right = (vx + wz * wheel_base / 2) / wheel_radius\n    return v_left, v_right"
+        }
+      ]
+    },
+    {
+      "id": "localization",
+      "widget": "particle",
+      "heading": "Localization - knowing where you are",
+      "body": "Given a map, localization estimates the robot's pose on it. AMCL (Adaptive Monte Carlo Localization) is the ROS standard - it maintains a cloud of pose hypotheses (particles) and weights them by how well their predicted laser scans match the observed scan. After enough motion + observations, the cloud converges to the true pose.",
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Bring up AMCL with an existing map",
+          "code": "ros2 launch nav2_bringup localization_launch.py \\\n    map:=$HOME/{{ws}}/maps/my_map.yaml \\\n    use_sim_time:=false"
+        },
+        {
+          "language": "bash",
+          "title": "Set initial pose if AMCL hasn't converged",
+          "code": "ros2 topic pub --once /initialpose geometry_msgs/PoseWithCovarianceStamped \\\n    \"{header: {frame_id: 'map'}, pose: {pose: {position: {x: 0.0, y: 0.0}, \\\n     orientation: {w: 1.0}}}}\""
+        }
+      ],
+      "links": [
+        {
+          "label": "AMCL in Nav2",
+          "url": "https://docs.nav2.org/configuration/packages/configuring-amcl.html"
+        }
+      ]
+    },
+    {
+      "id": "bayes-filter-intuition",
+      "widget": "bayes",
+      "heading": "Bayes filter - predict, then update",
+      "body": "Every Bayesian state estimator (Kalman, AMCL, MCL, factor graphs) is a discretization of the same loop: predict moves the belief through the motion model, then update reweights it by the sensor likelihood and renormalizes. Try the widget - the corridor has three doors, and your belief starts uniform. Each 'predict' blurs and shifts the belief; each 'sense door' multiplies by p(z|x) and renormalizes. Two or three sense steps separated by predicts collapse the belief onto the true door.",
+      "bullets": [
+        "Predict step is convolution: bel⁻(x) = Σ p(x | u, x') · bel(x'). Information always decreases.",
+        "Update step is pointwise multiplication: bel(x) = η · p(z | x) · bel⁻(x). Information increases when the sensor disagrees with motion uncertainty.",
+        "Entropy H(bel) is a clean diagnostic: predicts grow it, sensing shrinks it. Watch the H readout in the widget.",
+        "AMCL = same loop with particles. Kalman = same loop with Gaussians. Same equations, different representation.",
+        "Lost-robot recovery: reset to uniform → after a few sense+predict steps, the cloud collapses on the right door."
+      ],
+      "links": [
+        {
+          "label": "Probabilistic Robotics - Thrun, Burgard, Fox (Ch. 2 + 4)",
+          "url": "https://mitpress.mit.edu/9780262201629/probabilistic-robotics/"
+        },
+        {
+          "label": "Sebastian Thrun - Localization (CS373 lecture)",
+          "url": "https://www.youtube.com/watch?v=KJC8YDygBz4"
+        }
+      ]
+    },
+    {
+      "id": "slam",
+      "widget": "occupancy",
+      "heading": "Make a map with slam_toolbox",
+      "body": "When there's no map yet, run SLAM (Simultaneous Localization and Mapping). For 2D laser SLAM, slam_toolbox is the modern ROS 2 default - fast, lifelong-learnable, supports map serialization. For RGB-D SLAM (color + depth from a RealSense / Azure Kinect / ZED), RTAB-Map is the dominant open-source choice - mature, ROS 2 packages, used by service-robot vendors worldwide. For 3D LiDAR, LIO-SAM and FAST-LIO are the leaders.",
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Run online async SLAM",
+          "code": "source ~/{{ws}}/install/setup.bash\nros2 launch slam_toolbox online_async_launch.py \\\n    use_sim_time:=true"
+        },
+        {
+          "language": "bash",
+          "title": "Save the map when done",
+          "code": "ros2 run nav2_map_server map_saver_cli -f ~/{{ws}}/maps/my_map"
+        },
+        {
+          "language": "bash",
+          "title": "3D LiDAR - FAST-LIO for spinning Velodyne / Ouster",
+          "code": "cd ~/{{ws}}/src\ngit clone https://github.com/hku-mars/FAST_LIO.git\ncd ~/{{ws}}\ncolcon build --packages-select fast_lio"
+        }
+      ],
+      "links": [
+        {
+          "label": "slam_toolbox",
+          "url": "https://github.com/SteveMacenski/slam_toolbox"
+        },
+        {
+          "label": "FAST-LIO",
+          "url": "https://github.com/hku-mars/FAST_LIO"
+        }
+      ]
+    },
+    {
+      "id": "costmaps",
+      "widget": "costmap",
+      "heading": "Costmaps - turning the map into 'don't go there'",
+      "body": "Planners don't navigate the raw map; they navigate a costmap. Each cell has a cost - free space (0), inflated obstacle (graded), lethal (≥253). Nav2 builds two costmaps: a global one (static, slow updates) and a local one (rolling window around the robot, fast updates). Layers are stacked: static (the map), obstacle (live laser), inflation (buffer around obstacles), voxel (3D, for arms or cluttered scenes).",
+      "codeBlocks": [
+        {
+          "language": "yaml",
+          "title": "Layered costmap config snippet",
+          "code": "global_costmap:\n  global_costmap:\n    ros__parameters:\n      use_sim_time: false\n      robot_radius: 0.22\n      resolution: 0.05\n      track_unknown_space: true\n      plugins: [\"static_layer\", \"obstacle_layer\", \"inflation_layer\"]\n\n      static_layer:\n        plugin: \"nav2_costmap_2d::StaticLayer\"\n      obstacle_layer:\n        plugin: \"nav2_costmap_2d::ObstacleLayer\"\n        observation_sources: scan\n        scan: { topic: /scan, max_obstacle_height: 2.0 }\n      inflation_layer:\n        plugin: \"nav2_costmap_2d::InflationLayer\"\n        cost_scaling_factor: 3.0\n        inflation_radius: 0.55"
+        }
+      ],
+      "links": [
+        {
+          "label": "Nav2 costmap config",
+          "url": "https://docs.nav2.org/configuration/packages/configuring-costmaps.html"
+        }
+      ]
+    },
+    {
+      "id": "nav2-bringup",
+      "heading": "Bring up Nav2 with a simulated robot",
+      "body": "The fastest way to see Nav2 in action is the TurtleBot 3 simulation. From an empty workspace:",
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Install + launch",
+          "code": "sudo apt install -y ros-jazzy-navigation2 ros-jazzy-nav2-bringup \\\n    ros-jazzy-turtlebot3-gazebo\n\nexport TURTLEBOT3_MODEL=waffle\nexport GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models\n\nsource ~/{{ws}}/install/setup.bash\nros2 launch nav2_bringup tb3_simulation_launch.py headless:=False"
+        }
+      ],
+      "links": [
+        {
+          "label": "Nav2 docs",
+          "url": "https://docs.nav2.org/"
+        }
+      ]
+    },
+    {
+      "id": "planners-and-controllers",
+      "heading": "Planners and controllers in Nav2",
+      "body": "Nav2 ships with a smorgasbord of planner and controller plugins. The ones you'll actually use:",
+      "bullets": [
+        "NavFn (default) - Dijkstra-style, fast, good for indoor",
+        "Smac (A* / Hybrid A*) - kinematically feasible paths for cars",
+        "DWB (default controller) - dynamic window approach, smooth velocity commands",
+        "MPPI - sampling-based MPC controller, handles dynamic obstacles + complex constraints",
+        "Pure Pursuit - simplest path follower, great for predictable hardware"
+      ],
+      "codeBlocks": [
+        {
+          "language": "yaml",
+          "title": "Switch the local controller to MPPI",
+          "code": "controller_server:\n  ros__parameters:\n    controller_plugins: [\"FollowPath\"]\n    FollowPath:\n      plugin: \"nav2_mppi_controller::MPPIController\"\n      time_steps: 56\n      model_dt: 0.05\n      batch_size: 2000\n      vx_std: 0.2\n      wz_std: 0.4\n      ax_max: 3.0\n      vx_max: 0.5"
+        }
+      ],
+      "links": [
+        {
+          "label": "Nav2 plugins",
+          "url": "https://docs.nav2.org/plugins/index.html"
+        }
+      ],
+      "widget": "pure-pursuit"
+    },
+    {
+      "id": "astar-playground",
+      "widget": "astar",
+      "heading": "Try it: A* pathfinding",
+      "body": "A* expands the open node with the lowest f = g + h, where g is the cost paid so far and h is an admissible heuristic estimating cost-to-go. With a perfect heuristic A* expands only nodes on the optimal path; with a zero heuristic it degenerates to Dijkstra. Drag walls into the grid below and watch the search hug the heuristic gradient toward the goal.",
+      "bullets": [
+        "Open set - frontier of nodes discovered but not yet expanded",
+        "Closed set - nodes already expanded; A* will not revisit them",
+        "Manhattan heuristic for 4-connectivity is admissible (never overestimates) and consistent",
+        "f = g + h is the priority - lowest f wins each iteration",
+        "On large maps, swap the linear-scan open set for a binary heap or pairing heap"
+      ]
+    },
+    {
+      "id": "send-a-goal",
+      "heading": "Send a goal from code",
+      "body": "RViz is fine for testing, but real behaviors send goals from code. Nav2 exposes an action server you call with a goal pose, and a Behavior Tree you can reshape for complex missions.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "send_goal.py - drive to (2.0, 1.5)",
+          "code": "import rclpy\nfrom rclpy.action import ActionClient\nfrom rclpy.node import Node\nfrom geometry_msgs.msg import PoseStamped\nfrom nav2_msgs.action import NavigateToPose\n\nclass GoalSender(Node):\n    def __init__(self):\n        super().__init__('goal_sender')\n        self.cli = ActionClient(self, NavigateToPose, 'navigate_to_pose')\n\n    def send(self, x, y, yaw=0.0):\n        self.cli.wait_for_server()\n        goal = NavigateToPose.Goal()\n        goal.pose.header.frame_id = 'map'\n        goal.pose.header.stamp = self.get_clock().now().to_msg()\n        goal.pose.pose.position.x = x\n        goal.pose.pose.position.y = y\n        goal.pose.pose.orientation.w = 1.0\n        return self.cli.send_goal_async(goal)\n\ndef main():\n    rclpy.init()\n    node = GoalSender()\n    fut = node.send(2.0, 1.5)\n    rclpy.spin_until_future_complete(node, fut)"
+        }
+      ],
+      "links": [
+        {
+          "label": "Nav2 BT customization",
+          "url": "https://docs.nav2.org/behavior_trees/index.html"
+        }
+      ]
+    },
+    {
+      "id": "behavior-trees",
+      "heading": "Behavior trees - customize the Nav2 mission",
+      "body": "Nav2 doesn't hardcode 'plan, follow, recover' - it executes a behavior tree (BT) you can edit. The default tree handles 90% of cases (compute path, follow it, on failure trigger recovery, retry), but you can drop in custom nodes for: 'wait for elevator', 'dock at the charger', 'speak to the user', 'pick up trash if seen'. Groot 2 is a visual BT editor that ships alongside.",
+      "bullets": [
+        "BTs are XML - readable, diff-able, swappable at runtime via ROS params",
+        "Node types: Action (does work), Condition (returns SUCCESS/FAILURE), Decorator (modifies child)",
+        "Control flow: Sequence (all in order), Fallback (try until one works), Parallel",
+        "Custom Action nodes - write a C++ class, register it in the BT factory plugin",
+        "BehaviorTree.CPP is the underlying library - usable outside Nav2 too"
+      ],
+      "codeBlocks": [
+        {
+          "language": "xml",
+          "title": "Snippet: add a 'wait for door' check before navigating",
+          "code": "<root main_tree_to_execute=\"MainTree\">\n  <BehaviorTree ID=\"MainTree\">\n    <Sequence>\n      <RetryUntilSuccessful num_attempts=\"30\">\n        <IsDoorOpen door_id=\"front\"/>\n      </RetryUntilSuccessful>\n      <ComputePathToPose goal=\"{goal}\" path=\"{path}\"/>\n      <FollowPath path=\"{path}\"/>\n    </Sequence>\n  </BehaviorTree>\n</root>"
+        },
+        {
+          "language": "bash",
+          "title": "Point Nav2 at your custom BT XML",
+          "code": "ros2 launch nav2_bringup tb3_simulation_launch.py \\\n    headless:=False \\\n    params_file:=$HOME/{{ws}}/config/nav2_params.yaml\n# In nav2_params.yaml under bt_navigator:\n#   default_nav_to_pose_bt_xml: $HOME/{{ws}}/bts/my_tree.xml"
+        }
+      ],
+      "links": [
+        {
+          "label": "BehaviorTree.CPP",
+          "url": "https://www.behaviortree.dev/"
+        },
+        {
+          "label": "Nav2 BT customization",
+          "url": "https://docs.nav2.org/behavior_trees/index.html"
+        },
+        {
+          "label": "Groot 2 visual editor",
+          "url": "https://www.behaviortree.dev/groot"
+        }
+      ],
+      "widget": "behavior-tree"
+    },
+    {
+      "id": "outdoor-nav",
+      "heading": "Outdoor & off-road navigation",
+      "body": "Outdoor robots break every assumption indoor stacks make. GPS works (with RTK for cm accuracy) but drops out under tree canopy. The \"free space\" is now traversability - a slope you can drive on, mud you can't. 3D LiDAR + dense semantic segmentation feeds a 2.5D elevation/cost map. Specialized stacks: Robotec's Vehicle Dynamics Simulator, Clearpath's outdoor stack, NASA's VIPER lunar rover stack.",
+      "bullets": [
+        "GPS / RTK - absolute reference; falls back to LiDAR-IMU when satellites drop",
+        "Traversability - instead of binary obstacle, score each cell by drive-ability",
+        "2.5D elevation maps (GridMap) - capture height, slope, roughness per cell",
+        "Path-tracking on rough terrain - pure pursuit struggles; switch to MPC",
+        "Sensor IP rating - dust, rain, sun glare break consumer cameras quickly"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "GridMap + traversability example",
+          "code": "sudo apt install -y ros-jazzy-grid-map\n# Layered map: elevation, slope, friction, semantic\nros2 run grid_map_demos GridMapVisualization \\\n    --ros-args -p map_topic:=/elevation_map"
+        }
+      ],
+      "links": [
+        {
+          "label": "GridMap",
+          "url": "https://github.com/ANYbotics/grid_map"
+        },
+        {
+          "label": "OpenPlanetary outdoor",
+          "url": "https://www.openplanetary.org/"
+        }
+      ]
+    },
+    {
+      "id": "social-nav",
+      "heading": "Social navigation - sharing space with humans",
+      "body": "A robot moving through a crowd needs more than collision avoidance - it needs to be predictable, polite, and respect social norms. Social Force Models (SFM) treat humans as charged particles; CADRL and SARL apply RL to learn socially-compliant motion. Pedestrian-aware Nav2 plugins (people_msgs, ROS Social Costmap Layer) feed human trajectories into your costmap so the robot slows in crowds and never cuts a pedestrian off.",
+      "bullets": [
+        "Social Force Model - humans + robot as agents with attractive/repulsive forces",
+        "CADRL / SARL / NaviGAN - RL policies trained in pedestrian sim",
+        "People detection - leg detector (lidar) + YOLO-pose (camera); fuse with EKF",
+        "Pedsim_ros - synthetic pedestrian crowd simulator for training/evaluation",
+        "Norms: keep > 1m to a human, slow under 0.6 m/s near humans, never cut someone off"
+      ],
+      "links": [
+        {
+          "label": "pedsim_ros",
+          "url": "https://github.com/srl-freiburg/pedsim_ros"
+        }
+      ]
+    }
+  ]
+}

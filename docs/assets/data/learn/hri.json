@@ -1,0 +1,247 @@
+{
+  "slug": "hri",
+  "hero": {
+    "tagline": "Where robots and humans share space, intent, and trust",
+    "intro": "A robot in a lab is an engineering problem. A robot near a person is a different problem - now you have to think about safety, predictability, communication, and trust. Human-Robot Interaction (HRI) is the design discipline behind shared autonomy, natural-language commanding (now LLM-powered), gesture recognition, the safety standards that let cobots work next to humans without fences, teleoperation rigs (which double as training-data factories), haptic feedback, and the social robots people see most. If you're building something that touches a human - directly or indirectly - read this."
+  },
+  "sections": [
+    {
+      "id": "what-hri-is",
+      "heading": "What HRI is - and isn't",
+      "body": "HRI is the discipline of making robots usable by humans. It's distinct from robotics-engineering disciplines (perception, planning, control) which focus on what the robot can do; HRI focuses on the closed loop with the human in it. Done well, you barely notice it: the robot signals intent, the human stays comfortable, the task gets done. Done poorly, you get the uncanny valley, frustrating UX, or - at the safety extreme - actual injury.\n\nHRI is also distinct from teleoperation (which is one tool inside HRI). Teleop is one operator driving one robot; HRI scales to ambient interactions, multi-user supervisory control, and fully-autonomous robots whose behavior must still be legible to bystanders.",
+      "bullets": [
+        "Different from perception/planning - the human is in the loop, not just an obstacle",
+        "Different from teleop - teleop is one mode within the broader HRI design space",
+        "Different from UX - physical robots add safety, embodiment, latency, presence problems UX doesn't",
+        "Major venues: ACM/IEEE HRI conference (March), RO-MAN (Aug), CHI (May)",
+        "Notable labs: MIT Media Lab, CMU HARP, Stanford IRIS, Disney Research, Furhat / SoftBank"
+      ],
+      "links": [
+        {
+          "label": "ACM/IEEE HRI conference",
+          "url": "https://humanrobotinteraction.org/"
+        }
+      ]
+    },
+    {
+      "id": "shared-autonomy",
+      "heading": "Shared autonomy - splitting decisions human ↔ robot",
+      "body": "Pure teleop is exhausting; full autonomy is risky. Most real systems sit in between - shared autonomy - where the human supplies high-level intent and the robot fills in the low-level execution. Variants: supervisory control (human approves the robot's plan before execution), trading control (control swaps between human and robot at handoff points), shared blended (human and robot inputs are mixed continuously).",
+      "bullets": [
+        "Supervisory control - human plans, robot executes (Mars rovers, surgical robots)",
+        "Trading control - robot drives most of the time, human takes over at exceptions (L3 driving)",
+        "Shared blended - input mixing (assistive wheelchairs, surgical robots, FPV drones)",
+        "Sliding autonomy - robot's authority varies based on task confidence",
+        "Mixed-initiative - either party can initiate; needs explicit handoff cues",
+        "Common pitfall: 'mode confusion' - neither side knows who's currently in charge"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Trade-control gate - robot drives unless confidence drops",
+          "code": "class SharedAutonomy:\n    def __init__(self, conf_threshold=0.7):\n        self.threshold = conf_threshold\n        self.in_human_control = False\n\n    def cmd(self, robot_cmd, robot_conf, human_cmd):\n        if robot_conf >= self.threshold and not self.in_human_control:\n            return robot_cmd, 'AUTO'\n        # Trigger handoff\n        if not self.in_human_control:\n            self.notify_human('Confidence low - please take over')\n            self.in_human_control = True\n        return human_cmd, 'HUMAN'\n\n    def release(self):\n        self.in_human_control = False"
+        }
+      ],
+      "links": [
+        {
+          "label": "Survey: Shared autonomy",
+          "url": "https://www.frontiersin.org/articles/10.3389/frobt.2017.00075/full"
+        }
+      ]
+    },
+    {
+      "id": "language-interfaces",
+      "heading": "Natural-language interfaces - LLMs as the HRI layer",
+      "body": "Until 2022, talking to a robot meant grammar-based parsers (good for narrow domains, brittle outside them). LLMs broke that ceiling. Modern HRI stacks use a multimodal LLM (Gemini, Claude, GPT-4o) as the front end: scene image + audio transcription → natural-language instruction → grounded plan in the robot's skill set. Code-as-Policies, SayCan, and PaLM-E are the foundational papers; production systems include Figure 02's voice interface and 1X NEO's spoken control.",
+      "bullets": [
+        "STT → LLM → robot API: fastest path is Whisper (or a cloud STT) + Claude/GPT + your skill list",
+        "Skill grounding: the LLM must call YOUR robot's primitives, not invent new ones",
+        "Confirmation loops - LLM asks 'Should I pick up the red mug?' before acting (safety)",
+        "Spatial language: 'put it next to the keyboard' - LLM needs scene understanding (VLM)",
+        "Latency budget: human conversational turns expect <1s response - caching + small models help",
+        "Open-source: HuggingFace LeRobot has a clean LLM-planning starter"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "LLM-as-planner skeleton (Anthropic SDK)",
+          "code": "from anthropic import Anthropic\n\nSKILLS = '''\nrobot.pick(object_name)\nrobot.place(location_name)\nrobot.go_to(location_name)\nrobot.say(text)\n'''\n\ndef plan(user_speech, scene_description):\n    client = Anthropic()\n    msg = client.messages.create(\n        model='claude-opus-4-7',\n        max_tokens=512,\n        system=f'You control a robot. Skills:\\n{SKILLS}\\n'\n               'Scene: ' + scene_description + '\\n'\n               'Output ONLY runnable Python that uses these skills.',\n        messages=[{'role': 'user', 'content': user_speech}])\n    return msg.content[0].text\n\ncode = plan('please clean up the table',\n            'Table has a red mug, blue book, dirty plate.')\nexec(code, {'robot': my_robot})"
+        }
+      ],
+      "links": [
+        {
+          "label": "Code as Policies",
+          "url": "https://code-as-policies.github.io/"
+        },
+        {
+          "label": "Hugging Face LeRobot",
+          "url": "https://github.com/huggingface/lerobot"
+        }
+      ]
+    },
+    {
+      "id": "gesture-pose",
+      "heading": "Gesture, gaze, and body-pose interfaces",
+      "body": "Talking is one channel; pointing, gesturing, looking are equally rich. Modern body-pose models (Sapiens, MediaPipe, OpenPose) run real-time on a phone-class GPU and give you full 3D skeleton + face landmarks + gaze direction. For HRI: gaze cues tell the robot where the human's attention is, gesture (point, wave, stop) issues fast non-verbal commands, and body posture indicates engagement / disengagement.",
+      "bullets": [
+        "Sapiens (Meta, 2024) - SOTA for human pose, depth, segmentation; runs on Jetson Orin",
+        "MediaPipe - Google's real-time, mobile-first body / hand / face tracking",
+        "Pointing: combine gaze ray + arm vector to disambiguate which object the human means",
+        "Stop / wave / thumbs-up = universal gestures the robot should always interpret correctly",
+        "Engagement signals: shoulder orientation, gaze direction, distance - robots should react",
+        "Privacy: pose / face data is sensitive; do inference on-device, don't upload"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "MediaPipe pose tracking from a webcam",
+          "code": "import cv2\nimport mediapipe as mp\n\npose = mp.solutions.pose.Pose(min_detection_confidence=0.5)\ncap = cv2.VideoCapture(0)\n\nwhile cap.isOpened():\n    ok, frame = cap.read()\n    if not ok: break\n    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)\n    results = pose.process(rgb)\n    if results.pose_landmarks:\n        # Right wrist\n        rw = results.pose_landmarks.landmark[16]\n        # Right shoulder\n        rs = results.pose_landmarks.landmark[12]\n        if rw.y < rs.y:                      # wrist higher than shoulder\n            print('hand raised - interpret as STOP')"
+        }
+      ],
+      "links": [
+        {
+          "label": "Sapiens",
+          "url": "https://about.meta.com/realitylabs/codecavatars/sapiens/"
+        },
+        {
+          "label": "MediaPipe",
+          "url": "https://developers.google.com/mediapipe"
+        }
+      ]
+    },
+    {
+      "id": "cobot-safety",
+      "heading": "Safety standards - ISO 10218 + ISO/TS 15066 (collaborative robots)",
+      "body": "When a robot shares physical space with a human, regulation kicks in. ISO 10218 (2-part) is the umbrella standard for industrial robots; ISO/TS 15066 specifically covers collaborative robots (cobots) - Universal Robots, FANUC CR, KUKA LBR iiwa, Franka. Key concept: power-and-force limiting (PFL) - measured pain thresholds for every body region, and the robot must guarantee its impacts stay below those values. Other modes: speed-and-separation monitoring (SSM, slow down as humans approach), safety-rated monitored stop, hand-guiding mode.",
+      "bullets": [
+        "Four cobot collaboration modes: stop, hand-guiding, SSM (speed/separation), PFL (power/force)",
+        "ISO/TS 15066 specifies pain thresholds per body region - used to set joint torque limits",
+        "Safety-rated lidar (SICK microScan3) detects humans entering speed zones; robot slows or stops",
+        "Cobots have torque sensors at every joint to detect collisions and stop in <50 ms",
+        "ISO 13482 - service-robot standard (robots intended for non-industrial human spaces)",
+        "ANSI/RIA R15.06 - US equivalent of ISO 10218",
+        "Always: risk assessment per cell layout. CE / UL marking are not optional in production"
+      ],
+      "links": [
+        {
+          "label": "ISO/TS 15066 overview (Universal Robots blog)",
+          "url": "https://www.universal-robots.com/about-universal-robots/news-centre/iso-15066-the-collaborative-robotic-safety-standard/"
+        },
+        {
+          "label": "RIA R15.06",
+          "url": "https://www.automate.org/industry-insights/r15-06"
+        }
+      ]
+    },
+    {
+      "id": "teleoperation",
+      "heading": "Teleoperation - VR rigs, leader-follower, latency budgets",
+      "body": "Teleop is the workhorse of HRI for both data collection (ALOHA / Mobile ALOHA / ALOHA Unleashed produced the bimanual demos behind every credible 2026 manipulation policy) and remote operation (Toyota HSR, Sanctuary AI, Phantom Auto for last-mile delivery). The hard problems: latency (humans tolerate ~100 ms, get nauseated past 250 ms), depth perception (a flat camera feed loses scale), and force feedback (needed for assembly / surgery, hard to do over networks).\n\nThe humanoid wave reshuffled the rig landscape: 1X uses an in-house full-body teleop suit for NEO data, Figure runs operator pods at the BMW deployment, and most academic groups have standardized on GELLO-style 3D-printed leader arms or open-source Mobile ALOHA clones. HuggingFace's LeRobot project has standardized the data format so a teleop session on any rig becomes a directly trainable dataset.",
+      "bullets": [
+        "Leader-follower kinematic teleop (ALOHA / ALOHA 2 / GELLO): cheap, low-latency, scales to bimanual",
+        "Whole-body teleop suits (1X, Tesla data ops, Apptronik): full humanoid demo capture via mocap or exoskeleton rigs",
+        "VR teleop (Meta Quest 3 + RealSense / ZED): immersive, depth via stereo cameras, ~80 ms motion-to-photon",
+        "Network teleop: latency dominates; predictive display + autonomy assist help (Phantom Auto)",
+        "Force feedback: SensAble Phantom, 3D Systems, Force Dimension; expensive but transformative",
+        "Data collection target: 50-500 demos per task for IL; ALOHA Unleashed pushed scale to 26K for the hard ones",
+        "DROID dataset: 76K real-world episodes from 18 institutions, all teleop-collected; mirrored in LeRobot Hub"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "ALOHA teleop bringup",
+          "code": "cd ~/{{ws}}/src && git clone https://github.com/MarkFzp/aloha.git\ncd ~/{{ws}}\nrosdep install -i --from-path src --rosdistro jazzy -y\ncolcon build --packages-select aloha\nsource install/setup.bash\nros2 launch aloha aloha_bringup.launch.py teleop:=true"
+        }
+      ],
+      "links": [
+        {
+          "label": "ALOHA / Mobile ALOHA",
+          "url": "https://mobile-aloha.github.io/"
+        },
+        {
+          "label": "DROID dataset",
+          "url": "https://droid-dataset.github.io/"
+        }
+      ]
+    },
+    {
+      "id": "haptics-tactile",
+      "heading": "Haptic feedback - closing the loop",
+      "body": "Vision tells the operator what's happening; haptics tells them what's *touching* what. For surgery, manipulation in clutter, or any contact-rich task, haptic feedback dramatically improves performance. Hardware: SensAble PHANToM (single-point, surgical), 3D Systems Haptic, Force Dimension Omega/Sigma (multi-DoF), Meta TouchLab haptic gloves, bHaptics suits (gaming-grade). On the robot side: ATI / Robotiq wrist FT sensors, GelSight tactile pads, Xela skin arrays.",
+      "bullets": [
+        "Surgical haptic devices - surgeon feels the tissue resistance through a force-feedback controller",
+        "Wearable haptics - vibrotactile (cheap), pneumatic (rich), ultrasonic mid-air (no contact)",
+        "Tactile-on-robot: GelSight gives camera-resolution touch; Xela arrays cover whole skin",
+        "Haptic feedback over network: latency MUST be <30 ms or operator perceives lag and overshoots",
+        "Bilateral teleoperation: operator's force input ↔ robot's force output, both directions",
+        "Tactile + vision = the modern recipe for in-hand manipulation (DextrAH, InHand, Robocrane)"
+      ],
+      "links": [
+        {
+          "label": "GelSight",
+          "url": "https://www.gelsight.com/"
+        },
+        {
+          "label": "Force Dimension",
+          "url": "https://www.forcedimension.com/"
+        }
+      ]
+    },
+    {
+      "id": "social-robots",
+      "heading": "Social robots - what works, what doesn't",
+      "body": "Social robots - built primarily to interact with humans rather than do physical tasks - have a brutal commercial track record (Jibo, Anki Vector, Kuri, Aibo all came and went). Survivors and current bets: Furhat (animatronic face, projection-based), Pepper (SoftBank, mostly enterprise), NAO (academic), Moxie (children, social-emotional learning). The core problem: humans calibrate quickly to anything that's *almost* human, and the gap (uncanny valley) is harder to close than to widen. Stylized, deliberately-non-human designs (Wall-E, Cozmo, Anki) outperform humanoids on engagement.",
+      "bullets": [
+        "Commercial graveyard: Jibo, Anki Vector, Kuri, Mayfield Robotics, Bosch SD-R, etc.",
+        "Surviving bets: Furhat (face), Pepper (enterprise), NAO (academic), Moxie (kids), Aibo v2",
+        "Uncanny valley - almost-human is creepy; cartoonish or industrial are not",
+        "Modern resurgence: humanoid form factor (Tesla Optimus, Figure, 1X, Apptronik) bets on labor",
+        "Human-likeness ≠ engagement. Cozmo / Anki Vector outperformed Pepper on actual usage time",
+        "Voice-first vs face-first: voice is cheaper and ages better; faces locked in design quickly look dated"
+      ]
+    },
+    {
+      "id": "trust-calibration",
+      "heading": "Trust calibration - measuring + designing for trust",
+      "body": "A robot is worse than useless if humans don't trust it (it gets ignored or shut off) - and dangerous if humans overtrust it (they don't supervise when they should). Trust calibration is the explicit design discipline of building systems that earn just-enough trust to be used appropriately. Standard scales: SHAPE (Schaefer 2016), TPR (Trust in Automation, Jian 2000), MDMT (Multi-Dimensional Measure of Trust). The interventions: explainability (the robot says what it's doing and why), confidence display (show uncertainty visually), graceful degradation (announce when it's failing).",
+      "bullets": [
+        "Undertrust → robot is ignored, ROI is zero",
+        "Overtrust → human stops supervising, robot's failure becomes the human's failure (Tesla AP)",
+        "Standard scales: TPR (Jian), SHAPE (Schaefer), MDMT (Malle) for measuring trust experimentally",
+        "Explainability: the robot announces what it's about to do - short, specific, in plain language",
+        "Confidence display: color, motion damping, audio uncertainty cues all calibrate user expectation",
+        "Graceful failure: system signals 'I'm losing confidence' before it actually fails"
+      ],
+      "links": [
+        {
+          "label": "Lee & See - Trust in Automation (foundational paper)",
+          "url": "https://journals.sagepub.com/doi/10.1518/hfes.46.1.50.30392"
+        }
+      ]
+    },
+    {
+      "id": "hri-research-methods",
+      "heading": "HRI research methods - how to actually study a human ↔ robot loop",
+      "body": "HRI is empirical - claims need data from real humans interacting with the robot. The methods: between-subjects vs within-subjects studies, Wizard-of-Oz protocols (a hidden operator drives the robot to study what humans expect from autonomy that doesn't exist yet), questionnaires (validated scales > custom), think-aloud protocols, video coding. Sample sizes for the field are notoriously small (n=20-40 typical) so effect sizes need to be big and pre-registered.",
+      "bullets": [
+        "Wizard-of-Oz: hide the human; study what humans expect from a (future) autonomous robot",
+        "Between-subjects: each user sees one condition; cleanest, needs more participants",
+        "Within-subjects: each user sees all conditions; counterbalance order to fight learning effects",
+        "Validated scales > home-grown surveys (Godspeed, NARS, MDMT, TPR, SHAPE)",
+        "Video coding: code participant behavior frame-by-frame; expensive but high-fidelity",
+        "Pre-register your hypotheses (Open Science Framework) - HRI has a replication crisis",
+        "IRB approval is mandatory for any study with human participants"
+      ],
+      "links": [
+        {
+          "label": "OSF preregistration",
+          "url": "https://osf.io/prereg/"
+        },
+        {
+          "label": "Godspeed Questionnaire",
+          "url": "https://link.springer.com/article/10.1007/s12369-008-0001-3"
+        }
+      ]
+    }
+  ]
+}

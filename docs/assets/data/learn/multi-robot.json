@@ -1,0 +1,231 @@
+{
+  "slug": "multi-robot",
+  "hero": {
+    "tagline": "Many robots, one outcome - architectures, MAPF, and swarms",
+    "intro": "Multi-robot systems are not just one robot times N. You inherit new problems: who decides who does what, how robots avoid each other, how they share a map, how they survive a comms blackout, and how the system degrades when one robot fails. This branch covers the canonical patterns: centralized vs decentralized architectures, multi-agent path finding (MAPF), multi-robot SLAM, market-based task allocation, formation control, and the swarm-style algorithms that scale to hundreds of agents. If your fleet is bigger than two, you need this."
+  },
+  "sections": [
+    {
+      "id": "why-multi-robot",
+      "heading": "Why multi-robot? When the cost is worth it",
+      "body": "Putting two robots in the same space costs more than twice as much in software complexity. You only do it when the task demands it: parallel coverage (warehouse picks across many aisles), heterogeneous capabilities (a quadruped scouts, a wheeled robot carries), redundancy (if one dies the others continue), or scale (a swarm of inspection drones). The benefit is throughput and resilience; the cost is coordination, communication, and the possibility of cascading failures.",
+      "bullets": [
+        "Parallel coverage - same task, different sub-areas (warehouse picks)",
+        "Heterogeneity - different robots, complementary skills (drone scouts + ground vehicle delivers)",
+        "Redundancy - N+1 robots so a failure doesn't halt the system",
+        "Scale - swarms of inspection / mapping / agricultural robots",
+        "Cost: every robot is a comms peer; every coordination decision adds latency",
+        "Cascading failure: a stuck robot can deadlock the fleet if traffic logic is poor"
+      ]
+    },
+    {
+      "id": "mr-architectures",
+      "heading": "Architectures - centralized, decentralized, hierarchical",
+      "body": "Centralized systems have one brain (the fleet manager) that sees everything and dispatches every task. Decentralized systems push decisions to each robot - they negotiate peer-to-peer using algorithms like consensus, market auctions, or local rules. Hierarchical is the practical middle ground: a central scheduler hands out high-level tasks; robots negotiate locally to resolve conflicts at intersections.",
+      "bullets": [
+        "Centralized - easy to reason about, single point of failure, doesn't scale past ~50 robots",
+        "Decentralized - robust to comms loss, hard to debug, no global optimum",
+        "Hierarchical - central for slow strategic decisions, local for fast tactical ones",
+        "Pure swarm - no central coord; robots follow local rules (boids), emergent behavior",
+        "Real systems: Open-RMF and most commercial fleets are hierarchical"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Average-consensus update - agree on a value across N robots",
+          "code": "import numpy as np\n\ndef consensus_step(x, neighbors, eps=0.15):\n    \"\"\"x: my current value. neighbors: list of neighbour values.\n       Returns updated value pulled toward the average.\"\"\"\n    if not neighbors: return x\n    return x + eps * (np.mean(neighbors) - x)\n\n# Each robot runs this each tick, reading its neighbours' broadcast values.\n# After enough ticks (~50-100 on a connected graph), all robots converge to the\n# initial average - an emergent global agreement, no central coordinator needed."
+        }
+      ]
+    },
+    {
+      "id": "mr-communication",
+      "heading": "Communication - DDS, MQTT, namespacing, dropouts",
+      "body": "ROS 2 DDS works fine within one robot but doesn't scale to fleets - every robot would discover every node on every other robot. Production fleets use one of: ROS_DOMAIN_ID per robot to isolate, FastDDS Discovery Server (centralized discovery), or a higher-level transport (MQTT, ZeroMQ, gRPC) bridging only the topics that need cross-robot visibility. Plan for the comms link to drop - Wi-Fi mesh, 5G, LoRa all have failure modes.",
+      "bullets": [
+        "Per-robot ROS_DOMAIN_ID - isolates DDS chatter; bridge cross-robot topics deliberately",
+        "FastDDS Discovery Server - single discovery hub; robots register, find each other through it",
+        "MQTT / Zenoh - pub/sub across the WAN, lossy-tolerant; bridge to local ROS topics",
+        "Out-of-band: cellular fallback when Wi-Fi drops; BLE for proximity",
+        "Always design for partition: each robot must keep operating safely without comms",
+        "Topic load: don't bridge images cross-fleet; bridge only state + commands"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Robot-A and Robot-B isolated by domain",
+          "code": "# On Robot A\nexport ROS_DOMAIN_ID=10\n# On Robot B\nexport ROS_DOMAIN_ID=20\n\n# On the fleet manager bridge node\nexport ROS_DOMAIN_ID=10\nros2 run domain_bridge domain_bridge \\\n    --ros-args -p config_file_path:=/etc/bridge.yaml"
+        },
+        {
+          "language": "yaml",
+          "title": "Bridge selected topics A → fleet manager",
+          "code": "name: amr-fleet-bridge\ntopics:\n  /amr_a/odom:\n    type: nav_msgs/msg/Odometry\n    from_domain: 10\n    to_domain: 99\n    qos:\n      durability: volatile\n      reliability: reliable\n      history: keep_last\n      depth: 10\n  /amr_a/state:\n    type: industrial_msgs/msg/RobotStatus\n    from_domain: 10\n    to_domain: 99"
+        }
+      ],
+      "links": [
+        {
+          "label": "domain_bridge",
+          "url": "https://github.com/ros2/domain_bridge"
+        },
+        {
+          "label": "Zenoh-RMW",
+          "url": "https://github.com/ros2/rmw_zenoh"
+        }
+      ]
+    },
+    {
+      "id": "mapf",
+      "heading": "Multi-agent path finding (MAPF)",
+      "body": "Single-robot path planning is well solved. Multi-robot is hard: you need paths that don't collide in space-time. The algorithm of choice is CBS (Conflict-Based Search) and its faster variant ECBS. CBS plans each robot independently, detects pairwise conflicts, and adds constraints to resolve them - optimal but exponential in conflicts. ECBS trades a small bound on suboptimality for orders-of-magnitude speedup. PBS is even faster for sparse problems.",
+      "bullets": [
+        "Cooperative A* - replan one agent at a time given others' fixed paths; fast but suboptimal",
+        "CBS - optimal, two-level: high-level resolves conflicts, low-level replans single agents",
+        "ECBS - bounded-suboptimal CBS; w-times the optimal cost in fraction of the time",
+        "PBS - priority-based search; faster on sparse problems, no completeness guarantee",
+        "Anytime SIPP - single-agent planner respecting time-windows from other agents",
+        "Lifelong MAPF - replan continuously as new tasks arrive (warehouses)"
+      ],
+      "links": [
+        {
+          "label": "MAPF benchmark",
+          "url": "https://movingai.com/benchmarks/mapf/index.html"
+        },
+        {
+          "label": "EECBS implementation",
+          "url": "https://github.com/Jiaoyang-Li/EECBS"
+        }
+      ]
+    },
+    {
+      "id": "task-allocation",
+      "heading": "Task allocation - auctions, market-based, optimal",
+      "body": "When N tasks arrive and M robots are free, who gets what? The optimal answer is the assignment problem (Hungarian algorithm, O(M³) - fine for small fleets). For large fleets, market-based methods scale better: each robot bids on tasks based on its expected cost (distance, congestion, battery), and the auctioneer awards each task to the lowest bidder. CBBA (Consensus-Based Bundle Algorithm) extends this to bundles of tasks per robot.",
+      "bullets": [
+        "Hungarian - optimal for assignment; O(M³); breaks down past ~1000 robots/tasks",
+        "Greedy - pick the lowest-cost (robot, task) pair; fast, suboptimal, easy to reason about",
+        "Auction-based - robots bid; auctioneer awards; communication cost per task",
+        "CBBA - robots bid on bundles; consensus on assignments; distributed",
+        "MILP - model the whole problem as integer linear programming; optimal but slow",
+        "Reinforcement learning - for non-stationary fleets, learn a dispatch policy"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Hungarian assignment with scipy",
+          "code": "import numpy as np\nfrom scipy.optimize import linear_sum_assignment\n\n# cost[i][j] = cost for robot i to do task j\ncost = np.array([\n    [4, 1, 3],\n    [2, 0, 5],\n    [3, 2, 2]\n])\nrow_ind, col_ind = linear_sum_assignment(cost)\nfor r, t in zip(row_ind, col_ind):\n    print(f'robot {r} → task {t} (cost {cost[r, t]})')\nprint('total cost:', cost[row_ind, col_ind].sum())"
+        }
+      ],
+      "links": [
+        {
+          "label": "CBBA paper",
+          "url": "https://acl.mit.edu/papers/Choi09a.pdf"
+        }
+      ]
+    },
+    {
+      "id": "multi-slam",
+      "heading": "Multi-robot SLAM - building the map together",
+      "body": "Two robots in the same building can build a map twice as fast - if they can recognize when they've seen the same place and stitch their submaps together. Loop closure across robots is the hard part: appearance descriptors (BoVW, NetVLAD) match candidate places, then geometric verification (RANSAC, ICP) confirms the relative transform. Open-source stacks: LAMP (Lidar-based, NASA JPL), DCL-SLAM (decentralized lidar), Kimera-Multi (visual-inertial).",
+      "bullets": [
+        "Centralized: each robot streams lidar/keyframes to a base station that runs the joint optimization",
+        "Decentralized: robots exchange compact place descriptors; only solve when a match is found",
+        "Cross-robot loop closure: NetVLAD or HF-Net descriptors + ICP / PnP verification",
+        "Pose graph fusion: GTSAM / Ceres / g2o run on the merged graph",
+        "Trust: bad cross-robot loop closures destroy the map - use M-estimators or DCS",
+        "LAMP, DCL-SLAM, Kimera-Multi, Swarm-SLAM are the modern open-source baselines"
+      ],
+      "links": [
+        {
+          "label": "Kimera-Multi",
+          "url": "https://github.com/MIT-SPARK/Kimera-Multi"
+        },
+        {
+          "label": "LAMP (NASA JPL)",
+          "url": "https://github.com/NeBula-Autonomy/LAMP"
+        },
+        {
+          "label": "DCL-SLAM",
+          "url": "https://github.com/PengYu-Team/DCL-SLAM"
+        }
+      ]
+    },
+    {
+      "id": "formation-control",
+      "heading": "Formation control - moving as a team",
+      "body": "Sometimes you want N robots to maintain a shape - line formation for an inspection sweep, V-formation for fuel efficiency, custom shape for a payload. Three main flavors: leader-follower (one leader, N-1 followers tracking a relative pose), virtual structure (treat the formation as a single rigid body), and behavior-based (each robot follows local rules: maintain offset to neighbors, avoid collisions). Each has tradeoffs in robustness vs precision.",
+      "bullets": [
+        "Leader-follower - simple but the leader is a single point of failure",
+        "Virtual structure - formation has its own pose; robots track their slot inside it",
+        "Behavior-based - local rules per robot; robust to failures; less precise shape",
+        "Consensus protocols - robots agree on a common reference (centroid, heading)",
+        "Saturated control - clamp commands so a stragger can catch up without others crashing",
+        "Real example: drone shows (Intel, Skymagic) use centralized choreography + GPS RTK"
+      ]
+    },
+    {
+      "id": "swarm",
+      "widget": "boids",
+      "heading": "Swarm robotics - local rules, emergent behavior",
+      "body": "Swarm robotics scales to hundreds of agents by abandoning centralized control. Each robot follows local rules - Reynolds' boids (1986) is the canonical demo: cohesion (steer toward neighbors' centroid), alignment (match average velocity), separation (avoid getting too close). With those three rules, you get flocking, schooling, herding behaviors that look choreographed but emerge from local interactions. The widget below is the original boids algorithm; play with the weights to see how each rule contributes.",
+      "bullets": [
+        "Cohesion - pulls each agent toward its neighbors' centroid (groups stay together)",
+        "Alignment - matches each agent's velocity to its neighbors' average (synchronized motion)",
+        "Separation - pushes agents apart at close range (collision avoidance)",
+        "Emergent: no agent knows the global state; the swarm self-organizes",
+        "Real systems: Kilobots (Harvard), Smarticles, drone shows, agricultural drone swarms",
+        "Ant colony optimization, particle swarm optimization - algorithms inspired by swarms"
+      ],
+      "links": [
+        {
+          "label": "Reynolds' original boids",
+          "url": "https://www.red3d.com/cwr/boids/"
+        },
+        {
+          "label": "Kilobots (Harvard)",
+          "url": "https://www.eecs.harvard.edu/ssr/projects/progSA/kilobot.html"
+        }
+      ]
+    },
+    {
+      "id": "mr-consensus",
+      "heading": "Consensus & distributed coordination",
+      "body": "Decentralized fleets need agreement: which robot takes the next task, who is the leader, what is the agreed map version. Distributed consensus algorithms (Raft, Paxos, gossip protocols) solve this in the face of network partitions and failures. For robotics-specific uses, average consensus is enough - robots iteratively share state with neighbors and converge to the network-wide average.",
+      "bullets": [
+        "Average consensus - x_i(t+1) = x_i(t) + ε Σ_j (x_j - x_i); converges if graph is connected",
+        "Raft / Paxos - strong consistency; needed when an order matters",
+        "Gossip protocols - eventually consistent; cheap; great for large swarms",
+        "Byzantine fault tolerance (PBFT) - for adversarial environments; rarely needed in robotics",
+        "Leader election: ring algorithm, bully algorithm; usually layered on top of Raft"
+      ]
+    },
+    {
+      "id": "mr-deployments",
+      "heading": "Real deployments - what production looks like",
+      "body": "Real multi-robot deployments are a layered cake. At the bottom: per-robot ROS 2 + Nav2 + safety. In the middle: a fleet adapter (the protocol translator from the robot's API to VDA 5050 or Open-RMF). At the top: the fleet manager (Open-RMF, Vecna, Otto Fleet) handles task assignment, traffic, charging. Plumbing: MQTT broker (Mosquitto, EMQX), monitoring (Prometheus + Grafana), storage (PostgreSQL for tasks, time-series DB for telemetry).",
+      "bullets": [
+        "Robot layer: ROS 2, Nav2, safety stack - the same as a single-robot deployment",
+        "Adapter layer: translates robot API ↔ fleet protocol (VDA 5050, RMF API)",
+        "Fleet layer: traffic supervisor + task dispatcher + charging scheduler",
+        "Integration layer: WMS / MES / ERP via REST + AMQP",
+        "Observability: every robot publishes /metrics for Prometheus scrape",
+        "Postmortem culture: every fleet downtime gets an incident review"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Open-RMF fleet adapter - minimum viable example",
+          "code": "import rmf_adapter\nfrom rmf_adapter import Adapter\n\ndef setup_adapter(node_name='my_fleet_adapter', config_yaml='./config.yaml'):\n    adapter = Adapter.make(node_name)\n    fleet = adapter.add_fleet('my_amr_fleet',\n                              traits={'profile': 'differential', 'radius': 0.4})\n    # Robot loop: report state, accept tasks\n    @fleet.on_robot_added\n    def on_added(robot):\n        robot.update_position('lobby_node', heading=0.0)\n    return adapter\n\nif __name__ == '__main__':\n    a = setup_adapter()\n    a.start()\n    import rclpy; rclpy.spin(a.node)"
+        }
+      ],
+      "links": [
+        {
+          "label": "Open-RMF docs",
+          "url": "https://osrf.github.io/ros2multirobotbook/"
+        },
+        {
+          "label": "Otto Fleet Manager (commercial)",
+          "url": "https://ottomotors.com/products/otto-fleet-manager"
+        }
+      ]
+    }
+  ]
+}

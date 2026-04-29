@@ -1,0 +1,60 @@
+<div class="ql">
+  <div class="ql__stage">
+    <canvas #canvas></canvas>
+    <div class="ql__hud">
+      <span><span class="lbl">episodes</span><span class="val">{{ episodes }}</span></span>
+      <span><span class="lbl">steps</span><span class="val">{{ totalSteps }}</span></span>
+    </div>
+  </div>
+
+  <div class="ql__panel">
+    <div class="ql__panel-head">
+      <span class="ql__panel-title">Q-learning gridworld</span>
+      <div class="ql__actions">
+        <button type="button" class="ql__btn" (click)="togglePause()">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button type="button" class="ql__btn" (click)="resetQ()">
+          <i class="fas fa-undo"></i> reset Q
+        </button>
+        <button type="button" class="ql__btn" (click)="toggleArrows()">
+          <i class="fas" [class.fa-eye]="!showArrows" [class.fa-eye-slash]="showArrows"></i>
+          policy
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">α · learning rate</span><span class="slider-row__val">{{ alpha | number:'1.2-2' }}</span></div>
+      <input type="range" min="0.01" max="0.5" step="0.01" [value]="alpha" (input)="onSlider('alpha', $any($event.target).value)" aria-label="alpha" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">γ · discount</span><span class="slider-row__val">{{ gamma | number:'1.2-2' }}</span></div>
+      <input type="range" min="0.5" max="0.99" step="0.01" [value]="gamma" (input)="onSlider('gamma', $any($event.target).value)" aria-label="gamma" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">ε · exploration</span><span class="slider-row__val">{{ epsilon | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="0.5" step="0.01" [value]="epsilon" (input)="onSlider('epsilon', $any($event.target).value)" aria-label="epsilon" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Speed (steps / frame)</span><span class="slider-row__val">{{ speed }}</span></div>
+      <input type="range" min="1" max="500" step="5" [value]="speed" (input)="onSlider('speed', $any($event.target).value)" aria-label="speed" />
+    </div>
+
+    <div class="ql__legend">
+      <span><i class="dot" style="background:#fb7185"></i> agent</span>
+      <span><i class="dot" style="background:#34d399"></i> goal · +1</span>
+      <span><i class="dot" style="background:#7f1d1d"></i> trap · −1</span>
+      <span><i class="dot" style="background:#1f2937"></i> wall</span>
+      <span><i class="line" style="background:#fbbf24"></i> best action</span>
+    </div>
+
+    <p class="ql__note">
+      Q-learning: <code>Q(s,a) ← Q(s,a) + α·(r + γ·max Q(s′) − Q(s,a))</code>.
+      Cells are coloured by max Q-value (greener = higher expected return).
+      Crank ε up - the agent wanders; crank ε down - it exploits but may miss the optimum.
+      Speed past 100 to watch the policy converge in seconds.
+    </p>
+  </div>
+</div>

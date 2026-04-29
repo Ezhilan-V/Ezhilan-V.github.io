@@ -1,0 +1,232 @@
+{
+  "slug": "mechanical-design",
+  "hero": {
+    "tagline": "The physical body - links, joints, and the math that moves them",
+    "intro": "Robots are made of bodies. Before perception, planning, or control mean anything, you need to know what the robot is shaped like and how it can move. This branch covers the basics: rigid bodies, joints, actuators, the difference between forward kinematics (joints to position) and inverse kinematics (position to joints), the URDF file that describes a robot to ROS, and the design process that takes a use case and turns it into hardware. If you've never picked up a textbook on robot mechanics, start here."
+  },
+  "sections": [
+    {
+      "id": "rigid-body-basics",
+      "heading": "Rigid-body mechanics - the assumptions everything builds on",
+      "body": "A robot link is modelled as a rigid body - infinitely stiff, mass concentrated through the body, characterised by mass m, centre-of-mass position, and an inertia tensor I (3×3 matrix describing how the mass resists rotation). Every dynamics calculation downstream - Newton-Euler, Lagrangian, the dynamics term in MoveIt - assumes this rigid-body abstraction. Real bodies flex, but for arms moving slowly enough the approximation is excellent.",
+      "bullets": [
+        "Mass m - scalar; how much force it takes to accelerate the link",
+        "Inertia tensor I (3×3) - how torque maps to angular acceleration. Diagonal in body's principal-axis frame",
+        "Centre of mass - location where applied forces produce no rotation",
+        "Wrench (force + torque, 6-vector) - the canonical action acting on a body",
+        "Twist (linear + angular velocity, 6-vector) - the canonical motion of a body",
+        "Newton's 2nd: F = m·a translation; τ = I·α + ω × (I·ω) for rotation"
+      ]
+    },
+    {
+      "id": "joints-actuators",
+      "heading": "Joints & actuators - the moving parts",
+      "body": "A joint connects two links and allows constrained relative motion. Five canonical types cover almost every robot you'll see. Behind each joint sits an actuator that produces motion - choosing the right actuator dominates a robot's mass, speed, precision, and cost. Modern industrial arms use brushless DC motors with harmonic drives; humanoids increasingly use quasi-direct-drive (low-gear-ratio) BLDC for compliance.",
+      "bullets": [
+        "Revolute - 1 DOF, rotational. The default for arm + leg joints",
+        "Prismatic - 1 DOF, linear. Linear stages, Z-axis lifts, Cartesian robots",
+        "Helical - 1 DOF, screw motion (rotation + translation locked). Rare in robotics",
+        "Spherical - 3 DOF, ball joint. Wrists, hip joints in humanoids",
+        "Universal - 2 DOF, two perpendicular revolute axes. Camera gimbals",
+        "Actuator types: BLDC + harmonic drive (industrial), QDD BLDC (humanoid), stepper (cheap), servo (hobby), hydraulic (heavy), pneumatic (soft)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "xml",
+          "title": "URDF: revolute joint with limits",
+          "code": "<joint name=\"shoulder\" type=\"revolute\">\n  <parent link=\"base_link\"/>\n  <child  link=\"upper_arm\"/>\n  <origin xyz=\"0 0 0.1\" rpy=\"0 0 0\"/>\n  <axis xyz=\"0 0 1\"/>\n  <limit lower=\"-2.96\" upper=\"2.96\" effort=\"87\" velocity=\"2.17\"/>\n  <dynamics damping=\"0.5\" friction=\"0.2\"/>\n</joint>"
+        }
+      ],
+      "links": [
+        {
+          "label": "Harmonic Drive overview",
+          "url": "https://www.harmonicdrive.net/technology"
+        },
+        {
+          "label": "T-Motor QDD actuators",
+          "url": "https://store.tmotor.com/"
+        }
+      ],
+      "widget": "workspace-cloud"
+    },
+    {
+      "id": "forward-kinematics",
+      "widget": "kinematics",
+      "heading": "Forward kinematics - joint angles → end-effector pose",
+      "body": "Forward kinematics is the function f(q) → SE(3) that maps a vector of joint values q to the pose (position + orientation) of the end-effector. There are two canonical conventions for writing this down: Denavit-Hartenberg (DH) - four parameters per joint, multiply 4×4 transforms - and the modern product-of-exponentials (PoE) form using twists in the Lie algebra se(3). The hexapod widget below gives intuition: drag the joint angles and watch the foot move.",
+      "bullets": [
+        "DH convention - 4 numbers (a, α, d, θ) per joint; product of per-joint 4×4 transforms",
+        "Product of exponentials (PoE) - body-frame screw motions; Modern Robotics convention",
+        "End-effector pose: T = T₁ · T₂ · ... · Tₙ - order matters (right-to-left composition)",
+        "Singular configurations: where the Jacobian loses rank → infinite IK solutions or none",
+        "Workspace = the set of reachable end-effector poses - usually a torus / sphere with holes"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "FK for a 2-link planar arm (numpy)",
+          "code": "import numpy as np\n\ndef fk_2link(theta1, theta2, L1=0.3, L2=0.25):\n    x = L1*np.cos(theta1) + L2*np.cos(theta1 + theta2)\n    y = L1*np.sin(theta1) + L2*np.sin(theta1 + theta2)\n    return np.array([x, y])\n\nprint(fk_2link(np.pi/4, np.pi/3))   # → [0.073, 0.473]"
+        },
+        {
+          "language": "cpp",
+          "title": "Same FK in C++ with Eigen - the production-grade pattern",
+          "code": "#include <Eigen/Geometry>\n#include <vector>\n\nusing Eigen::Affine3d;\nusing Eigen::AngleAxisd;\nusing Eigen::Vector3d;\n\nstruct DhParam { double a, alpha, d, theta; };\n\n// FK by chain of homogeneous transforms.\nAffine3d fk_dh(const std::vector<DhParam>& dh, const std::vector<double>& q) {\n  Affine3d T = Affine3d::Identity();\n  for (size_t i = 0; i < dh.size(); ++i) {\n    const auto& p = dh[i];\n    const double th = p.theta + q[i];\n    Affine3d Tz = Affine3d::Identity();\n    Tz.translation() = Vector3d(0, 0, p.d);\n    Tz.rotate(AngleAxisd(th, Vector3d::UnitZ()));\n    Affine3d Tx = Affine3d::Identity();\n    Tx.translation() = Vector3d(p.a, 0, 0);\n    Tx.rotate(AngleAxisd(p.alpha, Vector3d::UnitX()));\n    T = T * Tz * Tx;\n  }\n  return T;\n}\n\n// Use Pinocchio for production: ~10x faster, more features.\n// pinocchio::forwardKinematics(model, data, q); pinocchio::updateFramePlacements(model, data);"
+        }
+      ]
+    },
+    {
+      "id": "inverse-kinematics",
+      "widget": "ik",
+      "heading": "Inverse kinematics - pose → joint angles",
+      "body": "IK is the harder direction: given a desired end-effector pose, find joint angles that achieve it. Some kinematic chains (6-DOF arms with a spherical wrist) admit closed-form analytical solutions. Most need iterative numerical solvers - typically damped least-squares using the Jacobian, or higher-quality solvers like TRAC-IK and BiO-IK that handle joint limits and singularities gracefully. Drag the red target on the widget below to see live IK on a 2-link planar arm.",
+      "bullets": [
+        "Analytical IK - closed form, instant, geometry-specific (Pieper's solution for spherical-wrist 6-DOF)",
+        "Numerical IK - Newton-Raphson, damped least-squares (DLS); works for any chain",
+        "Redundant arms (≥7 DOF) - many solutions per pose; pick by secondary objective (avoid joint limits, max manipulability)",
+        "Modern solvers: KDL (default in MoveIt), TRAC-IK (better near limits), BiO-IK (handles arbitrary cost terms)",
+        "ML-based IK - neural networks trained on FK data; fast at inference, no convergence guarantee"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Damped least-squares IK - the workhorse",
+          "code": "import numpy as np\n\ndef ik_step(J, err, lam=0.05):\n    \"\"\"One DLS step: dq that nudges the end-effector along err.\n       J is the 6×n geometric Jacobian. err is a 6-vector (linear + angular).\"\"\"\n    n = J.shape[1]\n    return np.linalg.solve(J.T @ J + lam * lam * np.eye(n), J.T @ err)\n\n# Iterate until ||err|| < tol or step count exhausted.\n# In practice always check: joint limits, self-collision, manipulability."
+        }
+      ],
+      "links": [
+        {
+          "label": "TRAC-IK",
+          "url": "https://traclabs.com/projects/trac-ik/"
+        },
+        {
+          "label": "BiO-IK",
+          "url": "https://github.com/TAMS-Group/bio_ik"
+        }
+      ]
+    },
+    {
+      "id": "dynamics",
+      "heading": "Robot dynamics - torques and accelerations",
+      "body": "Dynamics is the relationship between torques applied at joints and the resulting accelerations of the chain. The standard formulation is M(q)q̈ + C(q,q̇)q̇ + g(q) = τ, where M is the joint-space inertia matrix, C captures Coriolis + centrifugal effects, g captures gravity, and τ is the joint-torque vector. The recursive Newton-Euler algorithm computes this in O(n) for n joints; the Lagrangian form is mathematically cleaner but slower to evaluate. Knowing dynamics matters for: torque-controlled motors, MPC, gravity compensation, and any contact-rich task.",
+      "bullets": [
+        "M(q) - joint-space inertia matrix (positive definite, n×n)",
+        "C(q, q̇)q̇ - Coriolis and centrifugal forces; depend on velocity",
+        "g(q) - gravity-compensation torques; only depend on configuration",
+        "τ_friction - viscous + Coulomb; not in the canonical equation but always there in practice",
+        "Inverse dynamics - given (q, q̇, q̈), compute τ. RNEA = Recursive Newton-Euler",
+        "Forward dynamics - given (q, q̇, τ), compute q̈. Articulated-Body Algorithm in O(n)"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Use Pinocchio for fast rigid-body dynamics",
+          "code": "import pinocchio as pin\nimport numpy as np\n\nmodel = pin.buildModelFromUrdf('panda.urdf')\ndata  = model.createData()\n\nq    = pin.neutral(model)\nv    = np.zeros(model.nv)\na    = np.zeros(model.nv)\n\n# Inverse dynamics: torques to produce desired joint accelerations\ntau = pin.rnea(model, data, q, v, a)\n\n# Joint-space inertia matrix\nM = pin.crba(model, data, q)\n\n# Gravity-compensation torques (set v = a = 0)\ng = pin.computeGeneralizedGravity(model, data, q)"
+        }
+      ],
+      "links": [
+        {
+          "label": "Pinocchio (CNRS, fast rigid-body dynamics)",
+          "url": "https://github.com/stack-of-tasks/pinocchio"
+        },
+        {
+          "label": "Drake (Toyota Research, modelling + control)",
+          "url": "https://drake.mit.edu/"
+        }
+      ],
+      "widget": "manipulability"
+    },
+    {
+      "id": "frames-rotations",
+      "widget": "rotation3d",
+      "heading": "Coordinate frames & rotations",
+      "body": "Robotics is full of frames - world, base_link, camera, end-effector - and you constantly need to express points and poses in different ones. The math: rotation matrices SO(3), Euler angles (intuitive but suffer gimbal lock), axis-angle, and quaternions (4 numbers, no singularities, the de-facto standard in code). Drag the rotation widget below to see all three representations stay synchronised; the gimbal-lock preset shows the singularity that makes Euler dangerous near pitch ±90°.",
+      "bullets": [
+        "Rotation matrix R: orthonormal 3×3, det(R) = +1; composes by multiplication",
+        "Euler ZYX (yaw-pitch-roll) - intuitive but gimbal-locks at pitch = ±90°",
+        "Axis-angle (ω̂, θ) - exponential coordinates of SO(3); easy interpretation",
+        "Quaternion q = (w, x, y, z) - singularity-free, slerp-friendly, the standard in code",
+        "Lie group SE(3) = rotation + translation; Lie algebra se(3) = twists",
+        "ROS 2 TF2: timestamped tree of named frames; lookup_transform interpolates"
+      ]
+    },
+    {
+      "id": "urdf-modelling",
+      "heading": "URDF / xacro - describing the robot to ROS",
+      "body": "URDF (Unified Robot Description Format) is the XML format every ROS tool reads. It lists every link (rigid body) and joint (connection), plus visual meshes, collision meshes, inertial properties. xacro is the macro language you'll actually write - it adds parameters, conditionals, and includes so URDFs don't become 5000-line copy-paste pyramids. SDF is the Gazebo-native sibling format; ros_gz translates between them.",
+      "codeBlocks": [
+        {
+          "language": "xml",
+          "title": "Tiny xacro that generates a 2-link arm",
+          "code": "<?xml version=\"1.0\"?>\n<robot xmlns:xacro=\"http://www.ros.org/wiki/xacro\" name=\"two_link\">\n  <xacro:property name=\"L1\" value=\"0.4\"/>\n  <xacro:property name=\"L2\" value=\"0.3\"/>\n\n  <xacro:macro name=\"link_cyl\" params=\"name length\">\n    <link name=\"${name}\">\n      <visual>\n        <origin xyz=\"0 0 ${length / 2}\"/>\n        <geometry><cylinder length=\"${length}\" radius=\"0.025\"/></geometry>\n      </visual>\n      <inertial>\n        <mass value=\"1.0\"/>\n        <inertia ixx=\"0.01\" iyy=\"0.01\" izz=\"0.001\" ixy=\"0\" ixz=\"0\" iyz=\"0\"/>\n      </inertial>\n    </link>\n  </xacro:macro>\n\n  <link name=\"base_link\"/>\n  <xacro:link_cyl name=\"upper_arm\" length=\"${L1}\"/>\n  <xacro:link_cyl name=\"forearm\"   length=\"${L2}\"/>\n\n  <joint name=\"shoulder\" type=\"revolute\">\n    <parent link=\"base_link\"/><child link=\"upper_arm\"/>\n    <axis xyz=\"0 0 1\"/>\n    <limit lower=\"-3.14\" upper=\"3.14\" effort=\"10\" velocity=\"1\"/>\n  </joint>\n\n  <joint name=\"elbow\" type=\"revolute\">\n    <parent link=\"upper_arm\"/><child link=\"forearm\"/>\n    <origin xyz=\"0 0 ${L1}\"/>\n    <axis xyz=\"0 1 0\"/>\n    <limit lower=\"-2.0\" upper=\"2.0\" effort=\"10\" velocity=\"1\"/>\n  </joint>\n</robot>"
+        },
+        {
+          "language": "bash",
+          "title": "Render xacro → URDF and visualize",
+          "code": "ros2 run xacro xacro two_link.urdf.xacro > two_link.urdf\nros2 launch urdf_tutorial display.launch.py model:=$(pwd)/two_link.urdf"
+        }
+      ],
+      "links": [
+        {
+          "label": "URDF tutorials (official)",
+          "url": "https://docs.ros.org/en/jazzy/Tutorials/Intermediate/URDF/URDF-Main.html"
+        },
+        {
+          "label": "xacro reference",
+          "url": "https://github.com/ros/xacro/wiki"
+        }
+      ],
+      "widget": "tf-tree"
+    },
+    {
+      "id": "end-effectors",
+      "heading": "End-effectors - the working business end",
+      "body": "The end-effector is what actually does the task. The choice dominates everything downstream (planning, perception requirements, success rate). Major families: parallel-jaw grippers (cheap, robust, the manipulation default), suction cups (flat surfaces, food/packages - Amazon Robotics relies heavily here), anthropomorphic hands (dexterous but expensive - Shadow Hand, Allegro), soft grippers (compliant, food-safe, low precision), and specialty tools (welding torches, paint sprayers, surgical instruments). Choosing well makes the rest of the project tractable; choosing poorly forces ugly software workarounds.",
+      "bullets": [
+        "Parallel jaw - Robotiq 2F-85, Schunk EGP, OnRobot RG2; the default",
+        "Suction - vacuum-cup, multi-cup; great for warehouse picking, breaks on porous objects",
+        "Anthropomorphic - Shadow C5, Allegro V4, Inspire - 16+ DOF, ~$100K+",
+        "Soft / underactuated - Festo, Soft Robotics Inc; safe for irregular objects",
+        "Force / torque sensor at wrist (ATI, Robotiq FT300) - needed for assembly + impedance control",
+        "Tool changers - robot can swap end-effectors mid-task; common in assembly cells"
+      ],
+      "links": [
+        {
+          "label": "Robotiq grippers",
+          "url": "https://robotiq.com/products"
+        },
+        {
+          "label": "Shadow Robot hands",
+          "url": "https://www.shadowrobot.com/"
+        }
+      ]
+    },
+    {
+      "id": "design-process",
+      "heading": "The mechanical design process - use case → CAD → prototype",
+      "body": "Building a robot from scratch is a structured engineering process, not a vibe. The standard arc: requirements (payload, reach, speed, accuracy, environment) → concept design → kinematic synthesis (pick joint topology) → CAD modelling (SolidWorks, Onshape, Fusion 360) → simulation (FEA for stress, dynamics in Gazebo or Drake) → prototyping (3D print first, machine for production) → calibration → handoff to controls. Modern shortcut: start from an existing reference design (e.g., open-source quadruped, ROS-Industrial UR retrofit) and customize.",
+      "bullets": [
+        "Requirements first: what payload, what reach, what cycle time, what env (IP rating, EMI)",
+        "CAD: SolidWorks (industry standard), Onshape (cloud), Fusion 360 (cheaper)",
+        "FEA - finite element analysis for stress, deflection, fatigue (SolidWorks Simulation, Ansys)",
+        "3D-print prototype in PETG/ABS for fit; machine in aluminum for production",
+        "URDF should match CAD exactly - automate export with the URDF Exporter SolidWorks plugin",
+        "Tolerance stack-up - small mechanical errors compound; calibrate post-assembly",
+        "Open hardware: Open Dynamic Robot, MIT Mini Cheetah, B1 (Unitree open papers)"
+      ],
+      "links": [
+        {
+          "label": "SolidWorks URDF exporter",
+          "url": "http://wiki.ros.org/sw_urdf_exporter"
+        },
+        {
+          "label": "Open Dynamic Robot Initiative",
+          "url": "https://open-dynamic-robot-initiative.github.io/"
+        },
+        {
+          "label": "MIT Mini Cheetah open paper",
+          "url": "https://www.semanticscholar.org/paper/MIT-Cheetah-3-Design-and-Control-of-a-Robust-Bledt-Powell/4c83f8d9e0c8e5baca2c5aef41cb18e88d2d54b9"
+        }
+      ]
+    }
+  ]
+}

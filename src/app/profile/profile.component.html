@@ -59,15 +59,15 @@
 
           <!-- CTA buttons -->
           <div class="flex flex-wrap gap-2 sm:gap-3 mb-8 sm:mb-10">
-            <a [href]="meta.resumeUrl" target="_blank"
+            <a [href]="meta.resumeUrl" target="_blank" rel="noopener noreferrer"
                class="cta-primary inline-flex items-center px-5 sm:px-7 py-2.5 sm:py-3 rounded-full font-semibold text-white text-sm sm:text-base transition-all">
               <i class="fas fa-file-alt mr-2"></i>View Resume
             </a>
-            <a [href]="meta.linkedin" target="_blank"
+            <a [href]="meta.linkedin" target="_blank" rel="noopener noreferrer"
                class="cta-secondary inline-flex items-center px-5 sm:px-7 py-2.5 sm:py-3 rounded-full font-semibold border border-slate-600 text-slate-300 text-sm sm:text-base transition-all">
               <i class="fab fa-linkedin mr-2"></i>LinkedIn
             </a>
-            <a [href]="meta.github" target="_blank"
+            <a [href]="meta.github" target="_blank" rel="noopener noreferrer"
                class="cta-secondary inline-flex items-center px-5 sm:px-7 py-2.5 sm:py-3 rounded-full font-semibold border border-slate-600 text-slate-300 text-sm sm:text-base transition-all">
               <i class="fab fa-github mr-2"></i>GitHub
             </a>
@@ -106,6 +106,8 @@
                 <div class="w-full h-full rounded-full bg-dark-bg"></div>
               </div>
               <img src="assets/img/vez.jpg" [alt]="meta.name"
+                   width="288" height="288"
+                   fetchpriority="high" decoding="async"
                    class="absolute inset-[5px] w-[calc(100%-10px)] h-[calc(100%-10px)] rounded-full object-cover z-10 photo-glow">
             </div>
           </div>
@@ -176,23 +178,27 @@
     </div>
   </section>
 
-  <!-- ===================== CONTACT SECTION ===================== -->
+  <!-- ===================== CONNECT SECTION (stats + contact) ===================== -->
   <section class="py-16 sm:py-24 bg-dark-surface" id="contact">
-    <div class="container mx-auto px-4 sm:px-6 max-w-2xl text-center" data-aos="fade-up">
-      <p class="section-number mb-3">06 / Get In Touch</p>
-      <h2 class="text-3xl md:text-4xl font-bold text-slate-100 mb-4">Let's Work Together</h2>
-      <p class="text-slate-400 mb-8 leading-relaxed">I'm currently open to new opportunities. Whether you have a question, a project idea, or just want to say hi  my inbox is always open.</p>
-      <a [attr.href]="'mailto:' + meta.email" class="cta-primary inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-white text-lg">
-        <i class="fas fa-envelope"></i> Say Hello
-      </a>
-      <p class="mt-4 text-slate-400 text-sm">
-        or email me directly at
-        <a [attr.href]="'mailto:' + meta.email" class="text-sky-400 hover:text-sky-300 transition-colors font-medium">{{ meta.email }}</a>
-      </p>
-      <div class="flex justify-center gap-6 mt-8">
-        <a [href]="meta.linkedin" target="_blank" class="text-slate-400 hover:text-sky-400 transition-colors flex items-center gap-2 text-sm"><i class="fab fa-linkedin text-lg"></i> LinkedIn</a>
-        <a [href]="meta.github" target="_blank" class="text-slate-400 hover:text-violet-400 transition-colors flex items-center gap-2 text-sm"><i class="fab fa-github text-lg"></i> GitHub</a>
-        <a [href]="meta.resumeUrl" target="_blank" class="text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-2 text-sm"><i class="fas fa-file-alt text-lg"></i> Resume</a>
+    <div class="container mx-auto px-4 sm:px-6 max-w-6xl">
+
+      <header class="text-center mb-10 sm:mb-14" data-aos="fade-up">
+        <p class="section-number mb-3">06 / Connect</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-100 mb-4">Say hello, see who else has</h2>
+        <p class="text-slate-400 leading-relaxed max-w-2xl mx-auto">I'm open to robotics roles, collaborations, and conversations. Drop a message on the right, or use any of the direct channels. The card on the left shows live visitor stats.</p>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+        <div data-aos="fade-right" data-aos-duration="700">
+          <app-visitor-stats></app-visitor-stats>
+        </div>
+        <div data-aos="fade-left" data-aos-duration="700">
+          <app-contact-form
+            [email]="meta.email"
+            [linkedin]="meta.linkedin"
+            [github]="meta.github">
+          </app-contact-form>
+        </div>
       </div>
     </div>
   </section>
@@ -212,11 +218,11 @@
         <!-- Right: nav links -->
         <div class="flex flex-col gap-2">
           <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Quick Links</p>
-          <a [href]="meta.linkedin" target="_blank"
+          <a [href]="meta.linkedin" target="_blank" rel="noopener noreferrer"
              class="flex items-center gap-2 text-sm text-slate-400 hover:text-sky-400 transition-colors">
             <i class="fab fa-linkedin w-4 text-center"></i><span>LinkedIn</span>
           </a>
-          <a [href]="meta.github" target="_blank"
+          <a [href]="meta.github" target="_blank" rel="noopener noreferrer"
              class="flex items-center gap-2 text-sm text-slate-400 hover:text-violet-400 transition-colors">
             <i class="fab fa-github w-4 text-center"></i><span>GitHub</span>
           </a>
@@ -224,7 +230,7 @@
              class="flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors">
             <i class="fas fa-envelope w-4 text-center"></i><span>{{ meta.email }}</span>
           </a>
-          <a [href]="meta.resumeUrl" target="_blank"
+          <a [href]="meta.resumeUrl" target="_blank" rel="noopener noreferrer"
              class="flex items-center gap-2 text-sm text-slate-400 hover:text-amber-400 transition-colors">
             <i class="fas fa-file-alt w-4 text-center"></i><span>Resume</span>
           </a>

@@ -1,0 +1,73 @@
+<div class="pinhole">
+  <div class="pinhole__stage">
+    <div class="pinhole__canvas" #canvasHost></div>
+
+    <div class="pinhole__hud">
+      <div class="pinhole__legend">
+        <span><i class="dot" style="background:#fde047"></i> camera + frustum</span>
+        <span><i class="dot" style="background:#38bdf8"></i> image plane</span>
+        <span><i class="dot" style="background:#fb7185"></i> 3D point P</span>
+        <span><i class="dot" style="background:#fbbf24"></i> projection u, v</span>
+      </div>
+
+      <div class="pinhole__preview-wrap">
+        <span class="pinhole__preview-tag">image · 640 × 480</span>
+        <canvas class="pinhole__preview" #preview></canvas>
+        <span class="pinhole__preview-pixel" [class.is-out]="!inBounds">
+          ({{ u | number:'1.0-0' }}, {{ v | number:'1.0-0' }})
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pinhole__panel">
+    <div class="pinhole__panel-head">
+      <span class="pinhole__panel-title">3D point + intrinsics</span>
+      <button type="button" class="pinhole__reset" (click)="reset()">
+        <i class="fas fa-undo"></i> reset
+      </button>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Focal length</span>
+        <span class="slider-row__val">f = {{ f }} px</span>
+      </div>
+      <input type="range" min="100" max="1500" step="10" [value]="f"
+             (input)="onSlider('f', $any($event.target).value)" aria-label="Focal length" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Point X (right)</span>
+        <span class="slider-row__val">{{ X | number:'1.2-2' }} m</span>
+      </div>
+      <input type="range" min="-2" max="2" step="0.05" [value]="X"
+             (input)="onSlider('X', $any($event.target).value)" aria-label="Point X" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Point Y (down)</span>
+        <span class="slider-row__val">{{ Y | number:'1.2-2' }} m</span>
+      </div>
+      <input type="range" min="-2" max="2" step="0.05" [value]="Y"
+             (input)="onSlider('Y', $any($event.target).value)" aria-label="Point Y" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head">
+        <span class="slider-row__name">Point Z (depth)</span>
+        <span class="slider-row__val">{{ Z | number:'1.2-2' }} m</span>
+      </div>
+      <input type="range" min="0.1" max="6" step="0.05" [value]="Z"
+             (input)="onSlider('Z', $any($event.target).value)" aria-label="Point Z" />
+    </div>
+
+    <div class="pinhole__eq">
+      <code>u = f · X / Z + cx</code>
+      <code>v = f · Y / Z + cy</code>
+      <p>Drag the red sphere in 3D, or move the X / Y / Z sliders. Push <em>f</em> down to widen the field of view; push it up to zoom in. Points outside the frustum project off the image.</p>
+    </div>
+  </div>
+</div>

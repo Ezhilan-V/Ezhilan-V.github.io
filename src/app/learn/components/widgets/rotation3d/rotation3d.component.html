@@ -1,0 +1,55 @@
+<div class="r3d">
+  <div class="r3d__stage">
+    <div class="r3d__canvas" #canvasHost></div>
+    <div class="r3d__hud">
+      <span class="r3d__hud-tag">drag to orbit · scroll / pinch to zoom</span>
+    </div>
+  </div>
+
+  <div class="r3d__panel">
+    <div class="r3d__panel-head">
+      <span class="r3d__panel-title">Euler ZYX (intrinsic)</span>
+      <button type="button" class="r3d__btn" (click)="reset()">
+        <i class="fas fa-undo"></i> reset
+      </button>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Yaw  ψ (about Z)</span><span class="slider-row__val">{{ yaw }}°</span></div>
+      <input type="range" min="-180" max="180" step="1" [value]="yaw" (input)="onSlider('yaw', $any($event.target).value)" aria-label="Yaw" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Pitch  θ (about Y)</span><span class="slider-row__val">{{ pitch }}°</span></div>
+      <input type="range" min="-90" max="90" step="1" [value]="pitch" (input)="onSlider('pitch', $any($event.target).value)" aria-label="Pitch" />
+    </div>
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Roll  φ (about X)</span><span class="slider-row__val">{{ roll }}°</span></div>
+      <input type="range" min="-180" max="180" step="1" [value]="roll" (input)="onSlider('roll', $any($event.target).value)" aria-label="Roll" />
+    </div>
+
+    <div class="r3d__presets">
+      <button type="button" (click)="preset('identity')">identity</button>
+      <button type="button" (click)="preset('flip-x')">180° X</button>
+      <button type="button" (click)="preset('gimbal-lock')">gimbal lock</button>
+      <button type="button" (click)="preset('random')">random</button>
+    </div>
+
+    <div class="r3d__readouts">
+      <div class="r3d__readout">
+        <span class="r3d__readout-label">Quaternion (x, y, z, w)</span>
+        <span class="r3d__readout-val">[{{ qx }}, {{ qy }}, {{ qz }}, {{ qw }}]</span>
+      </div>
+      <div class="r3d__readout">
+        <span class="r3d__readout-label">Axis · angle</span>
+        <span class="r3d__readout-val">[{{ axisX }}, {{ axisY }}, {{ axisZ }}] · {{ axisDeg }}°</span>
+      </div>
+    </div>
+
+    <p class="r3d__note">
+      Three ways to describe the same orientation. Drag pitch toward ±90° and watch the gimbal-lock
+      preset: yaw and roll start affecting the same physical motion. Quaternions don't have this
+      problem - every unit quaternion maps to exactly one orientation, and slerp interpolates
+      smoothly even through poles.
+    </p>
+  </div>
+</div>

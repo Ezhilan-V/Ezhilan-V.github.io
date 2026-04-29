@@ -1,0 +1,84 @@
+:host { display: block; }
+
+.occ {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+
+  @media (min-width: 1000px) {
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.25rem;
+    padding: 1.25rem;
+  }
+
+  &__stage { position: relative; border-radius: 12px; overflow: hidden; background: #0a1320; canvas { display: block; width: 100%; height: auto; } }
+  &__hud { position: absolute; top: 0; left: 0; padding: 0.55rem 0.75rem; pointer-events: none;
+    &-tag { background: rgba(8, 11, 20, 0.7); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 6px; padding: 0.22rem 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; color: #94a3b8; backdrop-filter: blur(4px); } }
+
+  &__panel { display: flex; flex-direction: column; gap: 0.7rem; }
+  &__panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+  &__panel-title { font-size: 0.78rem; font-weight: 600; color: #34d399; text-transform: uppercase; letter-spacing: 0.12em; }
+
+  &__actions { display: inline-flex; flex-wrap: wrap; gap: 0.4rem; }
+  &__btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.72rem; color: #94a3b8;
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 8px; padding: 0.3rem 0.65rem;
+    cursor: pointer; transition: all 0.18s ease;
+    font-family: 'Inter', system-ui, sans-serif;
+    &:hover { color: #34d399; border-color: rgba(52, 211, 153, 0.4); }
+  }
+
+  &__legend {
+    display: flex; flex-wrap: wrap; gap: 0.45rem 0.85rem;
+    padding: 0.55rem 0.7rem;
+    background: rgba(8, 11, 20, 0.45);
+    border: 1px dashed rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    font-size: 0.7rem; color: #cbd5e1;
+    font-family: 'Inter', system-ui, sans-serif;
+    span { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .dot  { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .line { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+    .cell { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  }
+
+  &__note {
+    margin: 0; font-size: 0.74rem; color: #94a3b8; line-height: 1.55;
+    font-family: 'Inter', system-ui, sans-serif;
+    code { font-family: 'JetBrains Mono', monospace; color: #34d399; background: rgba(52,211,153,0.08); padding: 0.04rem 0.3rem; border-radius: 4px; font-size: 0.7rem; }
+  }
+}
+
+.slider-row {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(8, 11, 20, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 10px;
+  &__head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+  &__name { font-size: 0.78rem; color: #e2e8f0; font-weight: 500; }
+  &__val  { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #34d399; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+    background: linear-gradient(90deg, rgba(52, 211, 153, 0.25), rgba(56, 189, 248, 0.25));
+    border-radius: 999px; outline: none; cursor: pointer;
+    &::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #34d399; border: 2px solid #0a1320; box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.35); cursor: pointer; }
+    &::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #34d399; border: 2px solid #0a1320; cursor: pointer; }
+  }
+}
+
+:host-context(.light-theme) .occ {
+  background: #ffffff; border-color: rgba(15, 23, 42, 0.1);
+  &__stage { background: #1e293b; }
+  &__legend { background: rgba(241, 245, 249, 0.7); border-color: rgba(15, 23, 42, 0.12); color: #475569; }
+  &__note   { color: #475569; }
+  .slider-row { background: rgba(241, 245, 249, 0.7); border-color: rgba(15, 23, 42, 0.08); &__name { color: #0f172a; } &__val { color: #059669; } }
+}

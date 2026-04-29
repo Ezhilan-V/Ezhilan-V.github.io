@@ -1,0 +1,37 @@
+<div class="ws" [class.ws--paused]="paused" [style.--ws-accent]="accent">
+  <div class="ws__stage" #stage>
+    <canvas *ngIf="showCanvas" #canvas></canvas>
+    <ng-content select="[stage-content]"></ng-content>
+    <div class="ws__overlay">
+      <ng-content select="[stage-overlay]"></ng-content>
+    </div>
+  </div>
+
+  <div class="ws__panel">
+    <div class="ws__panel-head">
+      <div class="ws__panel-text">
+        <span class="ws__panel-title" *ngIf="title">{{ title }}</span>
+        <span class="ws__panel-subtitle" *ngIf="subtitle">{{ subtitle }}</span>
+      </div>
+      <div class="ws__actions">
+        <ng-content select="[head-actions]"></ng-content>
+        <button *ngIf="showPause" type="button" class="ws__btn"
+                (click)="togglePause()" [attr.aria-pressed]="paused">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button *ngIf="showReset" type="button" class="ws__btn" (click)="doReset()">
+          <i class="fas fa-undo"></i> reset
+        </button>
+      </div>
+    </div>
+
+    <div class="ws__controls">
+      <ng-content></ng-content>
+    </div>
+
+    <div class="ws__legend">
+      <ng-content select="[legend]"></ng-content>
+    </div>
+  </div>
+</div>

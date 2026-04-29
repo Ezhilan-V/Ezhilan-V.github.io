@@ -1,0 +1,242 @@
+{
+  "slug": "compute",
+  "hero": {
+    "tagline": "What runs the code - GPUs, real-time Linux, and the hardware foundation",
+    "intro": "Choosing your robot's compute is choosing your ceiling for everything else - perception throughput, control loop rate, ML model size, battery life. This branch covers the major options (NVIDIA Jetson, x86 NUCs, Raspberry Pi, Coral), when each makes sense, and the boring-but-critical concerns: real-time scheduling so a 1 kHz controller doesn't jitter, network latency, power and thermal budgets, ROS 2 QoS profiles, and observability for production deployments. The 'where do I run my code' chapter most courses skip."
+  },
+  "sections": [
+    {
+      "id": "the-stack",
+      "heading": "The compute stack",
+      "body": "Most robots end up with two or three compute layers. A microcontroller (STM32, Teensy, RP2040) handles motor drivers, encoders, and the real-time control loop at 1+ kHz. A main computer (Jetson, NUC, Pi) runs ROS 2, perception, planning. Optionally an offboard or cloud machine handles training and heavy ML.",
+      "bullets": [
+        "MCU layer - deterministic, fast, talks to motors and IMUs over UART/SPI/CAN",
+        "Onboard computer - Linux, ROS 2, perception + planning + behaviors",
+        "Offboard / cloud - RL training, ML inference for non-real-time tasks, fleet management",
+        "Bridge between layers: micro-ROS, rosserial, custom serial protocols"
+      ]
+    },
+    {
+      "id": "embedded-compute",
+      "heading": "Embedded compute - Jetson Thor, Orin, Pi, Coral",
+      "body": "For robots that have to fit on the platform and run on battery, the choice is usually between NVIDIA Jetson (GPU + ARM CPU, expensive but unbeatable for vision/ML), Raspberry Pi (cheap, great community, no GPU acceleration for ML), and accelerator add-ons like Google Coral (TPU, fast but model-restricted). For 2026 humanoid + AV workloads, NVIDIA's Jetson Thor (released 2025) is the new top of the line - 2,000 TFLOPS FP4, 128 GB shared memory, designed specifically to run VLAs like GR00T and full BEV perception on-device.",
+      "bullets": [
+        "Jetson Thor (~$3,500) - 2,000 TFLOPS FP4, 128 GB unified, 130 W. The 2026 humanoid / AV brain. Runs GR00T, Cosmos Policy, full BEV perception",
+        "Jetson AGX Orin (~$2,000) - 275 TOPS, laptop-class. Still the most-deployed compute on serious mobile robots in 2026",
+        "Jetson Orin NX (~$900) / Orin Nano (~$500) - 100 / 40 TOPS, great for sub-10kg AMRs, drones, dev kits",
+        "Raspberry Pi 5 (~$80) - great for control, light perception via Coral USB stick",
+        "Coral USB / M.2 - 4 TOPS INT8, runs quantized TFLite models only",
+        "Power draw: Thor at 130 W needs serious cooling. AGX Orin pulls 60 W under load. Orin Nano stays under 15 W"
+      ],
+      "links": [
+        {
+          "label": "Jetson Orin family",
+          "url": "https://www.nvidia.com/en-us/autonomous-machines/embedded-systems/jetson-orin/"
+        },
+        {
+          "label": "Coral devices",
+          "url": "https://coral.ai/products/"
+        }
+      ]
+    },
+    {
+      "id": "x86-compute",
+      "heading": "x86 mini-PCs and NUCs",
+      "body": "When the robot has the size and power for it, an x86 mini-PC (Intel NUC, ASUS PN, Beelink, Minisforum) crushes ARM SBCs on raw compute, has predictable performance, and runs every Linux package without ARM gotchas. A modern NUC with i7 + 32 GB + NVMe is around $700 and handles ROS 2 + perception + planning effortlessly.",
+      "bullets": [
+        "Pros: x86 software ecosystem, more RAM, real PCIe lanes (M.2 NVMe, sometimes a discrete GPU)",
+        "Cons: usually heavier, higher power, often no GPU (unless you go gaming-laptop sized)",
+        "Spec tip: minimum 16 GB RAM, NVMe SSD, 4+ cores. Get USB-C PD if you'll battery-power it",
+        "Watch the TDP - a 65W i9 in a fanless case will thermally throttle"
+      ]
+    },
+    {
+      "id": "gpus",
+      "heading": "GPUs - when you need them, what to buy",
+      "body": "If you're running learned perception (YOLO, SAM, SLAM with deep features), a VLM, or training in sim, you need a GPU. The decision is integrated (Jetson) vs discrete (laptop / desktop NVIDIA card).",
+      "bullets": [
+        "Inference only, on-robot - Jetson Orin Nano covers small models; AGX for VLMs",
+        "Training - desktop with RTX 4090 / 5090, or rent A100 / H100 by the hour on Lambda / RunPod",
+        "VRAM is the binding constraint for VLMs / VLAs - OpenVLA-7B needs ~16 GB FP16",
+        "Avoid AMD GPUs for robotics ML - CUDA ecosystem is still dominant in 2026"
+      ]
+    },
+    {
+      "id": "rtos",
+      "heading": "Real-time control + microcontrollers",
+      "body": "For control loops faster than ~200 Hz with hard timing requirements, run them on a microcontroller, not Linux. The MCU talks to the main computer over a serial bus. Modern options:",
+      "bullets": [
+        "STM32 (F4 / H7 / G4) - the industry workhorse for motor control + sensors",
+        "Teensy 4.x - Arduino-friendly, very fast (Cortex-M7 at 600 MHz)",
+        "RP2040 / RP2350 (Pi Pico) - cheap, two cores, programmable IO is amazing for encoders",
+        "ESP32-S3 - has Wi-Fi + BT for wireless robots, less rigorous timing than STM32",
+        "micro-ROS bridges any of these to ROS 2 over serial / Ethernet / CAN"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Add micro-ROS support to a Raspberry Pi Pico project",
+          "code": "cd ~/{{ws}}/src\ngit clone -b jazzy https://github.com/micro-ROS/micro_ros_setup.git\ncd ~/{{ws}}\nrosdep install --from-paths src --ignore-src -r -y\ncolcon build\nsource install/setup.bash\nros2 run micro_ros_setup create_firmware_ws.sh host"
+        }
+      ],
+      "links": [
+        {
+          "label": "micro-ROS",
+          "url": "https://micro.ros.org/"
+        }
+      ],
+      "widget": "rt-jitter"
+    },
+    {
+      "id": "networking",
+      "heading": "Networking, DDS, and latency",
+      "body": "ROS 2 uses DDS for transport. By default, every node on every machine on the same subnet discovers every other node - convenient, but it can saturate the network with discovery traffic on big robots. Tune it with ROS_DOMAIN_ID, FastDDS or Cyclone DDS profiles, and Discovery Server on bigger systems.",
+      "bullets": [
+        "Wired Gigabit ethernet beats Wi-Fi for any non-trivial topic bandwidth",
+        "Wi-Fi 6 / 6E if wireless - and pick a band with no other traffic, ideally a dedicated AP",
+        "ROS_DOMAIN_ID isolates groups of nodes so robots don't talk to each other",
+        "Cyclone DDS is the more predictable default for Humble; FastDDS is the actual default in some distros",
+        "Big topics (images, point clouds) - use image_transport / point_cloud_transport with compressed plugins"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Switch to Cyclone DDS",
+          "code": "sudo apt install -y ros-jazzy-rmw-cyclonedds-cpp\nexport RMW_IMPLEMENTATION=rmw_cyclonedds_cpp\nexport ROS_DOMAIN_ID=42  # any 0-101"
+        }
+      ],
+      "links": [
+        {
+          "label": "ROS 2 DDS tuning",
+          "url": "https://docs.ros.org/en/jazzy/How-To-Guides/DDS-tuning.html"
+        }
+      ]
+    },
+    {
+      "id": "power-thermal",
+      "heading": "Power and thermal budgets",
+      "body": "On battery-powered robots, every watt matters. Build the budget early: Jetson AGX (60 W) + LiDAR (8 W) + 4× cameras (10 W) + 6 motors at full load (200+ W) adds up fast. Battery: Wh = Ah × V. A 20 Ah 24 V LiPo is 480 Wh - about an hour of moderate driving on a 50 cm robot. For thermal, anything in a sealed enclosure needs forced air or a heatsink + spreader; passively cooled compute throttles within minutes under sustained ML load.",
+      "bullets": [
+        "Always reserve 20% battery for safe-return / shutdown",
+        "BMS (battery management system) is non-negotiable on Li chemistry - get one with cell balancing",
+        "Jetsons have selectable power modes (nvpmodel) - run the lowest mode that meets your perf",
+        "Active cooling on compute, passive on motors (until they need fans too)",
+        "Estimate before you buy - many robots get redesigned because the battery wouldn't fit"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Jetson - pick a power mode (max perf vs battery saving)",
+          "code": "sudo nvpmodel -q                 # show current mode\nsudo nvpmodel -m 0               # MAXN - uncapped, hottest, fastest\nsudo nvpmodel -m 1               # 15 W mode for Orin Nano\nsudo jetson_clocks               # lock all clocks to max within the mode"
+        },
+        {
+          "language": "bash",
+          "title": "tegrastats - live SoC + GPU + temp + power",
+          "code": "sudo tegrastats --interval 500\n# RAM 1234/8048MB ... GR3D_FREQ 67%@624 ... CPU [80%@1920,...]\n#                ... AO@36C GPU@40C ... POM_5V_IN 4567/4321"
+        },
+        {
+          "language": "python",
+          "title": "Read battery voltage on a UPS HAT (INA219 over I2C)",
+          "code": "from smbus2 import SMBus\nbus = SMBus(1)\nADDR = 0x42\n# INA219 register 2 = bus voltage; raw / 4 = mV (LSB = 4 mV)\nraw = bus.read_word_data(ADDR, 0x02)\nmsb, lsb = (raw >> 8) & 0xff, raw & 0xff\nbus_v = (((lsb << 8) | msb) >> 3) * 0.004   # volts\nprint(f'Battery: {bus_v:.2f} V')"
+        }
+      ]
+    },
+    {
+      "id": "logging-observability",
+      "heading": "Logging, telemetry & observability",
+      "body": "On a real robot, half your time is spent figuring out what went wrong. Build observability in early. The minimum: structured logs (rclpy logger), bag recordings of key topics, and a metrics dashboard. Beyond the minimum: distributed tracing across nodes, anomaly detection on bag streams, automatic incident artifacts when the robot e-stops.",
+      "bullets": [
+        "ros2 bag - record everything you might want to see again. Storage is cheap, repro is priceless",
+        "MCAP - modern bag format, plays back in Foxglove Studio, much faster than rosbag2 sqlite3",
+        "rqt_graph + rqt_console - quick during dev; doesn't scale to production fleets",
+        "Grafana + Prometheus - system metrics (CPU, RAM, GPU temp, battery) over time",
+        "Sentry / OpenTelemetry - exception tracking and distributed tracing across nodes",
+        "Always include topic stats: ros2 topic hz / bw - silent topic = dead sensor"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Black-box bag - last 60 s of critical topics, rotating",
+          "code": "ros2 bag record -o /var/log/blackbox \\\n    --max-bag-duration 60 --max-bag-size 268435456 \\\n    /tf /tf_static /odom /scan /cmd_vel /robot_status \\\n    --storage mcap --compression-mode file --compression-format zstd"
+        },
+        {
+          "language": "bash",
+          "title": "Convert old rosbag2 sqlite bags to MCAP",
+          "code": "ros2 bag convert -i old_bag/old_bag_0.db3 in:sqlite3 \\\n    -o new_bag --storage mcap"
+        },
+        {
+          "language": "python",
+          "title": "Custom metric publisher feeding Prometheus",
+          "code": "from prometheus_client import start_http_server, Gauge\nimport psutil, rclpy\nfrom rclpy.node import Node\n\nCPU = Gauge('robot_cpu_percent', 'CPU usage')\nMEM = Gauge('robot_mem_mb', 'Memory used MB')\nBAT = Gauge('robot_battery_v', 'Battery voltage')\n\nclass Metrics(Node):\n    def __init__(self):\n        super().__init__('metrics')\n        start_http_server(9100)\n        self.create_timer(1.0, self.tick)\n    def tick(self):\n        CPU.set(psutil.cpu_percent())\n        MEM.set(psutil.virtual_memory().used / 1e6)\n        # Update BAT from your battery topic subscription"
+        }
+      ],
+      "links": [
+        {
+          "label": "MCAP format",
+          "url": "https://mcap.dev/"
+        },
+        {
+          "label": "Foxglove Studio",
+          "url": "https://foxglove.dev/studio"
+        },
+        {
+          "label": "Prometheus client (Python)",
+          "url": "https://github.com/prometheus/client_python"
+        }
+      ]
+    },
+    {
+      "id": "qos-deep",
+      "heading": "QoS - getting the right delivery guarantees",
+      "body": "ROS 2 DDS lets every publisher and subscriber pick its own QoS profile - reliability (BEST_EFFORT vs RELIABLE), durability (VOLATILE vs TRANSIENT_LOCAL), history (KEEP_LAST vs KEEP_ALL), depth (queue size). Mismatched QoS = subscriber never receives. The defaults rarely fit production: sensor topics want BEST_EFFORT, commands want RELIABLE, latched topics need TRANSIENT_LOCAL.",
+      "bullets": [
+        "BEST_EFFORT - fire and forget; right for sensor streams (image, scan, IMU)",
+        "RELIABLE - retransmit until ACK; right for commands, parameters, lifecycle",
+        "TRANSIENT_LOCAL - late-joining subscribers get the last N messages (latched)",
+        "KEEP_ALL - never drop; bounded only by RAM. Use carefully",
+        "Deadline + lifespan - safety-relevant topics; declare expected rate",
+        "Liveliness - heartbeat semantics; detect dead publishers fast"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Sensor publisher with explicit QoS",
+          "code": "from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy\n\nsensor_qos = QoSProfile(\n    reliability=ReliabilityPolicy.BEST_EFFORT,\n    durability=DurabilityPolicy.VOLATILE,\n    history=HistoryPolicy.KEEP_LAST,\n    depth=5\n)\nself.pub = self.create_publisher(LaserScan, '/scan', sensor_qos)"
+        }
+      ],
+      "links": [
+        {
+          "label": "ROS 2 QoS overview",
+          "url": "https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Quality-of-Service-Settings.html"
+        }
+      ],
+      "widget": "ros-pubsub"
+    },
+    {
+      "id": "composition-lifecycle",
+      "heading": "Composition + lifecycle for production stacks",
+      "body": "Every ROS 2 node in its own process is convenient for development but wasteful for production - every topic between two nodes serializes, copies, and IPC-hops. Composition packs many \"components\" into one process so they can share memory directly via intra-process zero-copy. Lifecycle nodes give you deterministic startup / shutdown so your stack can recover from a sensor reboot without a full restart.",
+      "bullets": [
+        "Component - a class that registers with a ComponentContainer instead of running its own main()",
+        "Intra-process comms: zero-copy when both pub and sub live in the same container",
+        "Container choice: rclcpp_components::ComponentManager for general use",
+        "Lifecycle: unconfigured → inactive → active → inactive → finalized",
+        "Activate / deactivate hooks: open / close hardware connections cleanly",
+        "Use launch_ros.actions.LifecycleNode + register_event_handler for orchestration"
+      ],
+      "codeBlocks": [
+        {
+          "language": "cpp",
+          "title": "Register a node as a composable component",
+          "code": "#include <rclcpp/rclcpp.hpp>\n#include <rclcpp_components/register_node_macro.hpp>\n\nclass MyNode : public rclcpp::Node {\npublic:\n  explicit MyNode(const rclcpp::NodeOptions& opts)\n    : Node(\"my_node\", opts) { /* ... */ }\n};\n\nRCLCPP_COMPONENTS_REGISTER_NODE(MyNode)"
+        }
+      ],
+      "links": [
+        {
+          "label": "Composable nodes",
+          "url": "https://docs.ros.org/en/jazzy/Concepts/Intermediate/About-Composition.html"
+        }
+      ]
+    }
+  ]
+}

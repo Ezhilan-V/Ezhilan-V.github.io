@@ -1,0 +1,44 @@
+<div class="conv">
+  <div class="conv__pair">
+    <div class="conv__pane">
+      <span class="conv__pane-label">source</span>
+      <canvas #srcCanvas></canvas>
+    </div>
+    <div class="conv__pane">
+      <span class="conv__pane-label">filtered</span>
+      <canvas #dstCanvas></canvas>
+    </div>
+  </div>
+
+  <div class="conv__panel">
+    <div class="conv__panel-head">
+      <span class="conv__panel-title">3×3 kernel · {{ activeLabel }}</span>
+    </div>
+
+    <div class="conv__presets">
+      <button *ngFor="let p of presets"
+              type="button"
+              class="conv__preset"
+              [class.is-active]="current === p.name"
+              (click)="setPreset(p.name)">
+        {{ p.label }}
+      </button>
+    </div>
+
+    <div class="conv__kernel">
+      <input *ngFor="let v of kernel; let i = index"
+             type="number"
+             step="1"
+             [value]="kernel[i]"
+             (input)="onCellChange(i, $any($event.target).value)"
+             [attr.aria-label]="'k' + i" />
+    </div>
+
+    <p class="conv__note">
+      Each output pixel is a weighted sum of the 3×3 neighbourhood: <code>out = Σᵢ kᵢ · srcᵢ</code>.
+      For positive-sum kernels (blur, Gaussian) we normalise by the sum. For edge kernels (Sobel,
+      Laplacian) we add 128 so that flat regions show as mid-grey and edges appear as deviations.
+      Tweak any cell by hand to see what it does.
+    </p>
+  </div>
+</div>

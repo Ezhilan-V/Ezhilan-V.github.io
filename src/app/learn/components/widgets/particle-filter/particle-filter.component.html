@@ -1,0 +1,50 @@
+<div class="pf">
+  <div class="pf__stage">
+    <canvas #canvas></canvas>
+  </div>
+
+  <div class="pf__panel">
+    <div class="pf__panel-head">
+      <span class="pf__panel-title">Monte Carlo localization</span>
+      <div class="pf__actions">
+        <button type="button" class="pf__btn" (click)="togglePause()">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button type="button" class="pf__btn" (click)="reset()">
+          <i class="fas fa-undo"></i> reset
+        </button>
+        <button type="button" class="pf__btn pf__btn--danger" (click)="kidnap()">
+          <i class="fas fa-bolt"></i> kidnap robot
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Particles N</span><span class="slider-row__val">{{ N }}</span></div>
+      <input type="range" min="20" max="1000" step="20" [value]="N"
+             (input)="onSlider('N', $any($event.target).value)" aria-label="Particle count" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Motion noise</span><span class="slider-row__val">{{ motionNoise | number:'1.2-2' }} m</span></div>
+      <input type="range" min="0.01" max="0.4" step="0.01" [value]="motionNoise"
+             (input)="onSlider('motionNoise', $any($event.target).value)" aria-label="Motion noise" />
+    </div>
+
+    <div class="pf__legend">
+      <span><i class="dot" style="background:#fbbf24"></i> beacon</span>
+      <span><i class="dot ring" style="border-color:#22d3ee"></i> true robot</span>
+      <span><i class="dot" style="background:#38bdf8"></i> estimate</span>
+      <span><i class="dot" style="background:#a78bfa"></i> particles</span>
+    </div>
+
+    <p class="pf__note">
+      Each step: <b>predict</b> moves every particle by the commanded motion + noise,
+      <b>weight</b> scores each particle by how well its predicted beacon distances match the
+      observed distances, then <b>resample</b> draws a new particle set with replacement.
+      Tap <i>kidnap</i> to teleport the robot - watch the cloud diverge then re-converge once it
+      gets enough beacon evidence (this is recovery from the kidnapped-robot problem).
+    </p>
+  </div>
+</div>

@@ -1,0 +1,181 @@
+<div class="learn-shell">
+
+  <!-- Sticky search + workspace bar -->
+  <div class="ws-bar">
+    <div class="ws-bar__inner">
+      <div class="ws-bar__search">
+        <learn-search-bar></learn-search-bar>
+      </div>
+      <div class="ws-bar__input-wrap" [class.is-focused]="wsFocused" title="ROS 2 workspace - used in every {{ '{{ws}}' }} placeholder below">
+        <span class="ws-bar__prefix">~/</span>
+        <input
+          type="text"
+          [(ngModel)]="wsName"
+          (focus)="wsFocused = true"
+          (blur)="wsFocused = false; onWsCommit()"
+          (keyup)="onWsKeyup($event)"
+          spellcheck="false"
+          autocomplete="off"
+          maxlength="40"
+          aria-label="Workspace name" />
+        <span class="ws-bar__suffix">/</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="learn-shell__body">
+
+    <!-- Sidebar (desktop) -->
+    <aside class="learn-side">
+      <div class="learn-side__title">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Learn Robotics</span>
+      </div>
+
+      <nav>
+        <a routerLink="/learn" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }"
+           class="learn-side__link">
+          <i class="learn-side__chevron-spacer"></i>
+          <i class="fas fa-th-large"></i>
+          <span>Overview</span>
+        </a>
+
+        <a routerLink="/learn/paths" routerLinkActive="is-active"
+           class="learn-side__link">
+          <i class="learn-side__chevron-spacer"></i>
+          <i class="fas fa-route" style="color:#34d399"></i>
+          <span>Learning paths</span>
+        </a>
+
+        <a routerLink="/learn/vocabulary" routerLinkActive="is-active"
+           class="learn-side__link">
+          <i class="learn-side__chevron-spacer"></i>
+          <i class="fas fa-book-open" style="color:#facc15"></i>
+          <span>Vocabulary</span>
+        </a>
+
+        <a routerLink="/learn/quiz" routerLinkActive="is-active"
+           class="learn-side__link">
+          <i class="learn-side__chevron-spacer"></i>
+          <i class="fas fa-circle-question" style="color:#fb7185"></i>
+          <span>Test your knowledge</span>
+        </a>
+
+        <ng-container *ngIf="setup.length">
+          <span class="learn-side__group">Get Started</span>
+          <ng-container *ngFor="let b of setup">
+            <a [routerLink]="['/learn', b.slug]" routerLinkActive="is-active"
+               class="learn-side__link"
+               [class.is-expanded]="isActiveBranch(b.slug)">
+              <i class="fas learn-side__chevron"
+                 [class.fa-chevron-down]="isActiveBranch(b.slug)"
+                 [class.fa-chevron-right]="!isActiveBranch(b.slug)"></i>
+              <i class="fas" [class]="b.icon" [style.color]="b.accent"></i>
+              <span>{{ b.title }}</span>
+            </a>
+            <ul *ngIf="isActiveBranch(b.slug)" class="learn-side__sublist" [style.--accent]="b.accent">
+              <li *ngFor="let s of b.sectionTitles; let i = index">
+                <button type="button"
+                        class="learn-side__sublink"
+                        [class.is-active]="activeSectionId === s.id"
+                        (click)="goToSection(b.slug, s.id, $event)">
+                  <span class="learn-side__sublink-num">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                  <span class="learn-side__sublink-text">{{ s.heading }}</span>
+                </button>
+              </li>
+            </ul>
+          </ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="technical.length">
+          <span class="learn-side__group">Technical Branches</span>
+          <ng-container *ngFor="let b of technical">
+            <a [routerLink]="['/learn', b.slug]" routerLinkActive="is-active"
+               class="learn-side__link"
+               [class.is-expanded]="isActiveBranch(b.slug)">
+              <i class="fas learn-side__chevron"
+                 [class.fa-chevron-down]="isActiveBranch(b.slug)"
+                 [class.fa-chevron-right]="!isActiveBranch(b.slug)"></i>
+              <i class="fas" [class]="b.icon" [style.color]="b.accent"></i>
+              <span>{{ b.title }}</span>
+            </a>
+            <ul *ngIf="isActiveBranch(b.slug)" class="learn-side__sublist" [style.--accent]="b.accent">
+              <li *ngFor="let s of b.sectionTitles; let i = index">
+                <button type="button"
+                        class="learn-side__sublink"
+                        [class.is-active]="activeSectionId === s.id"
+                        (click)="goToSection(b.slug, s.id, $event)">
+                  <span class="learn-side__sublink-num">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                  <span class="learn-side__sublink-text">{{ s.heading }}</span>
+                </button>
+              </li>
+            </ul>
+          </ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="applied.length">
+          <span class="learn-side__group">Applied &amp; Platform</span>
+          <ng-container *ngFor="let b of applied">
+            <a [routerLink]="['/learn', b.slug]" routerLinkActive="is-active"
+               class="learn-side__link"
+               [class.is-expanded]="isActiveBranch(b.slug)">
+              <i class="fas learn-side__chevron"
+                 [class.fa-chevron-down]="isActiveBranch(b.slug)"
+                 [class.fa-chevron-right]="!isActiveBranch(b.slug)"></i>
+              <i class="fas" [class]="b.icon" [style.color]="b.accent"></i>
+              <span>{{ b.title }}</span>
+            </a>
+            <ul *ngIf="isActiveBranch(b.slug)" class="learn-side__sublist" [style.--accent]="b.accent">
+              <li *ngFor="let s of b.sectionTitles; let i = index">
+                <button type="button"
+                        class="learn-side__sublink"
+                        [class.is-active]="activeSectionId === s.id"
+                        (click)="goToSection(b.slug, s.id, $event)">
+                  <span class="learn-side__sublink-num">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                  <span class="learn-side__sublink-text">{{ s.heading }}</span>
+                </button>
+              </li>
+            </ul>
+          </ng-container>
+        </ng-container>
+      </nav>
+
+      <a routerLink="/" class="learn-side__back">
+        <i class="fas fa-arrow-left"></i> back to portfolio
+      </a>
+    </aside>
+
+    <!-- Mobile tab strip -->
+    <nav class="learn-tabs">
+      <a routerLink="/learn" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }"
+         class="learn-tabs__tab">
+        <i class="fas fa-th-large"></i><span>Overview</span>
+      </a>
+      <a routerLink="/learn/paths" routerLinkActive="is-active"
+         class="learn-tabs__tab">
+        <i class="fas fa-route" style="color:#34d399"></i><span>Paths</span>
+      </a>
+      <a routerLink="/learn/vocabulary" routerLinkActive="is-active"
+         class="learn-tabs__tab">
+        <i class="fas fa-book-open" style="color:#facc15"></i><span>Vocab</span>
+      </a>
+      <a routerLink="/learn/quiz" routerLinkActive="is-active"
+         class="learn-tabs__tab">
+        <i class="fas fa-circle-question" style="color:#fb7185"></i><span>Quiz</span>
+      </a>
+      <a *ngFor="let b of branches"
+         [routerLink]="['/learn', b.slug]"
+         routerLinkActive="is-active"
+         class="learn-tabs__tab">
+        <i class="fas" [class]="b.icon" [style.color]="b.accent"></i>
+        <span>{{ b.shortName }}</span>
+      </a>
+    </nav>
+
+    <!-- Outlet -->
+    <main class="learn-content">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+</div>

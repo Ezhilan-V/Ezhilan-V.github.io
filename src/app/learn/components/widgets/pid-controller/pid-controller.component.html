@@ -1,0 +1,66 @@
+<div class="pid">
+  <div class="pid__stage">
+    <canvas #canvas></canvas>
+    <div class="pid__hud">
+      <span class="pid__hud-tag">mass-spring-damper plant</span>
+      <span class="pid__hud-stat">u {{ u | number:'1.2-2' }}</span>
+    </div>
+    <div class="pid__metrics">
+      <span><span class="lbl">overshoot</span><span class="val">{{ overshoot | number:'1.0-1' }}%</span></span>
+      <span><span class="lbl">settle</span><span class="val">{{ settled ? (settleTime | number:'1.2-2') + 's' : '-' }}</span></span>
+      <span><span class="lbl">y</span><span class="val">{{ y | number:'1.2-2' }}</span></span>
+    </div>
+  </div>
+
+  <div class="pid__panel">
+    <div class="pid__panel-head">
+      <span class="pid__panel-title">PID gains</span>
+      <div class="pid__actions">
+        <button type="button" class="pid__btn" (click)="togglePause()">
+          <i class="fas" [class.fa-pause]="!paused" [class.fa-play]="paused"></i>
+          {{ paused ? 'play' : 'pause' }}
+        </button>
+        <button type="button" class="pid__btn" (click)="reset()">
+          <i class="fas fa-undo"></i> reset
+        </button>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Setpoint</span><span class="slider-row__val">{{ setpoint | number:'1.2-2' }}</span></div>
+      <input type="range" min="-2" max="2" step="0.05" [value]="setpoint"
+             (input)="onSlider('setpoint', $any($event.target).value)" aria-label="Setpoint" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Kp · proportional</span><span class="slider-row__val">{{ Kp | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="20" step="0.1" [value]="Kp"
+             (input)="onSlider('Kp', $any($event.target).value)" aria-label="Kp" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Ki · integral</span><span class="slider-row__val">{{ Ki | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="10" step="0.05" [value]="Ki"
+             (input)="onSlider('Ki', $any($event.target).value)" aria-label="Ki" />
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-row__head"><span class="slider-row__name">Kd · derivative</span><span class="slider-row__val">{{ Kd | number:'1.2-2' }}</span></div>
+      <input type="range" min="0" max="5" step="0.05" [value]="Kd"
+             (input)="onSlider('Kd', $any($event.target).value)" aria-label="Kd" />
+    </div>
+
+    <div class="pid__presets">
+      <button type="button" (click)="applyPreset('p')">P only</button>
+      <button type="button" (click)="applyPreset('pi')">PI</button>
+      <button type="button" (click)="applyPreset('pid')">PID balanced</button>
+      <button type="button" (click)="applyPreset('aggressive')">aggressive</button>
+    </div>
+
+    <div class="pid__legend">
+      <span><i class="line" style="background:#fbbf24"></i> setpoint</span>
+      <span><i class="line" style="background:#38bdf8"></i> output y</span>
+      <span><i class="line" style="background:rgba(167,139,250,0.5)"></i> control u (scaled)</span>
+    </div>
+  </div>
+</div>

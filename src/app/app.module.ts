@@ -3,9 +3,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { AppRoutingModule } from './app.routing';
+import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
+import { NotFoundComponent } from './shared/not-found/not-found.component';
 import { MaterialModule } from './material.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProfileService } from './profile/profile.service';
@@ -17,7 +18,8 @@ function initPortfolio(svc: ProfileService): () => Promise<any> {
 @NgModule({
   declarations: [
     AppComponent,
-    NavbarComponent
+    NavbarComponent,
+    NotFoundComponent
   ],
   imports: [
     BrowserAnimationsModule,

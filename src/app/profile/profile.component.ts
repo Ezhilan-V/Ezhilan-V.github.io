@@ -16,7 +16,7 @@ const STATS_OBSERVER_DELAY = 500;
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
-export class ResumeComponent implements OnInit, OnDestroy {
+export class ProfileComponent implements OnInit, OnDestroy {
   meta!: PortfolioMeta;
   about = '';
   skillCategories: SkillCategory[] = [];
@@ -31,7 +31,8 @@ export class ResumeComponent implements OnInit, OnDestroy {
   stats: Stat[] = [];
   private statsAnimated = false;
   private statsObserver?: IntersectionObserver;
-  private animationIntervals: ReturnType<typeof setInterval>[] = [];
+  private timeouts: ReturnType<typeof setTimeout>[] = [];
+  private intervals: ReturnType<typeof setInterval>[] = [];
 
   constructor(private profileService: ProfileService, private ngZone: NgZone) {
     this.meta = this.profileService.meta;
@@ -58,15 +59,15 @@ export class ResumeComponent implements OnInit, OnDestroy {
         this.statsObserver.observe(el);
       }
     }, STATS_OBSERVER_DELAY);
-
-    // Track so we can clear if destroyed before it fires
-    this.animationIntervals.push(initObserver as any);
+    this.timeouts.push(initObserver);
   }
 
   ngOnDestroy() {
     if (this.typeTimer !== null) clearTimeout(this.typeTimer);
-    this.animationIntervals.forEach(id => clearInterval(id));
-    this.animationIntervals = [];
+    this.timeouts.forEach(id => clearTimeout(id));
+    this.intervals.forEach(id => clearInterval(id));
+    this.timeouts = [];
+    this.intervals = [];
     this.statsObserver?.disconnect();
     document.body.classList.remove('profile-page');
   }
@@ -104,10 +105,10 @@ export class ResumeComponent implements OnInit, OnDestroy {
         if (step >= STAT_ANIMATION_STEPS) {
           stat.display = stat.target;
           clearInterval(iv);
-          this.animationIntervals = this.animationIntervals.filter(i => i !== iv);
+          this.intervals = this.intervals.filter(i => i !== iv);
         }
       }, STAT_ANIMATION_DURATION / STAT_ANIMATION_STEPS);
-      this.animationIntervals.push(iv);
+      this.intervals.push(iv);
     });
   }
 

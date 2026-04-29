@@ -1,4 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { ProfileService, PortfolioMeta } from '../../profile/profile.service';
 
 const SCROLL_THRESHOLD = 50;
@@ -17,12 +20,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
     activeSection = '';
     scrollProgress = 0;
     isDark = true;
+    isHomeRoute = true;
 
     meta!: PortfolioMeta;
-    initials = 'EV';
+    initials = 'EZ';
 
     private mq?: MediaQueryList;
     private mqListener?: (e: MediaQueryListEvent) => void;
+    private routeSub?: Subscription;
 
     navLinks = [
         { label: 'About',      id: 'about' },
@@ -33,15 +38,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
         { label: 'Contact',    id: 'contact' },
     ];
 
-    constructor(private profileService: ProfileService) {}
+    constructor(private profileService: ProfileService, private router: Router) {}
 
     ngOnInit() {
         this.meta = this.profileService.meta;
-        this.initials = this.meta.name
-            .split(' ')
-            .map(w => w[0])
-            .join('')
-            .toUpperCase();
+        this.initials = (this.meta.name.split(' ')[0] || 'EZ').slice(0, 2).toUpperCase();
 
         const saved = localStorage.getItem('portfolio-theme');
         this.isDark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -55,12 +56,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
             }
         };
         this.mq.addEventListener('change', this.mqListener);
+
+        this.isHomeRoute = this.router.url === '/' || this.router.url.startsWith('/?') || this.router.url.startsWith('/#');
+        this.routeSub = this.router.events.pipe(
+            filter(e => e instanceof NavigationEnd)
+        ).subscribe((e: any) => {
+            const url: string = e.urlAfterRedirects ?? e.url;
+            this.isHomeRoute = url === '/' || url.startsWith('/?') || url.startsWith('/#');
+        });
     }
 
     ngOnDestroy() {
         if (this.mq && this.mqListener) {
             this.mq.removeEventListener('change', this.mqListener);
         }
+        this.routeSub?.unsubscribe();
     }
 
     toggleTheme() {
@@ -101,6 +111,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     scrollToSection(id: string) {
+        if (!this.isHomeRoute) {
+            const fragment = id === 'top' ? undefined : id;
+            this.router.navigate(['/'], { fragment });
+            this.mobileMenuOpen = false;
+            return;
+        }
         if (id === 'top') {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
@@ -114,6 +130,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         }
         this.mobileMenuOpen = false;
     }
+
+    closeMobileMenu() { this.mobileMenuOpen = false; }
 
     toggleMobileMenu() { this.mobileMenuOpen = !this.mobileMenuOpen; }
 }

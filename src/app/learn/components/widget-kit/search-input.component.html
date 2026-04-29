@@ -1,0 +1,14 @@
+<div class="search-input" [class.is-active]="!!value">
+  <i class="fas fa-search search-input__icon"></i>
+  <input
+    type="text"
+    spellcheck="false"
+    autocomplete="off"
+    [placeholder]="placeholder"
+    [attr.aria-label]="ariaLabel"
+    [value]="value"
+    (input)="onInput($any($event.target).value)" />
+  <button *ngIf="value" type="button" class="search-input__clear" (click)="clear()" aria-label="Clear search">
+    <i class="fas fa-times"></i>
+  </button>
+</div>

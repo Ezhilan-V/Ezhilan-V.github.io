@@ -1,0 +1,312 @@
+{
+  "slug": "computer-vision",
+  "hero": {
+    "tagline": "Turning pixels and depth into something the robot can act on",
+    "intro": "Computer vision is the part of the robot that watches and understands. Given an image (or a depth map, or a point cloud), it decides 'there is a cup here, oriented like this, the door is open, the path is clear'. Everything downstream - planning, manipulation, navigation - depends on it being right. This branch walks the pipeline: how a camera projects 3D into 2D, classical image processing, deep object detection on a ROS topic, point clouds, sensor fusion, SLAM, and 6-DoF pose estimation. By the end you can build the perception layer of a real robot."
+  },
+  "sections": [
+    {
+      "id": "the-perception-stack",
+      "heading": "The perception stack",
+      "body": "Most robots run a pipeline that looks roughly like this: drivers publish raw sensor data → calibration aligns sensors with the robot's frames → low-level vision extracts features (edges, keypoints, depth) → mid-level vision groups them into objects and surfaces → a world model fuses everything over time. Each layer is a tradeoff between speed and richness - perception is almost always the bottleneck in a robot's control loop, so understanding what each layer costs is critical.",
+      "bullets": [
+        "Drivers - the camera or LiDAR's ROS 2 node, publishing /image_raw, /points, /imu/data",
+        "Calibration - intrinsic (the camera itself) and extrinsic (camera ↔ robot) transforms",
+        "Detection / segmentation - what is in the scene? YOLO, SAM, Mask R-CNN",
+        "3D reasoning - point clouds (PCL, Open3D), depth fusion, pose estimation",
+        "World model - TF tree, octomap, scene graph, or a custom representation",
+        "Fusion - Kalman / particle filters merging multiple sensors over time"
+      ]
+    },
+    {
+      "id": "camera-fundamentals",
+      "widget": "pinhole",
+      "heading": "Camera fundamentals: pinhole model + intrinsics",
+      "body": "Every perception pipeline starts with the pinhole camera model. A 3D point in the camera frame [X, Y, Z] projects to a 2D pixel [u, v] via the intrinsic matrix K. Calibration determines K - focal lengths fx, fy and the principal point (cx, cy). Without good calibration, every depth measurement and every back-projection is wrong.\n\nDistortion (barrel, pincushion) is modeled with extra parameters (k1, k2, p1, p2, k3 for radial + tangential). cv::undistort or image_proc handles this for you once calibrated.",
+      "bullets": [
+        "Intrinsics K = [[fx, 0, cx], [0, fy, cy], [0, 0, 1]] - describes the camera itself",
+        "Extrinsics [R | t] - the rigid transform from world frame to camera frame",
+        "Distortion coefficients - fix lens warping before doing geometry",
+        "Calibrate with a checkerboard or charuco target; ROS has tools for both"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Calibrate a monocular camera with the ROS 2 tool",
+          "code": "ros2 run camera_calibration cameracalibrator \\\n    --size 8x6 --square 0.025 \\\n    --ros-args -r image:=/camera/image_raw -r camera:=/camera",
+          "note": "Print a checkerboard, point the camera at it, move it through 9+ poses."
+        },
+        {
+          "language": "python",
+          "title": "Pixel (u, v) + depth → 3D point in camera frame",
+          "code": "import numpy as np\n\ndef pixel_to_point(u, v, depth_m, K):\n    fx, fy = K[0, 0], K[1, 1]\n    cx, cy = K[0, 2], K[1, 2]\n    x = (u - cx) * depth_m / fx\n    y = (v - cy) * depth_m / fy\n    z = depth_m\n    return np.array([x, y, z])\n\n# Forward project a 3D point back to a pixel\ndef point_to_pixel(p, K):\n    u = K[0, 0] * p[0] / p[2] + K[0, 2]\n    v = K[1, 1] * p[1] / p[2] + K[1, 2]\n    return np.array([u, v])"
+        }
+      ],
+      "links": [
+        {
+          "label": "OpenCV camera calibration",
+          "url": "https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html"
+        },
+        {
+          "label": "ROS 2 camera_calibration",
+          "url": "https://docs.ros.org/en/jazzy/p/camera_calibration/"
+        }
+      ]
+    },
+    {
+      "id": "ros2-camera-setup",
+      "heading": "Bring up an Intel RealSense camera",
+      "body": "RealSense is the workhorse stereo + RGB-D camera in academic robotics. Here's the full path from clone to streaming topics in your workspace.",
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "Create your workspace and clone the driver",
+          "code": "mkdir -p ~/{{ws}}/src\ncd ~/{{ws}}/src\ngit clone https://github.com/IntelRealSense/realsense-ros.git -b ros2-development"
+        },
+        {
+          "language": "bash",
+          "title": "Install dependencies and build",
+          "code": "cd ~/{{ws}}\nrosdep install -i --from-path src --rosdistro jazzy -y\ncolcon build --symlink-install --packages-select realsense2_camera"
+        },
+        {
+          "language": "bash",
+          "title": "Source and launch with depth alignment",
+          "code": "source ~/{{ws}}/install/setup.bash\nros2 launch realsense2_camera rs_launch.py \\\n    enable_color:=true enable_depth:=true \\\n    align_depth.enable:=true pointcloud.enable:=true"
+        },
+        {
+          "language": "bash",
+          "title": "Verify topics",
+          "code": "ros2 topic list | grep -E '(color|depth|point)'\n# /camera/camera/color/image_raw\n# /camera/camera/depth/image_rect_raw\n# /camera/camera/aligned_depth_to_color/image_raw\n# /camera/camera/depth/color/points"
+        }
+      ],
+      "links": [
+        {
+          "label": "realsense-ros",
+          "url": "https://github.com/IntelRealSense/realsense-ros"
+        }
+      ]
+    },
+    {
+      "id": "image-processing",
+      "widget": "convolution",
+      "heading": "Classical image processing with OpenCV",
+      "body": "Before reaching for deep learning, classical CV solves a surprising number of robot perception problems - color thresholding for sorting, edge detection for line following, blob detection for fiducials. Knowing OpenCV well makes you faster.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Color-space thresholding to find a red object",
+          "code": "import cv2\nimport numpy as np\n\ndef find_red(bgr_image):\n    hsv = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2HSV)\n    # Red wraps around hue 0/180 - use two ranges\n    m1 = cv2.inRange(hsv, (0,   100, 100), (10,  255, 255))\n    m2 = cv2.inRange(hsv, (170, 100, 100), (180, 255, 255))\n    mask = cv2.bitwise_or(m1, m2)\n    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,\n                            np.ones((5, 5), np.uint8))\n    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL,\n                                   cv2.CHAIN_APPROX_SIMPLE)\n    if not contours: return None\n    c = max(contours, key=cv2.contourArea)\n    M = cv2.moments(c)\n    return (int(M['m10']/M['m00']), int(M['m01']/M['m00']))"
+        },
+        {
+          "language": "python",
+          "title": "Detect ArUco fiducials (great for known objects)",
+          "code": "import cv2\nimport cv2.aruco as aruco\n\ndetector = aruco.ArucoDetector(\n    aruco.getPredefinedDictionary(aruco.DICT_5X5_50),\n    aruco.DetectorParameters())\n\ndef detect(frame):\n    corners, ids, _ = detector.detectMarkers(frame)\n    return ids, corners"
+        }
+      ],
+      "links": [
+        {
+          "label": "OpenCV Python tutorials",
+          "url": "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html"
+        }
+      ]
+    },
+    {
+      "id": "object-detection",
+      "heading": "Deep object detection on a ROS 2 topic",
+      "body": "Subscribe to /image_raw, run a model, republish detections. The 2026 model landscape: YOLOv10 / YOLOv11 (Ultralytics) remain the production default for closed-vocabulary detection (you know the classes up front). RT-DETR (Baidu) matches YOLO speed with better accuracy and is transformer-native. For open-vocabulary detection where you describe targets via text ('the red mug', 'a person holding a wrench'), Grounding DINO and OWL-ViT are the references - slower but unlock VLA-style prompted perception. For instance segmentation, SAM 2 (Meta, 2024) made promptable per-pixel masking a one-liner. The skeleton below is minimal so you can see the wiring; swap the model.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "yolo_detector_node.py",
+          "code": "import rclpy\nfrom rclpy.node import Node\nfrom sensor_msgs.msg import Image\nfrom vision_msgs.msg import Detection2DArray, Detection2D, ObjectHypothesisWithPose\nfrom cv_bridge import CvBridge\nfrom ultralytics import YOLO\n\nclass YoloDetector(Node):\n    def __init__(self):\n        super().__init__('yolo_detector')\n        self.bridge = CvBridge()\n        self.model = YOLO('yolov8n.pt')\n        self.sub = self.create_subscription(\n            Image, '/camera/camera/color/image_raw', self.cb, 10)\n        self.pub = self.create_publisher(\n            Detection2DArray, '/detections', 10)\n\n    def cb(self, msg: Image):\n        frame = self.bridge.imgmsg_to_cv2(msg, 'bgr8')\n        results = self.model(frame, verbose=False)[0]\n        out = Detection2DArray(header=msg.header)\n        for box in results.boxes:\n            d = Detection2D()\n            d.bbox.center.position.x = float(box.xywh[0][0])\n            d.bbox.center.position.y = float(box.xywh[0][1])\n            d.bbox.size_x = float(box.xywh[0][2])\n            d.bbox.size_y = float(box.xywh[0][3])\n            h = ObjectHypothesisWithPose()\n            h.hypothesis.class_id = self.model.names[int(box.cls)]\n            h.hypothesis.score = float(box.conf)\n            d.results.append(h)\n            out.detections.append(d)\n        self.pub.publish(out)\n\ndef main():\n    rclpy.init()\n    rclpy.spin(YoloDetector())"
+        },
+        {
+          "language": "bash",
+          "title": "Install + run",
+          "code": "pip install ultralytics\ncd ~/{{ws}}\ncolcon build --packages-select my_perception\nsource install/setup.bash\nros2 run my_perception yolo_detector_node"
+        }
+      ],
+      "links": [
+        {
+          "label": "Ultralytics YOLO",
+          "url": "https://docs.ultralytics.com/"
+        },
+        {
+          "label": "Segment Anything (SAM)",
+          "url": "https://segment-anything.com/"
+        }
+      ]
+    },
+    {
+      "id": "point-clouds",
+      "heading": "Point clouds - PCL + Open3D",
+      "body": "When you have depth, you get a point cloud - an unordered set of 3D points. Common operations: downsampling (voxel grid), filtering outliers, segmenting planes (RANSAC), clustering objects (Euclidean / DBSCAN), and registration (ICP). PCL is the C++ heavyweight, Open3D is the friendlier Python option.",
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Voxel downsample + plane segmentation in Open3D",
+          "code": "import open3d as o3d\n\npcd = o3d.io.read_point_cloud('scene.pcd')\npcd = pcd.voxel_down_sample(voxel_size=0.01)\n\n# Find the dominant plane (table top)\nplane_model, inliers = pcd.segment_plane(\n    distance_threshold=0.01, ransac_n=3, num_iterations=1000)\ntable = pcd.select_by_index(inliers)\nobjects = pcd.select_by_index(inliers, invert=True)\n\n# Cluster everything that's not the table\nlabels = objects.cluster_dbscan(eps=0.02, min_points=20)"
+        },
+        {
+          "language": "python",
+          "title": "ICP - register a model cloud to a sensor cloud",
+          "code": "import numpy as np\nimport open3d as o3d\n\nresult = o3d.pipelines.registration.registration_icp(\n    source=model_pcd, target=sensor_pcd,\n    max_correspondence_distance=0.02,\n    init=np.eye(4),\n    estimation_method=o3d.pipelines.registration\n        .TransformationEstimationPointToPoint())\nprint(result.transformation)  # 4x4 pose of model in sensor frame"
+        }
+      ],
+      "links": [
+        {
+          "label": "Open3D point clouds",
+          "url": "https://www.open3d.org/docs/release/tutorial/geometry/pointcloud.html"
+        },
+        {
+          "label": "PCL ROS 2",
+          "url": "https://github.com/ros-perception/perception_pcl"
+        }
+      ],
+      "widget": "icp"
+    },
+    {
+      "id": "visual-slam",
+      "heading": "Visual SLAM - building maps from cameras",
+      "body": "When you don't have a pre-made map, run SLAM (Simultaneous Localization and Mapping). Visual SLAM uses cameras (mono, stereo, or RGB-D) instead of LiDAR. ORB-SLAM3 and RTAB-Map are the modern open-source baselines.",
+      "bullets": [
+        "Sparse SLAM (ORB-SLAM3) - tracks keypoints, lightweight, sparse map",
+        "Dense SLAM (KinectFusion, BundleFusion) - voxel grids, full surface reconstruction",
+        "RGB-D SLAM (RTAB-Map) - pragmatic middle ground, ROS-native"
+      ],
+      "codeBlocks": [
+        {
+          "language": "bash",
+          "title": "RTAB-Map with a RealSense camera",
+          "code": "sudo apt install -y ros-jazzy-rtabmap-ros\nros2 launch rtabmap_examples realsense_d435i_color.launch.py"
+        }
+      ],
+      "links": [
+        {
+          "label": "ORB-SLAM3",
+          "url": "https://github.com/UZ-SLAMLab/ORB_SLAM3"
+        },
+        {
+          "label": "RTAB-Map",
+          "url": "https://github.com/introlab/rtabmap_ros"
+        }
+      ],
+      "widget": "loop-closure"
+    },
+    {
+      "id": "state-estimation",
+      "widget": "kalman",
+      "heading": "Sensor fusion & state estimation",
+      "body": "Real robots have noisy sensors and need to combine them. The Kalman filter (and its extended/unscented variants) is the foundational algorithm - predict the next state from a motion model, correct it with sensor measurements, weighted by their uncertainties.\n\nFor robotics in ROS 2, robot_localization fuses any number of pose / IMU / odometry inputs into a single TF-published estimate without you writing the math.",
+      "codeBlocks": [
+        {
+          "language": "yaml",
+          "title": "ekf.yaml - fuse wheel odom + IMU into /odometry/filtered",
+          "code": "ekf_filter_node:\n  ros__parameters:\n    frequency: 30.0\n    two_d_mode: true\n    publish_tf: true\n    odom_frame: odom\n    base_link_frame: base_link\n    world_frame: odom\n\n    odom0: /wheel/odometry\n    odom0_config: [true,  true,  false,\n                   false, false, true,\n                   true,  false, false,\n                   false, false, true,\n                   false, false, false]\n\n    imu0: /imu/data\n    imu0_config: [false, false, false,\n                  true,  true,  true,\n                  false, false, false,\n                  true,  true,  true,\n                  true,  true,  true]"
+        },
+        {
+          "language": "bash",
+          "title": "Launch the EKF",
+          "code": "sudo apt install -y ros-jazzy-robot-localization\nros2 run robot_localization ekf_node \\\n    --ros-args --params-file ~/{{ws}}/config/ekf.yaml"
+        }
+      ],
+      "links": [
+        {
+          "label": "robot_localization docs",
+          "url": "https://docs.ros.org/en/jazzy/p/robot_localization/"
+        },
+        {
+          "label": "Kalman filter intuitive intro",
+          "url": "https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/"
+        }
+      ]
+    },
+    {
+      "id": "object-tracking",
+      "heading": "Object tracking - keep an ID across frames",
+      "body": "Detection tells you what's in this frame; tracking tells you that the cup in frame N is the same cup in frame N+1. The trick is data association - given new detections and existing tracks, which goes with which. SORT solves this with a Kalman filter per track plus Hungarian-algorithm assignment. ByteTrack improves it by also matching low-confidence detections, which dramatically helps when objects are briefly occluded.",
+      "bullets": [
+        "Kalman filter per track - predicts where each object will appear next frame",
+        "IoU + Hungarian - match detections to predictions by box overlap",
+        "ByteTrack: low-confidence detections often correspond to occluded real objects, don't throw them away",
+        "DeepSORT / StrongSORT - add a learned appearance embedding for re-identification across long gaps",
+        "For ROS 2: yolov8-ros and tracking_pkg wrap these on Detection2DArray topics"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Run ByteTrack alongside YOLO via Ultralytics",
+          "code": "from ultralytics import YOLO\n\nmodel = YOLO('yolov8n.pt')\n# tracker = 'bytetrack.yaml' or 'botsort.yaml'\nresults = model.track(source='video.mp4', tracker='bytetrack.yaml',\n                      persist=True, conf=0.25)\nfor r in results:\n    if r.boxes.id is None: continue\n    for box, tid in zip(r.boxes.xyxy, r.boxes.id):\n        print(f'track {int(tid)} at {box.tolist()}')"
+        }
+      ],
+      "links": [
+        {
+          "label": "ByteTrack paper / code",
+          "url": "https://github.com/ifzhang/ByteTrack"
+        },
+        {
+          "label": "SORT (original)",
+          "url": "https://github.com/abewley/sort"
+        },
+        {
+          "label": "DeepSORT",
+          "url": "https://github.com/nwojke/deep_sort"
+        }
+      ],
+      "widget": "optical-flow"
+    },
+    {
+      "id": "depth-from-mono",
+      "heading": "Monocular depth estimation",
+      "body": "Single-camera depth used to be impossible without motion parallax. Modern transformers (MiDaS, ZoeDepth, Depth Anything V2) train on millions of mixed datasets and predict metric or relative depth from a single RGB image. Quality is now good enough for obstacle avoidance, AR, and rough scene understanding - though stereo + LiDAR still wins for safety-critical use.",
+      "bullets": [
+        "MiDaS - relative depth, scale ambiguous, very robust",
+        "ZoeDepth - metric depth, fine-tuned on indoor / outdoor splits",
+        "Depth Anything V2 - current SOTA (2024), 25M parameters, runs on Jetson",
+        "Marigold - diffusion-based; slower but extremely sharp at edges",
+        "Use cases: AR overlay, obstacle proximity, rough 3D reconstruction",
+        "Caveat: scale drifts with lens / environment; calibrate against a known target before trusting metric output"
+      ],
+      "codeBlocks": [
+        {
+          "language": "python",
+          "title": "Depth Anything V2 inference",
+          "code": "from transformers import pipeline\nfrom PIL import Image\n\npipe = pipeline(task='depth-estimation',\n                model='depth-anything/Depth-Anything-V2-Small-hf',\n                device=0)\ndepth = pipe(Image.open('scene.jpg'))['depth']\ndepth.save('depth.png')"
+        }
+      ],
+      "links": [
+        {
+          "label": "Depth Anything V2",
+          "url": "https://depth-anything-v2.github.io/"
+        },
+        {
+          "label": "ZoeDepth",
+          "url": "https://github.com/isl-org/ZoeDepth"
+        }
+      ],
+      "widget": "stereo-disparity"
+    },
+    {
+      "id": "6d-pose",
+      "heading": "6-DoF object pose estimation",
+      "body": "Knowing an object is in the scene (detection) is not enough for grasping - you need its full 6-DoF pose: position + orientation in the camera frame. Classic methods use known CAD models + ICP (PPF, Linemod). Modern learned methods (FoundationPose, PoseCNN, GDR-Net) generalize across objects without per-object training. FoundationPose (NVIDIA, 2024) sets the open-source bar - give it any RGB-D image and a CAD mesh, get the pose back.",
+      "bullets": [
+        "Known model + ICP - classical baseline, accurate, slow, requires CAD",
+        "PoseCNN, GDR-Net - supervised CNNs, need per-object training data",
+        "FoundationPose - generalist, RGB-D + mesh, 2024 SOTA, ~50ms on a 4090",
+        "MegaPose - RGB-only, mesh-conditioned, harder to get production-grade",
+        "Output: 4×4 transform matrix, can drive MoveIt grasp planners directly"
+      ],
+      "links": [
+        {
+          "label": "FoundationPose",
+          "url": "https://nvlabs.github.io/FoundationPose/"
+        },
+        {
+          "label": "BOP benchmark (pose evaluation)",
+          "url": "https://bop.felk.cvut.cz/home/"
+        }
+      ]
+    }
+  ]
+}

@@ -51,7 +51,8 @@
               <!-- Image header or gradient fallback -->
               <div *ngIf="project.imageUrls && project.imageUrls.length; else gradientHeader"
                    class="card-header-img relative">
-                <img [src]="project.imageUrls[0]" [alt]="project.title" class="card-img">
+                <img [src]="project.imageUrls[0]" [alt]="project.title" class="card-img"
+                     loading="lazy" decoding="async">
                 <span *ngIf="project.videoUrl" class="video-badge">
                   <mat-icon class="play-icon">play_circle</mat-icon> Video
                 </span>

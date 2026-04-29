@@ -1,0 +1,84 @@
+<div class="visitor-stats">
+  <header class="visitor-stats__head">
+    <span class="visitor-stats__eyebrow">
+      <i class="fas fa-globe"></i> Live audience
+    </span>
+    <h3>Who's reading this</h3>
+    <p *ngIf="liveMap">One pin per country, sized by visitor count. Detailed analytics live in Google Analytics.</p>
+    <p *ngIf="!liveMap">Tracked by Google Analytics. Map shows your location plus a sample of visitors.</p>
+  </header>
+
+  <div class="visitor-stats__counter">
+    <div *ngIf="showCount" class="visitor-stats__number" [class.is-loading]="loading">
+      <span>{{ displayCount.toLocaleString() }}</span>
+      <small>total page views</small>
+    </div>
+
+    <div *ngIf="!showCount" class="visitor-stats__tracker"
+         [class.is-armed]="gaConfigured || goatCounterCode"
+         [class.is-pending]="!gaConfigured && !goatCounterCode">
+      <i class="fas" [class.fa-chart-line]="gaConfigured || goatCounterCode" [class.fa-circle-info]="!gaConfigured && !goatCounterCode"></i>
+      <div>
+        <strong>{{ trackerLabel() }}</strong>
+        <span *ngIf="gaConfigured && !goatCounterCode">Detailed reports in your GA dashboard.</span>
+        <span *ngIf="!gaConfigured && goatCounterCode">View detailed reports on your GoatCounter dashboard.</span>
+        <span *ngIf="gaConfigured && goatCounterCode">Detailed reports in GA, public count from GoatCounter.</span>
+        <span *ngIf="!gaConfigured && !goatCounterCode">Replace the placeholder Measurement ID in <code>index.html</code> to enable.</span>
+      </div>
+    </div>
+
+    <div class="visitor-stats__self" *ngIf="selfLocation">
+      <i class="fas fa-location-dot"></i>
+      <div>
+        <strong>You're visiting from</strong>
+        <span>{{ selfLocation.city ? selfLocation.city + ', ' : '' }}{{ selfLocation.country }}</span>
+      </div>
+    </div>
+    <div class="visitor-stats__self visitor-stats__self--quiet" *ngIf="!selfLocation && !loading">
+      <i class="fas fa-globe"></i>
+      <div>
+        <strong>Welcome.</strong>
+        <span>Location lookup is best-effort and respects your privacy settings.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="visitor-stats__map" #mapStage>
+    <canvas #mapCanvas aria-label="Sparse dotted world map showing one pin per country, sized by recent visitor count"></canvas>
+  </div>
+
+  <div class="visitor-stats__quickstats">
+    <div class="visitor-stats__stat">
+      <span class="visitor-stats__stat-num">{{ totalVisitorPins() }}</span>
+      <span class="visitor-stats__stat-label">recent visitors</span>
+    </div>
+    <div class="visitor-stats__stat">
+      <span class="visitor-stats__stat-num">{{ countriesReached() }}</span>
+      <span class="visitor-stats__stat-label">{{ countriesReached() === 1 ? 'country' : 'countries' }}</span>
+    </div>
+  </div>
+
+  <div class="visitor-stats__legend">
+    <span class="visitor-stats__legend-item visitor-stats__legend-item--self">
+      <i></i> You
+    </span>
+    <span class="visitor-stats__legend-item">
+      <i></i> Country (size = visitor count)
+    </span>
+  </div>
+
+  <ul class="visitor-stats__top" *ngIf="topPlaces().length">
+    <li *ngFor="let p of topPlaces()" [class.is-self]="p.isSelf">
+      <span class="visitor-stats__top-name">
+        <i *ngIf="p.isSelf" class="fas fa-location-dot"></i>{{ p.label }}
+      </span>
+      <span class="visitor-stats__top-count">{{ p.count }}</span>
+    </li>
+  </ul>
+
+  <p class="visitor-stats__note">
+    <i class="fas fa-shield-halved"></i>
+    <span *ngIf="!liveMap">Your approximate location is fetched client-side from <code>ipapi.co</code> and never stored on a server. GA uses anonymized IP.</span>
+    <span *ngIf="liveMap">Approx. location from <code>ipapi.co</code> (~1 km). One pin per session is stored in Firebase Realtime Database (lat/lon, country, city only). GA uses anonymized IP.</span>
+  </p>
+</div>

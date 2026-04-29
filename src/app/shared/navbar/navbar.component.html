@@ -10,17 +10,32 @@
 
       <!-- Desktop nav -->
       <div class="hidden md:flex items-center gap-1">
-        <button *ngFor="let link of navLinks"
-                (click)="scrollToSection(link.id)"
-                [class]="'px-3 py-2 text-sm font-medium rounded-lg transition-all ' + (activeSection === link.id ? 'text-sky-400 bg-sky-500/10' : 'text-slate-400 hover:text-sky-400 hover:bg-white/[0.05]')">
-          {{ link.label }}
-        </button>
+        <ng-container *ngIf="isHomeRoute">
+          <button *ngFor="let link of navLinks"
+                  (click)="scrollToSection(link.id)"
+                  [class]="'px-3 py-2 text-sm font-medium rounded-lg transition-all ' + (activeSection === link.id ? 'text-sky-400 bg-sky-500/10' : 'text-slate-400 hover:text-sky-400 hover:bg-white/[0.05]')">
+            {{ link.label }}
+          </button>
+        </ng-container>
+
+        <a *ngIf="!isHomeRoute"
+           routerLink="/"
+           class="px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-sky-400 hover:bg-white/[0.05] inline-flex items-center gap-1.5">
+          <i class="fas fa-arrow-left text-xs"></i> Portfolio
+        </a>
+
+        <a routerLink="/learn"
+           routerLinkActive="text-emerald-400 bg-emerald-500/10"
+           class="px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/[0.08] inline-flex items-center gap-1.5">
+          <i class="fas fa-graduation-cap text-xs"></i> Learn
+        </a>
+
         <div class="flex items-center gap-1 ml-3 pl-3 border-l border-white/[0.08]">
-          <a [href]="meta.linkedin" target="_blank"
+          <a [href]="meta.linkedin" target="_blank" rel="noopener noreferrer"
              class="p-2 text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-lg transition-all" title="LinkedIn">
             <i class="fab fa-linkedin"></i>
           </a>
-          <a [href]="meta.github" target="_blank"
+          <a [href]="meta.github" target="_blank" rel="noopener noreferrer"
              class="p-2 text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 rounded-lg transition-all" title="GitHub">
             <i class="fab fa-github"></i>
           </a>
@@ -56,17 +71,33 @@
     <!-- Mobile dropdown -->
     <div *ngIf="mobileMenuOpen"
          class="md:hidden bg-[#080b14]/98 backdrop-blur-md border-t border-white/[0.07] pb-4 space-y-1">
-      <button *ngFor="let link of navLinks"
-              (click)="scrollToSection(link.id)"
-              [class]="'block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-all ' + (activeSection === link.id ? 'text-sky-400 bg-sky-500/10' : 'text-slate-400 hover:text-sky-400 hover:bg-white/[0.04]')">
-        {{ link.label }}
-      </button>
+      <ng-container *ngIf="isHomeRoute">
+        <button *ngFor="let link of navLinks"
+                (click)="scrollToSection(link.id)"
+                [class]="'block w-full text-left px-4 py-2.5 text-sm font-medium rounded-lg transition-all ' + (activeSection === link.id ? 'text-sky-400 bg-sky-500/10' : 'text-slate-400 hover:text-sky-400 hover:bg-white/[0.04]')">
+          {{ link.label }}
+        </button>
+      </ng-container>
+
+      <a *ngIf="!isHomeRoute"
+         routerLink="/" (click)="closeMobileMenu()"
+         class="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-sky-400 hover:bg-white/[0.04]">
+        <i class="fas fa-arrow-left text-xs"></i> Portfolio
+      </a>
+
+      <a routerLink="/learn"
+         routerLinkActive="text-emerald-400 bg-emerald-500/10"
+         (click)="closeMobileMenu()"
+         class="flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/[0.05]">
+        <i class="fas fa-graduation-cap text-xs"></i> Learn Robotics
+      </a>
+
       <div class="flex items-center gap-4 px-4 pt-3 mt-2 border-t border-white/[0.07]">
-        <a [href]="meta.linkedin" target="_blank"
+        <a [href]="meta.linkedin" target="_blank" rel="noopener noreferrer"
            class="text-slate-400 hover:text-sky-400 transition-colors">
           <i class="fab fa-linkedin text-lg"></i>
         </a>
-        <a [href]="meta.github" target="_blank"
+        <a [href]="meta.github" target="_blank" rel="noopener noreferrer"
            class="text-slate-400 hover:text-violet-400 transition-colors">
           <i class="fab fa-github text-lg"></i>
         </a>
